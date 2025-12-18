@@ -1,0 +1,165 @@
+11 August 2009
+ver 1.15
+
+graphics:
+- Faster POLY16_RGB by 15-20%
+- Added PutSurfBlnd16,PutMaskSurfBlnd16,SurfCopyBlnd16,SurfMaskCopyBlnd16
+- Added transparency functions with 32 level of tranparency:
+  PutSurfTrans16,PutMaskSurfTrans16,SurfCopyTrans16,SurfMaskCopyTrans16
+- Added SurfCopy as an alternative to (SetSurf,PutSurfxx)
+- Removed CollisPutSurf,CollisPutMaskSurf,RViewCollisPutSurf,RViewCollisPutMaskSurf
+
+Timer and Synch:
+- Increased the size of synch buffer by 8 Bytes.
+- Fixed a bug on SynchLastTime for low frequency timer.
+- Fixed a bug on SynchAverageTime : compute average time more correctly
+  and can see now time interval smaller than the timer frequency.
+
+1 March 2009
+ver 1.14
+
+graphics:
+- Fixed an introduced bug in 1.13 with double-sided Poly in 8bpp
+- Fixed a small incompatiblity with LoadBMPxx, LoadMemBMPxx
+- Rewrited Poly and Poly16 to be faster (more MMX) and smaller
+- Faster textured Poly and Poly16
+- Replaced line, linemap, line16, linemap16, lineblnd16, linemapblnd16
+  by faster "asm" wrappers instead the "C" ones
+- Updated all rectxx to use the new linexx
+
+Timer and Synch:
+- Fixed a bug on SynchLastTime.
+- Added StartSynch to start or restart Synching
+- Added SynchAccTime to compute all time in sec since started the synching.
+
+18 November 2008
+ver 1.13
+
+global:
+- ExecCPUID now set input value of EBX, ECX and EDX to zero.
+
+graphics:
+- Fixed a bug on InitVesa. Which enabled DUGL compatibility with FreeBasic.
+- Fixed a bug on both Poly and Poly16 in case of a polygone with more than 3 points
+  and the first 3 points are not enough to compute if the polygone is 
+  clockwise or counter clockwise.
+- Fixed a bug on bar, Bar, bar16 and Bar16.
+- Faster and smaller BlurSurf16, Line, LineMap, Line16 and LineMap16.
+- Added a first alpha version of FreeBasic header dugl.bi.
+- Added color transparency functions:     
+  LineBlnd16, LineMapBlnd16, lineblnd16, linemapblnd16, CPutPixelBlnd16, 
+  cputpixelblnd16, BarBlnd16, barblnd16, rectblnd16 and rectmapblnd16.
+
+9 August 2008
+ver 1.12
+
+graphics:
+- Added to Poly16 the support of POLY16_TEXT_BLND and POLY16_MASK_TEXT_BLND allowing 
+  to draw a texture mapped poly blended with a color with 32 level of blending. 
+  Allowing flat lightening, fog, shineness ...
+- Fixed a bug with POLY16_MASK_TEXT which was not always masked.
+- Added ConvSurf8ToSurf16Pal allowing to direct convert a 8bpp surf to a 16bpp without
+  a lookup table.
+- Added full support for uncompressed BMP format with : 
+  LoadMemBMP, LoadBMP, SaveMemBMP, SaveBMP, SizeSaveBMP,
+  LoadMemBMP16, LoadBMP16, SaveMemBMP16, SaveBMP16 and SizeSaveBMP16.
+
+20 march 2008
+ver 1.11
+
+graphics:
+- VESA 2.0+ implementation fixes for better compatiblity.
+- Added to Poly16 the support of POLY16_SOLID_BLND, allowing to draw a solid color poly 
+  blended with destination Surf with 32 level of blending.
+- Added BuildTbColConv a much faster version of PrBuildTbColConv but less accurate.
+- Reverted to a BlurSurf16 that will not blur the green as Fast as the blue and red.
+  This will make a better quality blur, losing less colors and brightness.
+- Faster BlurSurf16 by more than 5%.
+
+2 march 2008
+ver 1.10 
+
+graphics:
+- Faster BlurSurf16 by more than 1100% if the source Surf is a VRAM and a possible
+  Speed increase when the source Surf is a RAM on slow computers.
+- Faster ConvSurf8ToSurf16 by 25% RAM to RAM.
+
+Timer and Synch:
+- Resolved a bug on SynchLastTime.
+
+20 february 2008
+ver 1.10 alfa1
+
+global
+- Cleaned include files
+- Better License.txt
+- The GUI, and Sound moved to a new open Source addon library DUGL-PLUS.
+  This will keep DUGL a small and fast C/Asm library :)
+
+graphics:
+- InitVesaMode Init now any available 16bpp graphic mode.
+- SetSurf accepts now a 16bpp Surf as a target drawing Surf.
+- Added 16bpp graphic functions : 
+  * Poly16 : supporting POLY16_SOLID, POLY16_TEXT, POLY16_MASK_TEXT 
+    and the new POLY16_RGB
+  * PutPixel16, GetPixel16, Clear16, Line16, LineMap16
+  * ClearSurf16, line16, linemap16, putpixel16, cputpixel16, getpixel16, 
+    cgetpixel16, Bar16, bar16, rect16, rectmap16
+  * PutSurf16, PutMaskSurf16
+  * OutText16, OutText16XY, OutText16Mode, OutText16YMode, RViewOutText16Mode
+    RViewOutText16YMode,  RViewOutText16XY
+- Added RViewOutTextXY for 8bpp text outputting
+- Romoved the asm instruction EMMS from all the graphic functions.
+  This will increase the rendering speed specially on slow computers.
+  Instead the user should call the macro FREE_MMX() when going to use floating math.
+- Added ScanLine and Mask to the Surf structure.
+- Fixed a bug on CreateSurf, and CreateSurfBuff computing errnously the SizeSurf.
+- Added the function SetSrcSurf(Surf *S) to set the current source Surf for all the
+  drawing function using a surf, like Poly, PutSurf, PutMaskSurf. Giving the possiblity
+  then to pass a NULL pointer as source Surf.
+
+
+8 april 2007
+ver 1.01
+
+global:
+- Ported asm source to yasm 0.6
+- Added two constants DUGL_VERSION and DUGL_DATE_DMY for better DUGL versionning
+
+graphics:
+- VESA init bug fixes after trying to run DUGL under Qemu
+- Speed increase up to 30% for POLY_TEXT, POLY_DEG, POLY_FLAT_DEG_TEXT, POLY_DEG_TEXT
+- Speed increase for SetSurf
+- Speed increase for PrFindCol
+- Added BitsPixel to the Surf Structure
+- CreateSurf acceptes now all the possible value for BitsPixel (8,15,16,24,32)
+- Added ConvSurf16ToSurf8 and ConvSurf8ToSurf16 for converting from-to 16bpp and 8bpp
+- Added BlurSurf16 to apply a blur filter over a 16bpp Surf
+- Added PrBuildTbColConv which build lookup table for 8bpp, 16bpp conversion
+- Fixed ModeInfo.VModeFlag to short from char and added constants for testing purpose
+
+mouse:
+- Added new structure MouseEvent
+- Added a ring-buffer mouse event stack
+- added EnableMsEvntsStack, DisableMsEvntsStack and ClearMsEvntsStack to Enable, disable and clear the mouse events stack.
+- Added GetMsEvent to get a mouse event if occured
+
+Timer and Synch:
+- Increased the size of synch buff to 156 to add a ring-buffer liste time stack.
+- Added SynchAverageTime which return the average 32 times calls between each call to Synch.
+- Added SynchLastTime which return the time between the two last call to Synch.
+
+GUI:
+- some bugfixes on String
+- ListString :
+  * Full rework of ListString to be faster and more reliable
+  * Added two Insert for (char*) or (String*)
+  * Added a default parameter POS=0 to Delete and index, which could be LISTSTR_FIRST or LISTSTR_LAST.
+
+29 august 2006
+ver 1.0
+First public release. 
+Sources rearrangement.
+
+2000-2002
+Main development.

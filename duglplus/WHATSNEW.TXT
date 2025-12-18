@@ -1,0 +1,53 @@
+22 june 2013 WIP
+ver 0.31
+
+GUI:
+- Fixed bug on FilesBox that prevent detecting all drives if there is a gap
+  in their names (thanks rugxulo).
+- Improved FilesBox to accept multi-filter (as *.pcx|*.jpg ..)
+- Added ImgButton widget.
+- Several improvements in String and ListString, including search, splitting, sorting ..
+
+Images:
+- Added capability to load/save PNG images.
+
+11 august 2009
+ver 0.3
+
+GUI:
+- Added capability of both 16bpp/8bpp graphics.
+- WinHandler accepts now the value of 16 on the param BitsPixel
+- Added HzSlider and ImgButton GUI objects.
+- Improved HzScrollBar and VtSCrollBar behavior (acceleration ...)
+- Many improvements on FileBox including being keyboard friendly ..
+- Bug fixes on ListBox, ComboBox more keyboard friendly.
+- Removed InitPaletteGUI, now a palette is a parameter on the constructor of WinHandler
+- many small bug fixes and improvement.
+
+SOUND:
+- Finalized a working Sound Blaster pro sound driver.
+- Renamed many constants. 
+
+2 march 2008
+ver 0.2
+
+- Added Image Module, supporting for the moment jpeg image using the libjpeg6 library
+  with the following functions for a 16bpp Surf : 
+  LoadJPG16, LoadMemJPG16, SaveJPG16
+
+20 february 2008
+ver 0.1
+
+global:
+- Detached The GUI, Sound from from the DUGL 1.10alfa 
+
+SOUND:
+- Some few source code cleaning for the sound driver.
+
+GUI:
+- Updated sources to compatible with DUGL 1.10alfa1 
+  (adding some FREE_MMX() here and there ;) )
+
+
+2000-2002
+Main development.

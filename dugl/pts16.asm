@@ -1,0 +1,3164 @@
+ALIGN 32
+_PutSurf16:
+	ARG	SSN16, 4, XPSN16, 4, YPSN16, 4, PSType16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+		
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+SSN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+
+		MOV		EAX,[EBP+XPSN16]
+		MOV		EBX,[EBP+YPSN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+PSType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             SHORT .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,EDX ; = [SResH]
+		TEST		EDI,2  		; dword aligned ?
+		JZ		.FPasStBAv
+		DEC		EBX
+		MOVSW
+		JZ		.FinSHLine
+.FPasStBAv:	TEST		EDI,4 		; qword aligned ?
+		JZ		.PasStDAv
+		CMP		EBX,1
+		JLE		.StBAp
+		MOVSD
+		SUB		EBX,BYTE 2
+.PasStDAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StDAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+		AND		EBX,BYTE 3
+		JZ		.FinSHLine
+.StDAp: 	CMP		EBX,2
+		JL		.StBAp
+		SUB		EBX,BYTE 2
+		MOVSD
+.StBAp:		OR		EBX,EBX
+		JZ		.PasStBAp
+		MOVSW
+.PasStBAp:
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+.IBcStBAv:	TEST		EDI,2
+		JZ		.IFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		DEC		EBX
+		STOSW
+		JZ		.IFinSHLine
+.IFPasStBAv:	TEST		EDI,4
+		JZ		.IPasStDAv
+		CMP		EBX,1
+		JLE		.IStBAp
+                SUB		ESI,BYTE 4
+                MOV		EAX,[ESI]
+		SUB		EBX,BYTE 2
+                ROR		EAX,16 ; swap word order
+		STOSD
+.IPasStDAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.IStDAp
+;ALIGN 4
+.IStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		DEC		ECX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+
+		JNZ		.IStoMMX
+                
+		AND		EBX,BYTE 3
+		JZ		.IFinSHLine
+.IStDAp:	CMP		EBX,2
+		JL		.IStBAp
+		SUB		ESI,4
+		MOV		EAX,[ESI]
+		ROR		EAX,16 ; SWap word order
+		STOSD
+		SUB		EBX,BYTE 2
+                
+.IStBAp:	OR		EBX,EBX
+		JZ		.IPasStBAp
+.IBcStBAp:
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		DEC		EBX
+		STOSW
+.IPasStBAp:
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+.CBcStBAv:	TEST		EDI,2
+		JZ		.CFPasStBAv
+		DEC		EBX
+		MOVSW
+		JZ		.CFinSHLine
+.CFPasStBAv:	TEST		EDI,4
+		JZ		.CPasStDAv
+		CMP		EBX,1
+		JLE		.CStBAp
+		MOVSD
+		SUB		EBX,BYTE 2
+.CPasStDAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CStDAp
+;ALIGN 4
+.CStoMMX:	MOVQ		mm0,[ESI]
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.CStoMMX
+                
+		AND		EBX,BYTE 3
+		JZ		.CFinSHLine
+.CStDAp: 	TEST		EBX,2
+		JZ		.CStBAp
+		MOVSD
+		SUB		EBX,BYTE 2
+.CStBAp:	OR		EBX,EBX
+		JZ		.CPasStBAp
+		MOVSW
+.CPasStBAp:
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+.CIBcStBAv:	TEST		EDI,2
+		JZ		.CIFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		DEC		EBX
+		STOSW
+		JZ		.CIFinSHLine
+.CIFPasStBAv:	TEST		EDI,4
+		JZ		.CIPasStDAv
+		CMP		EBX,1
+		JLE		.CIStBAp
+		SUB		ESI,BYTE 4
+		MOV		EAX,[ESI]
+		ROR		EAX,16 ; reverse word order
+		STOSD
+		SUB		EBX,BYTE 2
+.CIPasStDAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CIStDAp
+;ALIGN 4
+.CIStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		ROR		EAX,16
+		MOVD		mm1,EAX
+		MOV		EAX,[ESI+4]
+		ROR		EAX,16
+		DEC		ECX
+		MOVD		mm0,EAX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+		JNZ		.CIStoMMX
+
+		AND		EBX,BYTE 3
+		JZ		.CIFinSHLine
+.CIStDAp: 	TEST		EBX,2
+		JZ		.CIStBAp
+		SUB		ESI,BYTE 4
+		MOV		EAX,[ESI]
+		ROR		EAX,16
+		STOSD
+		SUB		EBX,BYTE 2
+.CIStBAp:	OR		EBX,EBX
+		JZ		.CIPasStBAp
+.CIBcStBAp:	SUB		ESI,BYTE 2
+		MOV		AX,[ESI]
+		STOSW
+.CIPasStBAp:
+.CIFinSHLine:
+		ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.CIBcPutSurf
+
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+
+; PUT masked Surf
+;*****************
+
+ALIGN 32
+_PutMaskSurf16:
+	ARG	MSSN16, 4, MXPSN16, 4, MYPSN16, 4, MPSType16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+		
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+MSSN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+		;MOV		ECX,16
+		;REP		MOVSD
+
+		MOV		EAX,[EBP+MXPSN16]
+		MOV		EBX,[EBP+MYPSN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+MPSType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             SHORT .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,EDX ; = [SResH]
+		TEST		BL,1  		; dword aligned ?
+		JZ		.FPasStWAv
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JZ		.PasPutW
+		MOV		[EDI],AX
+.PasPutW:	ADD		ESI,BYTE 2
+		LEA		EDI,[EDI+2]
+		DEC		EBX
+		JZ		.FinSHLine
+.FPasStWAv:
+		SHR		EBX,1
+.BcStMD:	MOV		EAX,[ESI]
+		SHLD		ECX,EAX,16
+		CMP		AX,[SMask]
+		JE		.PasPutW1
+		MOV		[EDI],AX
+.PasPutW1:	CMP		CX,[SMask]
+		JE		.PasPutW2
+		MOV		[EDI+2],CX
+.PasPutW2:
+		ADD		ESI,BYTE 4
+		DEC		EBX
+		LEA		EDI,[EDI+4]
+		JNZ		.BcStMD
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+		TEST		BL,1  		; dword aligned ?
+		JZ		.IFPasStWAv
+		SUB		ESI,BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JZ		.IPasPutW
+		MOV		[EDI],AX
+.IPasPutW:
+		DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.IFinSHLine
+.IFPasStWAv:
+		SHR		EBX,1
+.IBcStMD:	SUB		ESI,BYTE 4
+		MOV		EAX,[ESI]
+		SHLD		ECX,EAX,16
+		CMP		CX,[SMask]
+		JE		.IPasPutW1
+		MOV		[EDI],CX
+.IPasPutW1:
+		CMP		AX,[SMask]
+		JE		.IPasPutW2
+		MOV		[EDI+2],AX
+.IPasPutW2:
+		DEC		EBX
+		LEA		EDI,[EDI+4]
+		JNZ		.IBcStMD
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+		TEST		BL,1  		; dword aligned ?
+		JZ		.CFPasStWAv
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JZ		.CPasPutW
+		MOV		[EDI],AX
+.CPasPutW:	ADD		ESI,BYTE 2
+		LEA		EDI,[EDI+2]
+		DEC		EBX
+		JZ		.CFinSHLine
+.CFPasStWAv:
+		SHR		EBX,1
+.CBcStMD:	MOV		EAX,[ESI]
+		SHLD		ECX,EAX,16
+		CMP		AX,[SMask]
+		JE		.CPasPutW1
+		MOV		[EDI],AX
+.CPasPutW1:	CMP		CX,[SMask]
+		JE		.CPasPutW2
+		MOV		[EDI+2],CX
+.CPasPutW2:
+		ADD		ESI,BYTE 4
+		DEC		EBX
+		LEA		EDI,[EDI+4]
+		JNZ		.CBcStMD
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+		TEST		BL,1  		; dword aligned ?
+		JZ		.CIFPasStWAv
+		SUB		ESI,BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JZ		.CIPasPutW
+		MOV		[EDI],AX
+.CIPasPutW:
+		DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.CIFinSHLine
+.CIFPasStWAv:
+		SHR		EBX,1
+.CIBcStMD:
+		SUB		ESI,BYTE 4
+		MOV		EAX,[ESI]
+		SHLD		ECX,EAX,16
+		CMP		CX,[SMask]
+		JE		.CIPasPutW1
+		MOV		[EDI],CX
+.CIPasPutW1:	CMP		AX,[SMask]
+		JE		.CIPasPutW2
+		MOV		[EDI+2],AX
+.CIPasPutW2:
+		DEC		EBX
+		LEA		EDI,[EDI+4]
+		JNZ		.CIBcStMD
+.CIFinSHLine:
+		ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.CIBcPutSurf
+
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+
+
+
+
+; -------------------------------
+; Put a Surf blended with a color
+; -------------------------------
+ALIGN 32
+_PutSurfBlnd16:
+	ARG	SSBN16, 4, XPSBN16, 4, YPSBN16, 4, PSBType16, 4, PSBCol16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+SSBN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+
+; prepare col blending
+		MOV		EAX,[EBP+PSBCol16] ;
+		MOV		EBX,EAX ;
+		MOV		ECX,EAX ;
+		MOV		EDX,EAX ;
+		AND		EBX,[QBlue16Mask] ; EBX = Bclr16 | Bclr16
+		SHR		EAX,24
+		AND		ECX,[QGreen16Mask] ; ECX = Gclr16 | Gclr16
+		AND		AL,BlendMask ; remove any ineeded bits
+		AND		EDX,[QRed16Mask] ; EDX = Rclr16 | Rclr16
+		XOR		AL,BlendMask ; 31-blendsrc
+		MOV		DI,AX
+		SHL		EDI,16
+		OR		DI,AX
+		XOR		AL,BlendMask ; 31-blendsrc
+		INC		AL
+		SHR		DX,5 ; right shift red 5bits
+		IMUL		BX,AX
+		IMUL		CX,AX
+		IMUL		DX,AX
+		MOVD		mm3,EBX
+		MOVD		mm4,ECX
+		MOVD		mm5,EDX
+		PUNPCKLWD	mm3,mm3
+		PUNPCKLWD	mm4,mm4
+		PUNPCKLWD	mm5,mm5
+		PUNPCKLDQ	mm3,mm3
+		PUNPCKLDQ	mm4,mm4
+		MOVD		mm7,EDI
+		PUNPCKLDQ	mm5,mm5
+		PUNPCKLDQ	mm7,mm7
+
+		MOV		EAX,[EBP+XPSBN16]
+		MOV		EBX,[EBP+YPSBN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+PSBType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             SHORT .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,EDX ; = [SResH]
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.FinSHLine
+		JMP		SHORT .BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSHLine
+.BcStBAp:
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+.IBcStBAv:	TEST		EDI,6
+		JZ		.IFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JZ		.IFinSHLine
+		JMP		SHORT .IBcStBAv
+.IFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.IStBAp
+;ALIGN 4
+.IStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		DEC		ECX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm1,mm0
+		MOVQ		mm2,mm0
+		@SolidBlndQ
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+		JNZ		.IStoMMX
+.IStBAp:
+		AND		EBX,BYTE 3
+		JZ		.IFinSHLine
+.IBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		DEC		EBX
+		STOSW
+		JNZ		.IBcStBAp
+.IPasStBAp:
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+.CBcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.CFPasStBAv
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.CFinSHLine
+		JMP		SHORT .CBcStBAv
+.CFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CStBAp
+;ALIGN 4
+.CStoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.CStoMMX
+.CStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CFinSHLine
+.CBcStBAp:
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.CBcStBAp
+.CPasStBAp:
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+.CIBcStBAv:	TEST		EDI,6
+		JZ		.CIFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JZ		.CIFinSHLine
+		JMP		SHORT .CIBcStBAv
+.CIFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CIStBAp
+;ALIGN 4
+.CIStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		ROR		EAX,16
+		MOVD		mm1,EAX
+		MOV		EAX,[ESI+4]
+		ROR		EAX,16
+		MOVD		mm0,EAX
+		DEC		ECX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm1,mm0
+		MOVQ		mm2,mm0
+		@SolidBlndQ
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+		JNZ		.CIStoMMX
+.CIStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CIFinSHLine
+.CIBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		DEC		EBX
+		STOSW
+		JNZ		.CIBcStBAp
+.CIPasStBAp:
+.CIFinSHLine:	ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.CIBcPutSurf
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+ALIGN 32
+_SurfCopyBlnd16:
+	ARG	PDstSrfB, 4, PSrcSrfB, 4, SCBCol, 4
+		PUSH		EDI
+		PUSH	        ESI
+		PUSH		EBX
+
+; prepare col blending
+		MOV		EAX,[EBP+SCBCol] ;
+		MOV		EBX,EAX ;
+		MOV		ECX,EAX ;
+		MOV		EDX,EAX ;
+		AND		EBX,[QBlue16Mask] ; EBX = Bclr16 | Bclr16
+		SHR		EAX,24
+		AND		ECX,[QGreen16Mask] ; ECX = Gclr16 | Gclr16
+		AND		AL,BlendMask ; remove any ineeded bits
+		AND		EDX,[QRed16Mask] ; EDX = Rclr16 | Rclr16
+		XOR		AL,BlendMask ; 31-blendsrc
+		MOV		DI,AX
+		SHL		EDI,16
+		OR		DI,AX
+		XOR		AL,BlendMask ; 31-blendsrc
+		INC		AL
+		SHR		DX,5 ; right shift red 5bits
+		IMUL		BX,AX
+		IMUL		CX,AX
+		IMUL		DX,AX
+		MOVD		mm3,EBX
+		MOVD		mm4,ECX
+		MOVD		mm5,EDX
+		PUNPCKLWD	mm3,mm3
+		PUNPCKLWD	mm4,mm4
+		PUNPCKLWD	mm5,mm5
+		PUNPCKLDQ	mm3,mm3
+		PUNPCKLDQ	mm4,mm4
+		MOVD		mm7,EDI
+		PUNPCKLDQ	mm5,mm5
+		PUNPCKLDQ	mm7,mm7
+
+		MOV		ESI,[EBP+PSrcSrfB]
+		MOV		EDI,[EBP+PDstSrfB]
+		MOV		EBX,[ESI+_SizeSurf-_CurSurf]
+
+		MOV		EDI,[EDI+_rlfb-_CurSurf]
+		SHR		EBX,1
+		MOV		ESI,[ESI+_rlfb-_CurSurf]
+
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.FinSurfCopy
+		JMP		SHORT .BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSurfCopy
+.BcStBAp:
+		MOV		AX,[ESI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.BcStBAp
+.FinSurfCopy:
+		POP		EBX
+		POP		ESI
+		POP		EDI
+		RETURN
+
+; =======================================
+; Put a MASKED Surf blended with a color
+; =======================================
+ALIGN 32
+_PutMaskSurfBlnd16:
+	ARG	MSSBN16, 4, MXPSBN16, 4, MYPSBN16, 4, MPSBType16, 4, MPSBCol16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+MSSBN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+
+; prepare col blending
+		MOV		EAX,[EBP+MPSBCol16] ;
+		MOV		EBX,EAX ;
+		MOV		ECX,EAX ;
+		MOV		EDX,EAX ;
+		AND		EBX,[QBlue16Mask] ; EBX = Bclr16 | Bclr16
+		SHR		EAX,24
+		AND		ECX,[QGreen16Mask] ; ECX = Gclr16 | Gclr16
+		AND		AL,BlendMask ; remove any ineeded bits
+		AND		EDX,[QRed16Mask] ; EDX = Rclr16 | Rclr16
+		XOR		AL,BlendMask ; 31-blendsrc
+		MOV		DI,AX
+		SHL		EDI,16
+		OR		DI,AX
+		XOR		AL,BlendMask ; 31-blendsrc
+		INC		AL
+		SHR		DX,5 ; right shift red 5bits
+		IMUL		BX,AX
+		IMUL		CX,AX
+		IMUL		DX,AX
+		MOVD		mm3,EBX
+		MOVD		mm4,ECX
+		MOVD		mm5,EDX
+		PUNPCKLWD	mm3,mm3
+		PUNPCKLWD	mm4,mm4
+		PUNPCKLWD	mm5,mm5
+		PUNPCKLDQ	mm3,mm3
+		PUNPCKLDQ	mm4,mm4
+		MOVD		mm7,EDI
+		PUNPCKLDQ	mm5,mm5
+		PUNPCKLDQ	mm7,mm7
+
+		MOV		EAX,[EBP+MXPSBN16]
+		MOV		EBX,[EBP+MYPSBN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+MPSBType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             SHORT .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,[SResH]
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.MaskBAv
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskBAv:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JZ		.FinSHLine
+		JMP		SHORT .BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.MaskW1Sto
+		MOV		[EDI],AX
+.MaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.MaskW2Sto
+		MOV		[EDI+2],AX
+.MaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.MaskW3Sto
+		MOV		[EDI+4],AX
+.MaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.MaskW4Sto
+		MOV		[EDI+6],AX
+.MaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSHLine
+.BcStBAp:
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.MaskBAp
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+.IBcStBAv:	TEST		EDI,6
+		JZ		.IFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.IMaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.IMaskStBAv:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.IFinSHLine
+		JMP		SHORT .IBcStBAv
+.IFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.IStBAp
+;ALIGN 4
+.IStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm6,mm0
+		MOVQ		mm1,mm0
+		MOVQ		mm2,mm0
+		MOVD		EDX,mm6
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		PSRLQ		mm6,32
+		JE		.IMaskW1Sto
+		MOV		[EDI],AX
+.IMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.IMaskW2Sto
+		MOV		[EDI+2],AX
+.IMaskW2Sto:
+		MOVD		EDX,mm6
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.IMaskW3Sto
+		MOV		[EDI+4],AX
+.IMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.IMaskW4Sto
+		MOV		[EDI+6],AX
+.IMaskW4Sto:
+		DEC		ECX
+		LEA		EDI,[EDI+8]
+		JNZ		.IStoMMX
+.IStBAp:
+		AND		EBX,BYTE 3
+		JZ		.IFinSHLine
+.IBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.IMaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.IMaskStBAp:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JNZ		.IBcStBAp
+.IPasStBAp:
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+.CBcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.CFPasStBAv
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CMaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CMaskStBAv:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JZ		.CFinSHLine
+		JMP		SHORT .CBcStBAv
+.CFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CStBAp
+		PUSH		EDX
+;ALIGN 4
+.CStoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CMaskW1Sto
+		MOV		[EDI],AX
+.CMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.CMaskW2Sto
+		MOV		[EDI+2],AX
+.CMaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CMaskW3Sto
+		MOV		[EDI+4],AX
+.CMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.CMaskW4Sto
+		MOV		[EDI+6],AX
+.CMaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.CStoMMX
+		POP		EDX
+.CStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CFinSHLine
+.CBcStBAp:
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CMaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CMaskStBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.CBcStBAp
+.CPasStBAp:
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+.CIBcStBAv:	TEST		EDI,6
+		JZ		.CIFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CIMaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CIMaskStBAv:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.CIFinSHLine
+		JMP		SHORT .CIBcStBAv
+.CIFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CIStBAp
+		PUSH		EDX
+;ALIGN 4
+.CIStoMMX:	SUB		ESI,BYTE 8
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm6,mm0
+		MOVQ		mm1,mm0
+		MOVQ		mm2,mm0
+		MOVD		EDX,mm6
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		PSRLQ		mm6,32
+		JE		.CIMaskW1Sto
+		MOV		[EDI],AX
+.CIMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.CIMaskW2Sto
+		MOV		[EDI+2],AX
+.CIMaskW2Sto:
+		MOVD		EDX,mm6
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CIMaskW3Sto
+		MOV		[EDI+4],AX
+.CIMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.CIMaskW4Sto
+		MOV		[EDI+6],AX
+.CIMaskW4Sto:
+		DEC		ECX
+		LEA		EDI,[EDI+8]
+		JNZ		.CIStoMMX
+		POP		EDX
+.CIStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CIFinSHLine
+.CIBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CIMaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CIMaskStBAp:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JNZ		.CIBcStBAp
+.CIPasStBAp:
+.CIFinSHLine:	ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.CIBcPutSurf
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+ALIGN 32
+_SurfMaskCopyBlnd16:
+	ARG	PDstSrfMB, 4, PSrcSrfMB, 4, SCMBCol, 4
+		PUSH		EDI
+		PUSH	        ESI
+		PUSH		EBX
+
+; prepare col blending
+		MOV		EAX,[EBP+SCMBCol] ;
+		MOV		EBX,EAX ;
+		MOV		ECX,EAX ;
+		MOV		EDX,EAX ;
+		AND		EBX,[QBlue16Mask] ; EBX = Bclr16 | Bclr16
+		SHR		EAX,24
+		AND		ECX,[QGreen16Mask] ; ECX = Gclr16 | Gclr16
+		AND		AL,BlendMask ; remove any ineeded bits
+		AND		EDX,[QRed16Mask] ; EDX = Rclr16 | Rclr16
+		XOR		AL,BlendMask ; 31-blendsrc
+		MOV		DI,AX
+		SHL		EDI,16
+		OR		DI,AX
+		XOR		AL,BlendMask ; 31-blendsrc
+		INC		AL
+		SHR		DX,5 ; right shift red 5bits
+		IMUL		BX,AX
+		IMUL		CX,AX
+		IMUL		DX,AX
+		MOVD		mm3,EBX
+		MOVD		mm4,ECX
+		MOVD		mm5,EDX
+		PUNPCKLWD	mm3,mm3
+		PUNPCKLWD	mm4,mm4
+		PUNPCKLWD	mm5,mm5
+		PUNPCKLDQ	mm3,mm3
+		PUNPCKLDQ	mm4,mm4
+		MOVD		mm7,EDI
+		PUNPCKLDQ	mm5,mm5
+		PUNPCKLDQ	mm7,mm7
+
+		MOV		ESI,[EBP+PSrcSrfMB]
+		MOV		EDI,[EBP+PDstSrfMB]
+		MOV		EBX,[ESI+_SizeSurf-_CurSurf]
+		MOV		EBP,[ESI+_Mask-_CurSurf] ; EBP = src Surf Mask
+
+		MOV		EDI,[EDI+_rlfb-_CurSurf]
+		SHR		EBX,1
+		MOV		ESI,[ESI+_rlfb-_CurSurf]
+
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		CMP		AX,BP ; source Surf Mask
+		JE		.MaskBAv
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskBAv:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JZ		.FinSurfCopy
+		JMP		SHORT .BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm1,[ESI]
+		MOVQ		mm2,[ESI]
+		@SolidBlndQ
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,BP
+		JE		.MaskW1Sto
+		MOV		[EDI],AX
+.MaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,BP
+		PSRLQ		mm0,32
+		JE		.MaskW2Sto
+		MOV		[EDI+2],AX
+.MaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,BP
+		JE		.MaskW3Sto
+		MOV		[EDI+4],AX
+.MaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,BP
+		JE		.MaskW4Sto
+		MOV		[EDI+6],AX
+.MaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSurfCopy
+.BcStBAp:
+		MOV		AX,[ESI]
+		CMP		AX,BP
+		JE		.MaskBAp
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		@SolidBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSurfCopy:
+		POP		EBX
+		POP		ESI
+		POP		EDI
+		RETURN
+
+; -------------------------------
+; Put a Transparent Surf
+; -------------------------------
+%macro	@TransBlndQ 0
+		PAND		mm0,[QBlue16Mask]
+		PAND		mm3,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		PAND		mm4,[QGreen16Mask]
+		PAND		mm2,[QRed16Mask]
+		PAND		mm5,[QRed16Mask]
+		PMULLW		mm0,mm7 ; [blend_src]
+		PMULLW		mm3,mm6 ; [blend_dst]
+		PSRLW		mm2,5
+		PSRLW		mm5,5
+		PMULLW		mm4,mm6 ; [blend_dst]
+		PMULLW		mm1,mm7 ; [blend_src]
+		PMULLW		mm5,mm6 ; [blend_dst]
+		PMULLW		mm2,mm7 ; [blend_src]
+
+		PADDW		mm0,mm3
+		PADDW		mm1,mm4
+		PADDW		mm2,mm5
+		PSRLW		mm0,5
+		PSRLW		mm1,5
+		PAND		mm2,[QRed16Mask]
+		;PAND		mm0,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		POR		mm0,mm2
+		POR		mm0,mm1
+%endmacro
+
+ALIGN 32
+_PutSurfTrans16:
+	ARG	SSTN16, 4, XPSTN16, 4, YPSTN16, 4, PSTType16, 4, PSTrans16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+SSTN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+
+; prepare col blending
+		MOV		EAX,[EBP+PSTrans16] ;
+		AND		EAX,BYTE BlendMask
+		JZ		.PasPutSurf
+		MOV		EDX,EAX ;
+		INC		EAX
+
+		XOR		DL,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+
+		MOV		EAX,[EBP+XPSTN16]
+		MOV		EBX,[EBP+YPSTN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+PSTType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             SHORT .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,[SResH]
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.FinSHLine
+		JMP		.BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSHLine
+.BcStBAp:
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+.IBcStBAv:	TEST		EDI,6
+		JZ		.IFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JZ		.IFinSHLine
+		JMP		.IBcStBAv
+.IFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.IStBAp
+;ALIGN 4
+.IStoMMX:	SUB		ESI,BYTE 8
+		MOVQ		mm3,[EDI]
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		DEC		ECX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm4,mm3
+		MOVQ		mm1,mm0
+		MOVQ		mm5,mm3
+		MOVQ		mm2,mm0
+		@TransBlndQ
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+		JNZ		.IStoMMX
+.IStBAp:
+		AND		EBX,BYTE 3
+		JZ		.IFinSHLine
+.IBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JNZ		.IBcStBAp
+.IPasStBAp:
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+.CBcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.CFPasStBAv
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		DEC		EBX
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.CFinSHLine
+		JMP		.CBcStBAv
+.CFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CStBAp
+;ALIGN 4
+.CStoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.CStoMMX
+.CStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CFinSHLine
+.CBcStBAp:
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		DEC		EBX
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.CBcStBAp
+.CPasStBAp:
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+.CIBcStBAv:	TEST		EDI,6
+		JZ		.CIFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JZ		.CIFinSHLine
+		JMP		.CIBcStBAv
+.CIFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CIStBAp
+;ALIGN 4
+.CIStoMMX:	SUB		ESI,BYTE 8
+		MOVQ		mm3,[EDI]
+		MOV		EAX,[ESI]
+		ROR		EAX,16
+		MOVD		mm1,EAX
+		MOV		EAX,[ESI+4]
+		ROR		EAX,16
+		MOVD		mm0,EAX
+		DEC		ECX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm4,mm3
+		MOVQ		mm1,mm0
+		MOVQ		mm5,mm3
+		MOVQ		mm2,mm0
+		@TransBlndQ
+		MOVQ		[EDI],mm0
+		LEA		EDI,[EDI+8]
+		JNZ		.CIStoMMX
+.CIStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CIFinSHLine
+.CIBcStBAp:	SUB		ESI, BYTE 2
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		EBX
+		MOVD		EAX,mm0
+		STOSW
+		JNZ		.CIBcStBAp
+.CIPasStBAp:
+.CIFinSHLine:	ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.CIBcPutSurf
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+
+ALIGN 32
+_SurfCopyTrans16:
+	ARG	PDstSrfT, 4, PSrcSrfT, 4, SCTrans, 4
+		PUSH		EDI
+		PUSH		ESI
+		PUSH		EBX
+
+; prepare col blending
+		MOV		EAX,[EBP+SCTrans] ;
+		AND		EAX,BYTE BlendMask
+		JZ		.FinSurfCopy
+		MOV		EDX,EAX ;
+		INC		EAX
+
+		XOR		DL,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+
+		MOV		ESI,[EBP+PSrcSrfT]
+		MOV		EDI,[EBP+PDstSrfT]
+		MOV		EBX,[ESI+_SizeSurf-_CurSurf]
+
+		MOV		EDI,[EDI+_rlfb-_CurSurf]
+		SHR		EBX,1
+		MOV		ESI,[ESI+_rlfb-_CurSurf]
+
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.FinSurfCopy
+		JMP		.BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		DEC		ECX
+		MOVQ		[EDI],mm0
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSurfCopy
+.BcStBAp:
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		DEC		EBX
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSurfCopy:
+		POP		EBX
+		POP		ESI
+		POP		EDI
+		RETURN
+
+; -------------------------------
+; Put a Masked Transparent Surf
+; -------------------------------
+
+ALIGN 32
+_PutMaskSurfTrans16:
+	ARG	SMSTN16, 4, XPMSTN16, 4, YPMSTN16, 4, PMSTType16, 4, PMSTrans16, 4
+		PUSH		EBX
+		PUSH		EDI
+		PUSH		ESI
+
+		MOV		EAX,[_MinX]
+		MOV		EBX,[_MinY]
+		CMP		EAX,[_MaxX]
+		MOV		ESI,[EBP+SMSTN16]
+		JG		.PasPutSurf
+		CMP		EBX,[_MaxY]
+		MOV		EDI,Svlfb
+		JG		.PasPutSurf
+
+		CopySurf	; copy surf
+
+; prepare col blending
+		MOV		EAX,[EBP+PMSTrans16] ;
+		AND		EAX,BYTE BlendMask
+		JZ		.PasPutSurf
+		MOV		EDX,EAX ;
+		INC		EAX
+
+		XOR		DL,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+
+		MOV		EAX,[EBP+XPMSTN16]
+		MOV		EBX,[EBP+YPMSTN16]
+		MOV		ECX,EAX
+		MOV		EDX,EBX
+
+		MOV             ESI,[EBP+PMSTType16]
+		TEST            ESI,1
+		JZ              .NormHzPut
+		SUB             EAX,[SMinX]
+		SUB             ECX,[SMaxX]
+		JMP             SHORT .InvHzPut
+.NormHzPut:	ADD		EAX,[SMaxX] ; EAX = PutMaxX
+		ADD		ECX,[SMinX] ; ECX = PutMinX
+.InvHzPut:
+		TEST            ESI,2
+		JZ              .NormVtPut
+		SUB             EBX,[SMinY]
+		SUB             EDX,[SMaxY]
+		JMP             .InvVtPut
+.NormVtPut:	ADD		EBX,[SMaxY] ; EBX = PutMaxY
+		ADD		EDX,[SMinY] ; EDX = PutMinY
+.InvVtPut:
+		CMP		EAX,[_MaxX]
+		JG		.PutSurfClip
+		CMP		EBX,[_MaxY]
+		JG		.PutSurfClip
+		CMP		ECX,[_MinX]
+		JL		.PutSurfClip
+		CMP		EDX,[_MinY]
+		JL		.PutSurfClip
+; PutSurf non Clipper *****************************
+		MOV		[PType],ESI
+		MOV		EBP,[SResV]
+		TEST		ESI,2 ; vertically reversed ?
+		JZ		.NormAdSPut
+		MOV		ESI,[Srlfb]
+		MOV		EAX,[SScanLine]
+		ADD		ESI,[SSizeSurf] ; ESI start of the last line in the surf
+		SUB		ESI,EAX
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .InvAdSPut
+.NormAdSPut:
+		XOR		EAX,EAX
+		MOV		ESI,[Srlfb] ; ESI : start copy adress
+.InvAdSPut:
+		MOV		EDI,EBX ; PutMaxY or the top left corner
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		MOV		EDX,[_ScanLine]
+		ADD		EDI,[_vlfb]
+		SUB		EDX,[SScanLine] ; EDX : dest adress plus
+		MOV		[Plus2],EDX
+
+		TEST		BYTE [PType],1
+		MOV		EDX,[SResH]
+                JNZ             .InvHzPSurf
+		MOV		[Plus],EAX
+                
+.BcPutSurf:	MOV		EBX,[SResH]
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		CMP		AX,[SMask]
+		JE		.MaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskStBAv:
+		DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JZ		.FinSHLine
+		JMP		.BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.MaskW1Sto
+		MOV		[EDI],AX
+.MaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.MaskW2Sto
+		MOV		[EDI+2],AX
+.MaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.MaskW3Sto
+		MOV		[EDI+4],AX
+.MaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.MaskW4Sto
+		MOV		[EDI+6],AX
+.MaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSHLine
+.BcStBAp:
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		CMP		AX,[SMask]
+		JE		.MaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskStBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.BcPutSurf
+
+		JMP		.PasPutSurf
+
+; Put surf unclipped reversed horizontally *************
+.InvHzPSurf:
+		LEA		EAX,[EAX+EDX*4] ; +=SScanLine*2
+		LEA		ESI,[ESI+EDX*2] ; +=SScanLine
+		MOV		[Plus],EAX
+		
+.IBcPutSurf:	MOV		EBX,[SResH]
+.IBcStBAv:	TEST		EDI,6
+		JZ		.IFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		DX,[EDI]
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.IMaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.IMaskStBAv:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.IFinSHLine
+		JMP		.IBcStBAv
+.IFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.IStBAp
+;ALIGN 4
+.IStoMMX:	SUB		ESI,BYTE 8
+		MOVQ		mm3,[EDI]
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm4,mm3
+		MOVQ		mm1,mm0
+		MOVQ		mm5,mm3
+		MOVQ		mm2,mm0
+		@TransBlndQ
+		MOVD		mm1,EAX
+		CMP		DX,[SMask]
+		MOVD		EAX,mm0
+		JE		.IMaskW1Sto
+		MOV		[EDI],AX
+.IMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.IMaskW2Sto
+		MOV		[EDI+2],AX
+.IMaskW2Sto:
+		MOVD		EDX,mm1
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.IMaskW3Sto
+		MOV		[EDI+4],AX
+.IMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.IMaskW4Sto
+		MOV		[EDI+6],AX
+.IMaskW4Sto:
+		DEC		ECX
+		LEA		EDI,[EDI+8]
+		JNZ		.IStoMMX
+.IStBAp:
+		AND		EBX,BYTE 3
+		JZ		.IFinSHLine
+.IBcStBAp:	SUB		ESI, BYTE 2
+		MOV		DX,[EDI]
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.IMaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.IMaskStBAp:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JNZ		.IBcStBAp
+.IPasStBAp:
+.IFinSHLine:	ADD		EDI,[Plus2]
+		ADD		ESI,[Plus]
+		DEC		EBP
+		JNZ		.IBcPutSurf
+
+		JMP		.PasPutSurf
+
+.PutSurfClip:	CMP		EAX,[_MinX]
+		JL		.PasPutSurf
+		CMP		EBX,[_MinY]
+		JL		.PasPutSurf
+		CMP		ECX,[_MaxX]
+		JG		.PasPutSurf
+		CMP		EDX,[_MaxY]
+		JG		.PasPutSurf
+; PutSurf Clipper **********************************************
+		MOV		[PType],ESI ; sauvegarde le type
+		XOR		EDI,EDI   ; Y Fin Source
+		XOR		ESI,ESI   ; X deb Source
+
+		MOV		EBP,[_MinX]
+		CMP		ECX,EBP ; CMP minx, _MinX
+		JGE		.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+		JNZ		.InvHzCalcDX
+		MOV		ESI,EBP
+		;MOV		[XP1],EBP    ; XP1 = _MinX
+		SUB		ESI,ECX	; ESI = _MinX - XP2
+.InvHzCalcDX:
+		MOV		ECX,EBP
+.PsInfMinX:	MOV		EBP,[_MaxY]
+		CMP		EBX,EBP ; cmp maxy, _MaxY
+		JLE		.PsSupMaxY   ; YP2>_MaxY
+		MOV		EDI,EBP
+		NEG		EDI
+		;MOV		[YP2],EBP
+		ADD		EDI,EBX
+		MOV		EBX,EBP
+.PsSupMaxY:	MOV		EBP,[_MinY]
+		CMP		EDX,EBP      ; YP1<_MinY
+		JGE		.PsInfMinY
+		MOV		EDX,EBP
+.PsInfMinY:   	MOV		EBP,[_MaxX]
+		CMP		EAX,EBP      ; XP2>_MaxX
+		JLE		.PsSupMaxX
+                TEST		BYTE [PType],1
+                JZ		.PsInvHzCalcDX
+		MOV		ESI,EAX
+		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+.PsInvHzCalcDX:
+		MOV		EAX,EBP
+.PsSupMaxX:
+		SUB		EAX,ECX      ; XP2 - XP1
+		MOV		EBP,[SScanLine]
+		LEA		EAX,[EAX*2+2]
+		SUB		EBP,EAX  ; EBP = SResH-DeltaX, PlusSSurf
+		MOV		[Plus],EBP
+		MOV		EBP,EBX
+		SUB		EBP,EDX      ; YP2 - YP1
+		INC		EBP   ; EBP = DeltaY
+		MOV		EDX,[_ScanLine]
+		MOVD		mm0,EAX ; = DeltaX
+		SUB		EDX,EAX ; EDX = _ResH-DeltaX, PlusDSurfS
+		TEST		BYTE [PType],2
+		MOV		[Plus2],EDX
+		JZ		.CNormAdSPut
+		MOV		EAX,[Srlfb] ; Si inverse vertical
+		ADD		EAX,[SSizeSurf] ; go to the last buffer
+		SUB		EAX,[SScanLine] ; jump to the first of the last line
+		LEA		EAX,[EAX+ESI*2] ; +X1InSSurf*2 clipping
+		IMUL		EDI,[SScanLine] ; Y1InSSurf*ScanLine
+                SUB		EAX,EDI
+		MOV		ESI,EAX
+
+		MOV		EAX,[SScanLine]
+		ADD		EAX,EAX
+		NEG		EAX
+		JMP		SHORT .CInvAdSPut
+.CNormAdSPut:
+		IMUL		EDI,[SScanLine]
+		XOR		EAX,EAX
+		LEA		EDI,[EDI+ESI*2]
+		ADD		EDI,[Srlfb]
+		MOV		ESI,EDI
+.CInvAdSPut:
+		MOV		EDI,EBX
+		IMUL		EDI,[_ScanLine]
+		NEG		EDI
+		LEA		EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
+		PSRLD		mm0,1 ; (deltaX*2) / 2
+		ADD		EDI,[_vlfb]
+
+		MOVD		EDX,mm0  ; DeltaX
+		TEST		BYTE [PType],1
+                JNZ             .CInvHzPSurf
+		ADD		[Plus],EAX
+.CBcPutSurf:	MOV		EBX,EDX
+		PUSH		EDX
+.CBcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.CFPasStBAv
+		MOV		AX,[ESI]
+		MOVD		mm0,EAX
+		DEC		EBX
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		LEA		ESI,[ESI+2]
+		STOSW
+		JZ		.CFinSHLine
+		JMP		.CBcStBAv
+.CFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CStBAp
+;ALIGN 4
+.CStoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CMaskW1Sto
+		MOV		[EDI],AX
+.CMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.CMaskW2Sto
+		MOV		[EDI+2],AX
+.CMaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CMaskW3Sto
+		MOV		[EDI+4],AX
+.CMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.CMaskW4Sto
+		MOV		[EDI+6],AX
+.CMaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.CStoMMX
+.CStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CFinSHLine
+.CBcStBAp:
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		MOVD		mm0,EAX
+		JE		.CMaskStBAp
+		MOV		AX,[EDI]
+		MOVD		mm3,EAX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CMaskStBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.CBcStBAp
+.CPasStBAp:
+.CFinSHLine:
+		ADD		ESI,[Plus] ; += PlusSSurf + nextLinePlus
+		ADD		EDI,[Plus2] ; += PlusDSurf
+		POP		EDX
+		DEC		EBP
+		JNZ		.CBcPutSurf
+		JMP		.PasPutSurf
+                
+.CInvHzPSurf:   ; clipper et inverser horizontalement
+
+		ADD		EAX,[SScanLine]
+		LEA		EAX,[EAX+EDX*2] ; add to jump to the end
+		LEA		ESI,[ESI+EDX*2] ; jump to the end
+		MOV		[Plus],EAX
+.CIBcPutSurf:	MOV		EBX,EDX
+		PUSH		EDX
+.CIBcStBAv:	TEST		EDI,6
+		JZ		.CIFPasStBAv
+		SUB		ESI, BYTE 2
+		MOV		DX,[EDI]
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CIMaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CIMaskStBAv:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JZ		.CIFinSHLine
+		JMP		.CIBcStBAv
+.CIFPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.CIStBAp
+;ALIGN 4
+.CIStoMMX:	SUB		ESI,BYTE 8
+		MOVQ		mm3,[EDI]
+		MOV		EAX,[ESI]
+		MOV		EDX,[ESI+4]
+		ROR		EAX,16
+		ROR		EDX,16
+		MOVD		mm1,EAX
+		MOVD		mm0,EDX
+		PUNPCKLDQ	mm0,mm1
+		MOVQ		mm4,mm3
+		MOVQ		mm1,mm0
+		MOVQ		mm5,mm3
+		MOVQ		mm2,mm0
+		@TransBlndQ
+		MOVD		mm1,EAX
+		CMP		DX,[SMask]
+		MOVD		EAX,mm0
+		JE		.CIMaskW1Sto
+		MOV		[EDI],AX
+.CIMaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		PSRLQ		mm0,32
+		JE		.CIMaskW2Sto
+		MOV		[EDI+2],AX
+.CIMaskW2Sto:
+		MOVD		EDX,mm1
+		MOVD		EAX,mm0
+		CMP		DX,[SMask]
+		JE		.CIMaskW3Sto
+		MOV		[EDI+4],AX
+.CIMaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,[SMask]
+		JE		.CIMaskW4Sto
+		MOV		[EDI+6],AX
+.CIMaskW4Sto:
+		DEC		ECX
+		LEA		EDI,[EDI+8]
+		JNZ		.CIStoMMX
+.CIStBAp:
+		AND		EBX,BYTE 3
+		JZ		.CIFinSHLine
+.CIBcStBAp:	SUB		ESI, BYTE 2
+		MOV		DX,[EDI]
+		MOV		AX,[ESI]
+		CMP		AX,[SMask]
+		JE		.CIMaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.CIMaskStBAp:	DEC		EBX
+		LEA		EDI,[EDI+2]
+		JNZ		.CIBcStBAp
+.CIPasStBAp:
+.CIFinSHLine:	ADD		EDI,[Plus2]; ; += PlusDSurf , ECX
+		ADD		ESI,[Plus]
+		DEC		EBP
+		POP		EDX
+		JNZ		.CIBcPutSurf
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+		RETURN
+
+ALIGN 32
+_SurfMaskCopyTrans16:
+	ARG	PDstSrfMT, 4, PSrcSrfMT, 4, SCMTrans, 4
+		PUSH		EDI
+		PUSH		ESI
+		PUSH		EBX
+
+; prepare col blending
+		MOV		EAX,[EBP+SCMTrans] ;
+		AND		EAX,BYTE BlendMask
+		JZ		.FinSurfCopy
+		MOV		EDX,EAX ;
+		INC		EAX
+
+		XOR		DL,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+
+		MOV		ESI,[EBP+PSrcSrfMT]
+		MOV		EDI,[EBP+PDstSrfMT]
+		MOV		EBX,[ESI+_SizeSurf-_CurSurf]
+		MOV		EBP,[ESI+_Mask-_CurSurf]
+
+		MOV		EDI,[EDI+_rlfb-_CurSurf]
+		SHR		EBX,1
+		MOV		ESI,[ESI+_rlfb-_CurSurf]
+
+.BcStBAv:	TEST		EDI,6  		; dword aligned ?
+		JZ		.FPasStBAv
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		CMP		AX,BP
+		JE		.MaskStBAv
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskStBAv:
+		DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JZ		.FinSurfCopy
+		JMP		.BcStBAv
+.FPasStBAv:	MOV		ECX,EBX
+		SHR		ECX,2
+		JZ		.StBAp
+;ALIGN 4
+.StoMMX:	MOVQ		mm0,[ESI]
+		MOVQ		mm3,[EDI]
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+
+		MOV		EDX,[ESI]
+		MOVD		EAX,mm0
+		CMP		DX,BP
+		JE		.MaskW1Sto
+		MOV		[EDI],AX
+.MaskW1Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,BP
+		PSRLQ		mm0,32
+		JE		.MaskW2Sto
+		MOV		[EDI+2],AX
+.MaskW2Sto:
+		MOV		EDX,[ESI+4]
+		MOVD		EAX,mm0
+		CMP		DX,BP
+		JE		.MaskW3Sto
+		MOV		[EDI+4],AX
+.MaskW3Sto:
+		SHR		EDX,16
+		SHR		EAX,16
+		CMP		DX,BP
+		JE		.MaskW4Sto
+		MOV		[EDI+6],AX
+.MaskW4Sto:
+		DEC		ECX
+		LEA		ESI,[ESI+8]
+		LEA		EDI,[EDI+8]
+		JNZ		.StoMMX
+.StBAp:
+		AND		EBX,BYTE 3
+		JZ		.FinSurfCopy
+.BcStBAp:
+		MOV		AX,[ESI]
+		MOV		DX,[EDI]
+		CMP		AX,BP
+		JE		.MaskStBAp
+		MOVD		mm0,EAX
+		MOVD		mm3,EDX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV		[EDI],AX
+.MaskStBAp:	DEC		EBX
+		LEA		ESI,[ESI+2]
+		LEA		EDI,[EDI+2]
+		JNZ		.BcStBAp
+.PasStBAp:
+.FinSurfCopy:
+		POP		EBX
+		POP		ESI
+		POP		EDI
+		RETURN
+

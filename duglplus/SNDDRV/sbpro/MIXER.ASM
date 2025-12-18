@@ -1,0 +1,479 @@
+
+AddVoice:
+	ARG	PtrAddVoice, 4, VcEff, 4, VcStt, 4, VcPckPtr, 4, AddVcPos, 4
+		PUSH		EBX
+		PUSH		ESI
+		PUSH		EDI
+
+		MOV		EDX,[EBP+PtrAddVoice]
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.FreeNtFnd  ; voix existe deja => erreur
+		
+		CALL		GetBaseAddress
+		MOV		EDX,[EBP+PtrAddVoice]
+		OR		EDX,EDX
+		JZ		.FreeNtFnd
+		
+		LEA		EDI,[EDX+Voice.Effect]
+		XOR		EAX,EAX
+		MOV		ECX,19
+		REP		STOSD
+
+		MOV		ECX,[EBX+MaxNbVoice]
+		LEA		ESI,[EBX+VoicePtr]
+.BcSrchFree:	LODSD
+		OR		EAX,EAX
+		JZ		.FreeFnd
+		DEC		ECX
+		JNZ		.BcSrchFree
+.FreeNtFnd:	XOR		EAX,EAX
+		JMP		SHORT .End
+.FreeFnd:	; Ajoute le Voix --------------------------------------------
+		MOV		EAX,[EBP+VcStt]
+		CLI
+		MOV		[ESI-4],EDX
+		MOV		[EDX+Voice.VcSTATE],EAX
+		MOV		ECX,[EBP+VcEff]
+		OR		ECX,ECX
+		JZ		.VcNoEff
+		MOV		[EDX+Voice.Effect],ECX
+		MOV		ESI,[EBP+VcPckPtr]
+
+		TEST		ECX,ChgSpeed
+		JZ		.PasEffChgSpeed
+		MOV		EAX,[ESI+VoicePack.Speed]
+		AND		EAX,SpeedMask
+		MOV		[EDX+Voice.Speed],EAX
+.PasEffChgSpeed:
+		TEST		ECX,ChgVol
+		JZ		.PasEffChgVol
+		MOV		EAX,[ESI+VoicePack.LeftVol]
+		MOV		EDX,[ESI+VoicePack.RightVol]
+		AND		EAX,VolMask
+		AND		EDX,VolMask
+		MOV		[EDX+Voice.LeftVol],EAX
+		MOV		[EDX+Voice.RightVol],EDX
+.PasEffChgVol:
+.VcNoEff:
+		MOV		EAX,[EBP+AddVcPos]
+		OR		EAX,EAX
+		JZ		.PosZero
+		MOV		EDI,[EDX+Voice.Size]
+		CMP		EAX,EDI
+		JAE		.PosZero
+		CALL		GetBaseAddress
+		MOV		EDI,EDX
+		MOV		ECX,[EDI+Voice.Type]
+		XOR		EDX,EDX
+		MOV		ECX,[EBX+ECX*4+SizeEchant]
+		DIV		ECX
+		MUL		ECX
+		MOV		[EDI+Voice.Pos],EAX
+		JMP		SHORT .PasPosZero
+.PosZero:	XOR		EAX,EAX
+		MOV		[EDX+Voice.Pos],EAX
+.PasPosZero:
+		STI
+		OR		EAX,BYTE -1
+.End:
+		POP		EDI
+		POP		ESI
+		POP		EBX
+		RETURN
+
+PrepVoice:
+	ARG	PrepPtrVoice, 4
+
+		MOV		EDX,[EBP+PrepPtrVoice]
+		MOV		EAX,EDX
+		CALL		PrcLockVoice   ; Lock Voice
+		OR		EAX,EAX
+		JNZ		.Error ; Erreur
+		MOV		EAX,EDX
+		CALL		PrcLockVoiceData   ; Lock Voice Data
+		OR		EAX,EAX
+		JZ		.OkVcLocked ; PasErreur
+		MOV		EAX,EDX
+		CALL		PrcUnlockVoice   ; unlock Voice
+		JMP		SHORT .Error	; Erreur
+.OkVcLocked:	OR		EAX,BYTE -1
+		JMP		SHORT .Fin
+.Error:		XOR		EAX,EAX
+.Fin:
+		RETURN
+
+UnprepVoice:
+	ARG	UnprepPtrVoice, 4
+
+		MOV		EDX,[EBP+PrepPtrVoice]
+		MOV		EAX,EDX
+		CALL		PrcUnlockVoice   ; Lock Voice
+		MOV		EAX,EDX
+		CALL		PrcUnlockVoiceData   ; Lock Voice Data
+
+		RETURN
+
+;----------------------------------------------------------------------
+		
+GetVoicePos:
+	ARG	GVcPos, 4, PtVrGtVcPos, 4
+		MOV		EDX,[EBP+GVcPos]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+.VcFnd:
+
+                PUSH            EBX
+		CALL		GetBaseAddress
+		MOV		EAX,[EDX+Voice.Pos]
+		MOV		EDX,[EBP+PtVrGtVcPos]
+		MOV		[EDX],EAX
+		OR		EAX,BYTE -1
+                POP             EBX
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+		RETURN
+		
+
+SetVoicePos:
+	ARG	SVcPos, 4, StVrVcPos, 4
+		PUSH		EDI
+		PUSH		EBX
+
+		MOV		EDX,[EBP+SVcPos]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+.VcFnd:
+		MOV		EAX,[EBP+StVrVcPos]
+		CMP		EAX,[EDX+Voice.Size]
+		JAE		.VcNtFnd
+		CALL		GetBaseAddress
+		MOV		EDI,EDX
+		MOV		ECX,[EDI+Voice.Type]
+		XOR		EDX,EDX
+		MOV		ECX,[EBX+ECX*4+SizeEchant]
+		DIV		ECX
+		XOR		EBX,EBX
+		MUL		ECX
+		MOV		[EDI+Voice.Pos],EAX
+		MOV		[EDI+Voice.RestCoeff],EBX
+		OR		EAX,BYTE -1
+
+		
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+		POP		EBX
+		POP		EDI
+		RETURN
+		
+
+;----------------------------------------------------------------------
+		
+GetVoiceState:
+	ARG	GVcStt, 4, PtVrGtVcStt, 4
+		
+		MOV		EDX,[EBP+GVcStt]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+.VcFnd:		MOV		EAX,[EDX+Voice.VcSTATE]
+		MOV		EDX,[EBP+PtVrGtVcStt]
+		MOV		[EDX],EAX
+		OR		EAX,BYTE -1
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+		RETURN
+		
+
+SetVoiceState:
+	ARG	SVcStt, 4, StStt, 4
+	
+		MOV		EDX,[EBP+GVcStt]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+		
+.VcFnd:		MOV		EAX,[EBP+StStt]
+		MOV		[EDX+Voice.VcSTATE],EAX
+		OR		EAX,BYTE -1
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+		RETURN
+
+GetVoiceEffPack:
+	ARG	GVcEPck, 4, PtrVrGEff, 4, PtrGtVcPck, 4
+		PUSH		EBX
+		PUSH		ESI
+		PUSH		EDI
+
+		MOV		EDX,[EBP+GVcEPck]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+		
+.VcFnd:		MOV		ECX,[EDX+Voice.Effect]
+		MOV		ESI,[EBP+PtrGtVcPck]
+		MOV		EDI,[EBP+PtrVrGEff]
+		MOV		[EDI],ECX
+		
+		OR		ECX,ECX
+		JZ		.VcNoEff
+
+		TEST		ECX,ChgSpeed
+		JZ		.PasEffChgSpeed
+		MOV		EAX,[EDX+Voice.Speed]
+		MOV		[ESI+VoicePack.Speed],EAX
+.PasEffChgSpeed:
+		TEST		ECX,ChgVol
+		JZ		.PasEffChgVol
+		MOV		EAX,[EDX+Voice.LeftVol]
+		MOV		EDI,[EDX+Voice.RightVol]
+		MOV		[ESI+VoicePack.LeftVol],EAX
+		MOV		[ESI+VoicePack.RightVol],EDI
+.PasEffChgVol:
+.VcNoEff:
+		OR		EAX,BYTE -1
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+
+		POP		EDI
+		POP		ESI
+		POP		EBX
+		RETURN
+		
+SetVoiceEffPack:
+	ARG	SVcEPck, 4, StEffPck, 4, PtrStVcPck, 4
+		PUSH		EBX
+		PUSH		ESI
+		PUSH		EDI
+	
+		MOV		EDX,[EBP+SVcEPck]
+		CLI
+		CALL		SearchVoiceIn
+		OR		EAX,EAX
+		JZ		.VcFnd
+		JMP		SHORT .VcNtFnd
+		
+.VcFnd:
+		MOV		ECX,[EBP+StEffPck]
+		MOV		[EDX+Voice.Effect],ECX
+		MOV		ESI,[EBP+PtrStVcPck]
+		
+		OR		ECX,ECX
+		JZ		.VcNoEff
+
+		TEST		ECX,ChgSpeed
+		JZ		.PasEffChgSpeed
+		MOV		EAX,[ESI+VoicePack.Speed]
+		XOR		EDI,EDI
+		AND		EAX,SpeedMask
+		MOV		[EDX+Voice.Speed],EAX
+		MOV		[EDX+Voice.RestCoeff],EDI
+.PasEffChgSpeed:
+		TEST		ECX,ChgVol
+		JZ		.PasEffChgVol
+		MOV		EAX,[ESI+VoicePack.LeftVol]
+		MOV		EDI,[ESI+VoicePack.RightVol]
+		AND		EAX,VolMask
+		AND		EDI,VolMask
+		MOV		[EDX+Voice.LeftVol],EAX
+		MOV		[EDX+Voice.RightVol],EDI
+.PasEffChgVol:
+.VcNoEff:
+
+		OR		EAX,BYTE -1
+		JMP		SHORT .Ok
+.VcNtFnd:	XOR		EAX,EAX
+.Ok:		STI
+
+		POP		EDI
+		POP		ESI
+		POP		EBX
+		RETURN
+
+DeleteVoice:
+	ARG	PtrDelVc, 4
+		PUSH		EBX
+		PUSH		ESI
+
+		CALL		GetBaseAddress
+		MOV		ECX,[EBX+MaxNbVoice]
+		LEA		ESI,[EBX+VoicePtr]
+		MOV		EDX,[EBP+PtrDelVc]
+.BcSrchVc:	LODSD
+		CMP		EDX,EAX
+		JE		.VcFnd
+		DEC		ECX
+		JNZ		.BcSrchVc
+		JMP		SHORT .Error
+.VcFnd:		XOR		EAX,EAX
+		MOV		[ESI-4],EAX
+		OR		EAX,BYTE -1
+		JMP		SHORT .Ok
+.Error:		XOR		EAX,EAX
+.Ok:
+		POP		ESI
+		POP		EBX
+		RETURN
+
+DeleteAllVoice:
+		PUSH		EDI
+		PUSH		EBX
+
+		CALL		GetBaseAddress
+		MOV		ECX,32
+		LEA		EDI,[EBX+VoicePtr]
+		XOR		EAX,EAX
+		REP		STOSD
+
+		POP		EBX
+		POP		EDI
+		RET
+		
+GetNbVoice:
+		PUSH		ESI
+		PUSH		EBX
+
+		CALL		GetBaseAddress
+		MOV		ECX,[EBX+MaxNbVoice]
+		LEA		ESI,[EBX+VoicePtr]
+		XOR		EDX,EDX
+.BcCmptVc:	LODSD
+		OR		EAX,EAX
+		JZ		.VcNtActv
+		INC		EDX
+.VcNtActv:	DEC		ECX
+		JNZ		.BcCmptVc
+		MOV		EAX,EDX
+
+		POP		EBX
+		POP		ESI
+		RET
+
+;IN EDX Ptr Vc -----------------
+;OUT EAX= 0 Ok sinon introuvable
+SearchVoiceIn:
+		PUSH		ECX
+		PUSH		ESI
+		PUSH		EBX
+
+		CALL		GetBaseAddress
+		MOV		ECX,[EBX+MaxNbVoice]
+		LEA		ESI,[EBX+VoicePtr]
+.BcSrchVc:	LODSD
+		CMP		EDX,EAX
+		JE		.VcFnd
+		DEC		ECX
+		JNZ		.BcSrchVc
+		JMP		SHORT .Error
+.VcFnd:		XOR		EAX,EAX
+		JMP		SHORT .Ok
+.Error:		OR		EAX,BYTE -1
+.Ok:
+		POP		EBX
+		POP		ESI
+		POP		ECX
+		RET
+
+
+;******* Lock & Unlock Vc&Vc DATA ******************************************
+; EAX Ptr Voice
+PrcLockVoice:
+		PUSHAD
+
+		CALL		GetBaseAddress
+		MOV		ECX,EAX     ; LOW WORD LAddr
+		ADD		ECX,[EBX+DSBaseAddress]
+		MOV		EBX,ECX     ; HIGH WORD LAddr
+		SHR		EBX,16
+		MOV		EDI,(Voice.Fin)
+		MOV		ESI,(Voice.Fin)>>16
+		MOV		AX,0x600
+		INT		0x31
+		JC		.Error
+		POPAD
+		XOR		EAX,EAX
+		JMP		SHORT .Fin
+.Error: 	POPAD
+		OR		EAX,BYTE -1
+.Fin:
+
+		RET
+		
+; EAX Ptr Voice
+PrcUnlockVoice:
+		PUSHAD
+
+		CALL		GetBaseAddress
+		MOV		ECX,EAX     ; LOW WORD LAddr
+		ADD		ECX,[EBX+DSBaseAddress]
+		MOV		EBX,ECX     ; HIGH WORD LAddr
+		SHR		EBX,16
+		MOV		EDI,(Voice.Fin)
+		MOV		ESI,(Voice.Fin)>>16
+		MOV		AX,0x601
+		INT		0x31
+
+		POPAD
+		RET
+	
+; EAX Ptr Voice
+PrcLockVoiceData:
+		PUSHAD
+
+		CALL		GetBaseAddress
+		MOV		ECX,[EAX+Voice.Ptr]     ; LOW WORD LAddr
+		OR		ECX,ECX
+		JZ		.Error
+		ADD		ECX,[EBX+DSBaseAddress]
+		MOV		EBX,ECX     ; HIGH WORD LAddr
+		SHR		EBX,16
+		MOV		EDI,[EAX+Voice.Size]
+		MOV		ESI,[EAX+Voice.Size]
+		SHR		ESI,16
+		MOV		AX,0x600
+		INT		0x31
+		JC		.Error
+		POPAD
+		XOR		EAX,EAX
+		JMP		SHORT .Fin
+.Error: 	POPAD
+		OR		EAX,BYTE -1
+.Fin:
+		RET
+		
+; EAX Ptr Voice
+PrcUnlockVoiceData:
+		PUSHAD
+
+		CALL		GetBaseAddress
+		MOV		ECX,[EAX+Voice.Ptr]     ; LOW WORD LAddr
+		ADD		ECX,[EBX+DSBaseAddress]
+		MOV		EBX,ECX     ; HIGH WORD LAddr
+		SHR		EBX,16
+		MOV		EDI,[EAX+Voice.Size]
+		MOV		ESI,[EAX+Voice.Size]
+		SHR		ESI,16
+		MOV		AX,0x601
+		INT		0x31
+
+		POPAD
+		RET
+

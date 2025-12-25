@@ -8,7 +8,7 @@
 		LEA		EAX,[EAX+EBX-1] ; maxy - 1
 		MOV		[MEndYPoly],ECX
 		MOV		[MDebYPoly],EAX ; save deb and end y
-		
+
 		MOV		EAX,[MVectColPlus]
 		MOV		ECX,[MVectYPlus]
 		MOVD		mm0,[EDI+EAX] ; V1.col
@@ -32,7 +32,7 @@
 		JE		%%DownTri
 		CMP		[ESI+ECX],EBX ; v2.y == maxy ? => down tri
 		JE		%%DownTri
-		
+
 		CMP		[EBP+ECX],EDX ; v3.y != miny ? => right tri
 		JNE		%%RightTri
 		CMP		[ESI+ECX],EDX ; v2.y != miny ? => left tri
@@ -42,7 +42,7 @@
 		; case    ^   ~~~~~~~~~~~
 		;        / \
 		;        ---
-		
+
 		MOV		ECX,[MVectXPlus]
 		MOV		EAX,[EDI+ECX] ; v1.x
 		MOV		EDI,[ESI+ECX] ; V2.x
@@ -94,7 +94,7 @@ ALIGN 4
 		; case  ----    ~~~~~~~~~~~
 		;       \  /
 		;        \/
-		
+
 		CMP		EDX,[ESI+ECX] ; miny = v2.y ?
 		JE		SHORT %%Vertex2Down
 %%Vertex3Down:	XCHG		EBP,EDI
@@ -138,7 +138,7 @@ ALIGN 4
 		; case   |\    ~~~~~~~~~~~
 		;        | \
 		;        | /
-		;	 |/
+		;	     |/
 
 		MOV		EAX,[EBP+ECX] ; v3.y
 		MOV		[MYP3],EAX
@@ -215,7 +215,7 @@ ALIGN 4
 		; case   /|    ~~~~~~~~~~~
 		;       / |
 		;       \ |
-		;	 \|
+		;	     \|
 
 		MOV		EAX,[ESI+ECX] ; v2.y
 		MOV		[MYP2],EAX
@@ -271,7 +271,7 @@ ALIGN 4
 		DEC		EBX
 		LEA		EDX,[EDX+EBP] ; += MScanLine or -= MScanLine
 		JNZ		SHORT %%BcFillLftTri
-		
+
 		MOVD		EBX,mm1
 		MOV		EAX,[MXP3]
 		OR		EBX,EBX

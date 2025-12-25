@@ -21,7 +21,7 @@ int  LoadKbMAP(KbMAP **KMap,const char *Fname)
 	KbMAP KM;
 	int Size,i;
 	unsigned int Buff;
-	
+
 	if ((InKbMAP=fopen(Fname,"rb"))==NULL) return 0;
 	if (fread(&KM,sizeof(KbMAP),1,InKbMAP)<1) return 0;
 	fseek(InKbMAP,0,SEEK_END);
@@ -31,11 +31,11 @@ int  LoadKbMAP(KbMAP **KMap,const char *Fname)
 	if ((*KMap=(KbMAP*) malloc(KM.SizeKbMap+sizeof(KbMAP)))==NULL)
 	  { fclose(InKbMAP); return 0; }
 	Buff=(unsigned int)(*KMap);
-	  
+
 	fseek(InKbMAP,0,SEEK_SET);
 	if (fread(*KMap,KM.SizeKbMap+sizeof(KbMAP),1,InKbMAP)<1)
 	  { free(*KMap); fclose(InKbMAP); return 0; }
-	  
+
 	// Ajuste les pointeur
 	(*KMap)->KbMapPtr=(void*)((unsigned int)((*KMap)->KbMapPtr)+Buff);
 	if ((*KMap)->TabPrefixKeyb!=NULL)
@@ -69,13 +69,13 @@ int  LoadMemKbMAP(KbMAP **KMap,void *In,int SizeIn)
 {	KbMAP KM;
 	int i;
 	unsigned int Buff;
-	
+
 	memcpy(&KM,In,sizeof(KbMAP));
 	if (KM.Sign!='PAMK' || KM.SizeKbMap!=(SizeIn-sizeof(KbMAP))) return 0;
 	if ((*KMap=(KbMAP*)malloc(KM.SizeKbMap+sizeof(KbMAP)))==NULL) return 0;
 	Buff=(unsigned int)(*KMap);
 	memcpy(*KMap,In,KM.SizeKbMap+sizeof(KbMAP));
-	
+
 	// Ajuste les pointeur
 	(*KMap)->KbMapPtr=(void*)((unsigned int)((*KMap)->KbMapPtr)+Buff);
 	if ((*KMap)->TabPrefixKeyb!=NULL)
@@ -87,7 +87,7 @@ int  LoadMemKbMAP(KbMAP **KMap,void *In,int SizeIn)
 	if ((*KMap)->TabNormKeyb!=NULL)
 	  (*KMap)->TabNormKeyb=
 	    (NormKeyb*)((unsigned int)((*KMap)->TabNormKeyb)+Buff);
-	    
+
 	if ((*KMap)->TabNormKeyb!=NULL)
 	  for (i=0;i<(*KMap)->NbNorm;i++)
 	    (*KMap)->TabNormKeyb[i].Ptr=
@@ -160,13 +160,13 @@ int  Synch(void *SynchBuff,int *Pos) {
    // increase the pos
    ST->LastPos+=SynchLastTime(SynchBuff)*ST->Freq;
    if (Pos!=NULL) *Pos=ST->LastPos;
-   
+
    return ST->LastPos-ipos;
 }
 
 void StartSynch(void *SynchBuff,int *Pos) {
    SynchTime *ST;
-   if (TimerFreq==0 || SynchBuff==NULL) return 0;
+   if (TimerFreq==0 || SynchBuff==NULL) return;
    ST=((SynchTime*)(SynchBuff));
    // start Sync
    ST->LastPos=0.0;

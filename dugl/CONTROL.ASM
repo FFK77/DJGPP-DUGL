@@ -198,7 +198,7 @@ TimerHandler:
 		JB		.PasTrtCycle
 		PUSH		ECX
 		PUSH		EDX
-		
+
 		MOV		EAX,[CptOldTimer3]
 		MOV		ECX,[TimerAddCpt]
 		ADD		EAX,[RestTimerTick]
@@ -267,11 +267,11 @@ _InstallMouse:
 		JNE		.NoWheelAPI
 		TEST		BYTE [_V_ECX], 1 ; check first capabilities bit
 						 ; pointing device supports wheel
-						 
+
 		SETNZ		[MsWheelSupp]
 .NoWheelAPI:
 		; end wheel detection
-		
+
 		MOV		AX,6	; Get DS Base Address
 		MOV		EBX,DS
 		INT		0x31
@@ -525,7 +525,7 @@ _EnableMsEvntsStack:
 		OR		AL,1
 		MOV		[MsStackEnable],EAX
 		RET
-		
+
 _DisableMsEvntsStack:
 		XOR		EAX,EAX
 		MOV		[MsStackEnable],EAX
@@ -538,15 +538,15 @@ _ClearMsEvntsStack:
 		MOV		[MsStackNbElt],EAX
 		MOV		[MsStackStart],EAX
 		RET
-		
+
 _GetMsEvent:
 		ARG	MsEvnt, 4
 		CLI ; critique function
-		
+
 		MOV		EAX,[MsStackNbElt]
 		OR		EAX,EAX
 		JZ		.finNoMsEvt
-		
+
 		PUSH		EDI
 		DEC		EAX ; _MsStackNbElt-1
 		PUSH		ESI
@@ -594,7 +594,7 @@ DebMsLockCode:;****************************************************************
 MouseHandler:
 		PUSH		ES
 		PUSH		EDI
-		
+
 		LODSD
 		MOV		[ES:EDI+0x2A],EAX   ; CS:IP
 		ADD		WORD [ES:EDI+0x2E],4 ; REAL SP+4
@@ -882,7 +882,7 @@ _PauseKeyPressed:
 		MOV		AL,[PausePressed]
 		MOV		[PausePressed],AH
 		STI
-		
+
 		RET
 
 _WaitKeyPressed:
@@ -937,7 +937,7 @@ _GetTimedKeyDown:
 		PUSH		ESI
 		PUSH		EDI
 		PUSH		EBX
-		
+
 		XOR		EAX,EAX
 		MOV		ESI,[EBP+PTmKey]
 		MOV		EDI,[EBP+PKeyTIME]
@@ -968,7 +968,7 @@ _GetKey:
 		PUSH		ESI
 		PUSH		EDI
 		PUSH		EBX
-		
+
 		XOR		EAX,EAX
 		MOV		ESI,[EBP+PKey]
 		MOV		EDI,[EBP+PKeyFLAG]
@@ -994,12 +994,12 @@ _GetKey:
 		POP		ESI
 		RETURN
 
-_WaitGetKey
+_WaitGetKey:
 	ARG	WPKey, 4, WPKeyFLAG, 4
 		PUSH		ESI
 		PUSH		EDI
 		PUSH		EBX
-		
+
 		MOV		ESI,[EBP+WPKey]
 		MOV		EDI,[EBP+WPKeyFLAG]
 		XOR		EAX,EAX
@@ -1062,7 +1062,7 @@ _SetKbMAP:
 		CALL		LockCurKbMAP
 		MOV		[ValidCurKbMAP],EAX
 		STI
-		
+
 		POP		EBX
 		POP		EDI
 		POP		ESI
@@ -1099,7 +1099,7 @@ _DisableCurKbMAP:
 		CALL		UnlockCurKbMAP
 .PasExistOthMp:
 		STI
-		
+
 		POP		EBX
 		POP		EDI
 		POP		ESI
@@ -1148,7 +1148,7 @@ _GetAscii:
 		RETURN
 
 
-_WaitGetAscii
+_WaitGetAscii:
 	ARG	WPAscii, 4, WPAsciiFLAG, 4
 		XOR		EAX,EAX
 		CMP		[ValidCurKbMAP],EAX
@@ -1159,7 +1159,7 @@ _WaitGetAscii
 		MOV		EAX,[EBP+PAsciiFLAG]
 		MOV		[EAX],EDX
 		RETURN
-		
+
 .KbMapActv:	PUSH		ESI
 		PUSH		EDI
 		PUSH		EBX
@@ -1183,7 +1183,7 @@ _WaitGetAscii
 		MOV		[AsciiCBDeb],EBX
 		STI
 		POP		EBX
-		
+
 		RETURN
 
 _GetAsciiNbElt:
@@ -1229,7 +1229,7 @@ UnlockCurKbMAP:
 		INT		0x31
 
 		RET
-		
+
 
 ALIGN 32
 DebKbLockCode:;****************************************************************
@@ -1293,7 +1293,7 @@ KeyboardHandler:
 		AND		[_KbApp+ECX],BL
 		CALL		TraitTimeKey
 		CALL		TraitRel
-		
+
 		JMP		.FinKey
 .ExtKey:	MOV		BYTE [ExtKey],0
 		IN		AL,0x60
@@ -1386,7 +1386,7 @@ TraitAscii:
 		PUSH		EAX
 		CMP		DWORD [ValidCurKbMAP],0
 		JE		.PasTraitAscii ;-----------------------
-		
+
 		; test si Code Key Ascii ----------
 		MOV		ESI,TbNonAscii
 		MOV		ECX,[NbKbNonAscii]
@@ -1398,7 +1398,7 @@ TraitAscii:
 		DEC		ECX
 		JNZ		.BcSrNonAscii
 		MOV		AL,DL
-		
+
 		CMP		DWORD [CurPrefixKb],0
 		JNE		.TraitPrefix
 
@@ -1414,7 +1414,7 @@ TraitAscii:
 		MOV		EBX,[_KbFLAG]
 		TEST		EBX,[EDI+NormKeyb.MaskNo]
 		JNZ		.PasScanNormKb
-		
+
 		AND		EBX,[EDI+NormKeyb.MaskYes]
 		MOV		EBP,[EDI+NormKeyb.DefActiv]
 .BcTestMYes:	TEST		EBX,1
@@ -1483,7 +1483,7 @@ TraitAscii:
 		MOV		EBX,[_KbFLAG]
 		TEST		EBX,[EDI+NormKeyb.MaskNo]
 		JNZ		.PPasScanNormKb
-		
+
 		AND		EBX,[EDI+NormKeyb.MaskYes]
 		MOV		EBP,[EDI+NormKeyb.DefActiv]
 .PBcTestMYes:	TEST		EBX,1
@@ -1549,7 +1549,7 @@ TraitAscii:
 ;-------------------------------------------------------------------
 
 .PasTraitAscii:	POP		EAX
-		
+
 		RET
 
 ;IN  : EDX code butt,EDI Ptr NrmKb
@@ -1669,7 +1669,7 @@ TraitKey:
 ;-------------------------------------
 TraitApp:
 		PUSH		EAX
-		
+
 		XOR		EDX,EDX
 		MOV		DL,AL
 		MOV		ECX,[NbKbFLAGLock] ; traite lock ------------
@@ -1692,12 +1692,12 @@ TraitApp:
 ;--Deb Test INS************--
 		MOV		ECX,[NbMskNoYsDefAct]
 		MOV		ESI,MskNoYsDefAct
-		
+
 .BcTstIns:
 		LEA		ESI,[ECX-1]
 		IMUL		ESI,20
 		ADD		ESI,MskNoYsDefAct
-		
+
 		LODSD
 		CMP		EAX,EDX
 		JNE		.PasTstIns

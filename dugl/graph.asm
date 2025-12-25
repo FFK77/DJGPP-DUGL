@@ -249,7 +249,7 @@ _OutRLE:
 		XOR		BL,BL
 .BcOutRLEGn:
 		LODSB
-		
+
 		CMP		BL,62
 		JAE		.PrcOutRLE
 		CMP		AL,AH
@@ -697,7 +697,7 @@ _Clear:
 		MOV		EDI,[_rlfb]
 		MOV		AX,CX
 		@SolidHLine
-		
+
 		POP		EBX
 		POP		ESI
 		POP		EDI
@@ -1257,13 +1257,13 @@ _SensPoly:
 		IMUL		EDI,EDX
 		SUB		ESI,EDI
 		MOV		EAX,ESI
-		
+
 		MOVD		ESI,mm7
 		MOVD		EBX,mm6
 		MOVD		EDI,mm5
 		;EMMS
 		RETURN
-		
+
 ;****************************************************************************
 ;structure de PtrlistPt
 ;0‚		  DWORD : n nombre de point
@@ -1323,7 +1323,7 @@ _Poly:
 
 		JL		.TstSiDblSide ; si <= 0 alors pas ok
 		JZ		.SpecialCase
-		
+
 ;****************
 .DrawPoly:
 		; Sauvegarde les parametre et libere EBP
@@ -1361,7 +1361,7 @@ _Poly:
 		POR		mm1,mm5
 		POR		mm2,mm6
 		JNZ		.PBoucMnMxXY
-		
+
 		MOVD		EAX,mm2 ; maxx
 		MOVD		ECX,mm1 ; minx
 		PSRLQ		mm2,32
@@ -1454,7 +1454,7 @@ _Poly:
 		LEA		EDI,[EBX+ECX*4]
 		ADD		EBX,BYTE 4
 		SHR		ECX,1
-		
+
 .BcSwapPts:	MOV		EAX,[EBX]
 		MOV		EDX,[EDI]
 		MOV		[EDI],EAX
@@ -1483,7 +1483,7 @@ _Poly:
 		LEA		ESI,[ESI+4]
 		JNZ		.lpAnydiff
 		JMP		.PasDrawPoly ; failed
-		
+
 .finddiffP3:	MOV		EAX,[EDI]
 		MOV		EBX,[EDI+4]
 		MOV		[XP2],EAX
@@ -1493,7 +1493,7 @@ _Poly:
 		JZ		.PasDrawPoly ; no more points ? :(
 		SUB		EAX,[XP1] ; = XP2-XP1
 		SUB		EBX,[YP1] ; = YP2-YP1
-		
+
 .lpPdiff:	MOV		EDI,[ESI]
 		MOV		EDX,[EDI] ; XP3
 		MOV		EDI,[EDI+4] ; YP3
@@ -1839,7 +1839,7 @@ _Clear16:
 		MOV		EDI,[_rlfb]
 		MOVD		EAX,mm0
 		SHR		ESI,1
-		
+
 		@SolidHLine16
 
 		MOVD		EDI,mm7
@@ -2037,9 +2037,9 @@ _Poly16:
 		MOV		EAX,[PType]
 		CALL		[ClFillPolyProc16+EAX*4]
 .PasDrawPoly:
-                POP             EDI
+        POP             EDI
 		POP             EBX
-                POP             ESI
+        POP             ESI
 		;EMMS
 		RETURN
 
@@ -2080,7 +2080,7 @@ _Poly16:
 		LEA		ESI,[ESI+4]
 		JNZ		.lpAnydiff
 		JMP		.PasDrawPoly ; failed
-		
+
 .finddiffP3:	MOV		EAX,[EDI]
 		MOV		EBX,[EDI+4]
 		MOV		[XP2],EAX
@@ -2090,7 +2090,7 @@ _Poly16:
 		JZ		.PasDrawPoly ; no more points ? :(
 		SUB		EAX,[XP1] ; = XP2-XP1
 		SUB		EBX,[YP1] ; = YP2-YP1
-		
+
 .lpPdiff:	MOV		EDI,[ESI]
 		MOV		EDX,[EDI] ; XP3
 		MOV		EDI,[EDI+4] ; YP3
@@ -2108,7 +2108,7 @@ _Poly16:
 		LEA		ESI,[ESI+4]
 		JL		.TstSiDblSide
 		JMP		.DrawPoly
-		
+
 
 SECTION	.data
 ALIGN 32

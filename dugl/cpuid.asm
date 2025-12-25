@@ -25,12 +25,12 @@ _DetectCPUID:
 		SETNZ		AL
 		RET
 
-_ExecCPUID
+_ExecCPUID:
 	ARG	ValEAX, 4, PtEAX, 4, PtEBX, 4, PtECX, 4, PtEDX, 4
 	        PUSH		ESI
 	        PUSH		EBX
 	        PUSH		EDI
-		
+
 		MOV		EAX,[EBP+ValEAX]
 		XOR		EBX,EBX
 		XOR		ECX,ECX
@@ -50,7 +50,7 @@ _ExecCPUID
 		POP		ESI
 		RETURN
 
-_EnableMTRR
+_EnableMTRR:
 		push	ebx
 		mov	eax,0x1
 		cpuid

@@ -4,23 +4,26 @@
 /*  23 november 2008 : first release */
 /*  11 august 2009 : Updated fps displaying, move synching with lastFps,
     usage of the fast SurfCopy instead of (SetSurf, PutSurf)*/
+/* 25 december 2025 : Fix gcc 12 errors / updates */
 
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <dugl/dugl.h>
+#include "dugl.h"
 
 
 // screen resolution
-
-int ScrResH=640,ScrResV=480;
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+int ScrResH=SCREEN_WIDTH,ScrResV=SCREEN_HEIGHT;
 
 // polygone points and list of drop over screen
 
-int WT_XTEX=ScrResH/50;
-int WT_YTEX=ScrResV/50;
+#define WT_XTEX (SCREEN_WIDTH/50)
+#define WT_YTEX (SCREEN_HEIGHT/50)
+
 // textured poly points
 //               X    Y    Z       XT = U           YT = V
 int PtWt01[5] = { 0,   0,   0,   WT_XTEX*4, WT_YTEX*2 };
@@ -137,13 +140,10 @@ int main (int argc, char ** argv)
     // load GFX
     if (!LoadGIF16(&BackSurf,"jeux1.gif")) {
       printf("Error loading jeux1.gif\n"); exit(-1); }
-      
+
     // load font
     if (!LoadFONT(&F1,"hello.chr")) {
       printf("Error loading hello.chr\n"); exit(-1); }
-
-
-
 
     if (!InstallTimer(500)) {
        CloseVesa(); printf("Timer error\n"); exit(-1);
@@ -152,7 +152,6 @@ int main (int argc, char ** argv)
        CloseVesa(); UninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
-
 
     // init video mode
     if (!InitVesaMode(ScrResH,ScrResV,16,1))
@@ -188,14 +187,14 @@ int main (int argc, char ** argv)
       //
       DeltaPos=PosSynch-LastPos;
       LastPos=PosSynch;
-      
+
       // synch screen display
       float avgFps=SynchAverageTime(SynchBuff),
             lastFps=SynchLastTime(SynchBuff);
 
       // set the current active surface for drawing
       SetSurf(&rendSurf16);
-      
+
       unsigned char keyCode;
       unsigned int keyFLAG;
       // render ///////////////////
@@ -205,7 +204,7 @@ int main (int argc, char ** argv)
       ResizeSurf16(&CurSurf, &BackSurf);
       // render rain
       SetOrgSurf(&CurSurf,0,0);
-      
+
       bool EnableOneSmk=true;
       for (int i=0;i<NUMBER_DROPS;i++) {
         FREE_MMX();
@@ -232,7 +231,7 @@ int main (int argc, char ** argv)
             linemapblnd16(x,y,x,y+TRain[i].dy, col,TRain[i].map);
           else
             linemap16(x,y,x,y+TRain[i].dy, col,TRain[i].map);
-          
+
         }
 
       }
@@ -246,9 +245,9 @@ int main (int argc, char ** argv)
               ((!TCloud[i].RightCloud) && (TCloud[i].x-TCloud[i].rayx>ScrResH))) {
              GenRandCloud(&TCloud[i]);
           }
-              
+
       }
-      
+
       ResizeSurf16(&smallRendSurf16,&CurSurf);
 //      SetOrgSurf(&smallRendSurf16,10,10);
       // Init table of Screen Drops
@@ -268,7 +267,7 @@ int main (int argc, char ** argv)
         if ((TScr[i].go) && (TScr[i].y+TScr[i].rayy<=0))
           GenRandScrDrop(&TScr[i]);
       }
-      
+
       // end render ///////////////
       // get key
       GetKey(&keyCode, &keyFLAG);
@@ -281,7 +280,7 @@ int main (int argc, char ** argv)
           Transparency=!Transparency; break;
       }
 
-      
+
       if (BlurDisplay) {
          BlurSurf16(&blurSurf16,&rendSurf16);
          SetSurf(&blurSurf16);
@@ -290,7 +289,7 @@ int main (int argc, char ** argv)
         SetSurf(&rendSurf16);
       }
 
-      
+
       // display FPS
 
       FREE_MMX();
@@ -360,7 +359,7 @@ void RenderCloud(cloud *pCloud) {
     const int nbVertex=20;
     int tCldVertex[nbVertex*2];
     int ListPt[nbVertex+1];
-    
+
     FREE_MMX();
     // fill vertexes
     float radStep=(3.14*2.0)/((float)(nbVertex));
@@ -428,13 +427,13 @@ void ResizeSurf16(Surf *SDstSurf,Surf *SSrcSurf) {
      SrcSurf=*SSrcSurf;
      SSrc=&SrcSurf;
   }
-  
+
   // Get Current Surf
   GetSurf(&OldSurf);
 
   // set dest Surf as destination
   SetSurf(SDstSurf);
-  
+
   // draw the resize polygone inside the dest Surf
   Poly16(ListPt1, SSrc, POLY16_TEXT, 0);
 
@@ -461,7 +460,7 @@ void GenRandCloud(cloud *pCloud) {
   pCloud->enabled=true;
   pCloud->RightCloud=rand()&1;
   pCloud->y=ScrResV+10-(rand()%(ScrResV/15));
-      
+
   if (pCloud->RightCloud) {
      pCloud->x=ScrResH+pCloud->rayx;
      pCloud->speed=-(rand()%(ScrResV/15)+10);
@@ -478,9 +477,9 @@ void GenRandScrDrop(scrDrop *pScrDrop) {
   pScrDrop->rayx=(rand()%(ScrResH/150))+ScrResH/85;
   pScrDrop->rayy=(rand()%(ScrResH/120))+ScrResV/65;
   pScrDrop->speed=(rand()%(ScrResV/5))+ScrResV/8;
-  pScrDrop->TimeToGo=float((rand()%200))/200.0+1.5;
+  pScrDrop->TimeToGo=(float)((rand()%200))/200.0+1.5;
   pScrDrop->TimeHere=0.0;
   pScrDrop->go=false;
-  
+
 }
 

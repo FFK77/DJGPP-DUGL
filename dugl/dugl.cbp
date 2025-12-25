@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="dugl" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/dugl" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Debug/" />
+				<Option type="2" />
+				<Option compiler="djgpp_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/dugl" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj/Release/" />
+				<Option type="2" />
+				<Option compiler="djgpp_gnu_gcc_compiler" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Unit filename="CONTROL.ASM" />
+		<Unit filename="CONTROLC.C">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="DCONTROL.H" />
+		<Unit filename="DGraph.h" />
+		<Unit filename="DIPX.H" />
+		<Unit filename="DKeyb.h" />
+		<Unit filename="DMGRaph.h" />
+		<Unit filename="DMouse.h" />
+		<Unit filename="DTimer.h" />
+		<Unit filename="DUGL.h" />
+		<Unit filename="FILL.ASM">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="HZLINE.ASM">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="MFill16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="PTS_LINE.ASM">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="Poly.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="cpuid.asm" />
+		<Unit filename="fill16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="graph.asm" />
+		<Unit filename="graphc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="hzline16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="intrdugl.h" />
+		<Unit filename="ipx.asm" />
+		<Unit filename="ipxc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="line16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="mgraphc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="mline16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="mpoly16.asm" />
+		<Unit filename="poly16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="pts16.asm">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="transf.asm" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

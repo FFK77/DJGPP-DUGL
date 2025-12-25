@@ -5,6 +5,9 @@
 #define DUGL_VERSION "1.16WIP"
 #define DUGL_DATE_DMY "19/12/2025"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "DGraph.h"
 #include "DMGraph.h"
 #include "DKeyb.h"

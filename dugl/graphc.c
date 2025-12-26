@@ -168,7 +168,7 @@ void BuildTbDegCol(void *PalBGR1024)
 	unsigned char *Pal=PalBGR1024;
 	int ND=64;
 	FREE_MMX();
-	
+
 	Black=FindCol(1,255,0,0,0,Pal);
 	White=FindCol(1,255,255,255,255,Pal);
 	for (i=0;i<256;i++) {
@@ -188,7 +188,7 @@ void BuildTbDegCol(void *PalBGR1024)
 	    sb+=pb; sg+=pg; sr+=pr;
 	    TbDegCol[i*ND+j]=FindCol(1,255,sb,sg,sr,Pal);
 	  }
-	  
+
 	  sb=Pal[TbDegCol[i*ND+((ND/2)-1)]*4];
 	  sg=Pal[TbDegCol[i*ND+((ND/2)-1)]*4+1];
 	  sr=Pal[TbDegCol[i*ND+((ND/2)-1)]*4+2];
@@ -228,7 +228,7 @@ void PrBuildTbDegCol(void *PalBGR1024,float PropBonus)
 	    sb+=pb; sg+=pg; sr+=pr;
 	    TbDegCol[i*ND+j]=PrFindCol(1,255,sb,sg,sr,Pal,PropBonus);
 	  }
-	  
+
 	  sb=Pal[TbDegCol[i*ND+((ND/2)-1)]*4];
 	  sg=Pal[TbDegCol[i*ND+((ND/2)-1)]*4+1];
 	  sr=Pal[TbDegCol[i*ND+((ND/2)-1)]*4+2];
@@ -846,7 +846,7 @@ void SetSurfInView(Surf *S, View *V)
 	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
         else
 	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
-        
+
 }
 
 // les coordonnees des limite sont relative a l'origine de l'ecran
@@ -891,8 +891,8 @@ void RealViewSurf(int NbSurf)
 	r.h.bh = 0;
 	r.d.ecx = 0; // x = 0
         r.d.edx = VSurf[0].ResV*NbSurf; // y
-        
-        
+
+
    	_go32_dpmi_simulate_int(0x10, &r);
 }
 
@@ -921,7 +921,7 @@ void RealViewSurfWaitVR(int NbSurf)
 	r.h.bh = 0;
 	r.d.ecx = 0; // x = 0
         r.d.edx = VSurf[0].ResV*NbSurf; // y
-        
+
    	_go32_dpmi_simulate_int(0x10, &r);
 }
 
@@ -989,7 +989,7 @@ int InitVesa()
 	if (r.h.al!=0x4f) return 0;
 	dosmemget(__tb,sizeof(VesaIntro),&VesaInt);
 	if ((ListMode=(short *)malloc(1024))==NULL) return 0;
-	
+
 	if ((VesaInt.VideoPtr&0xFFFF)>(0xffff-1024)) {
 	  TbMemCopy=0xffff-(VesaInt.VideoPtr&0xFFFF);
 	  TbModeCopy=TbMemCopy/2; }
@@ -1010,7 +1010,7 @@ int InitVesa()
 
    	dpinf.address=VesaInf.PhysBasePtr; // map LFB
    	dpinf.size=VesaInt.Memory*64*1024;
-	
+
    	if (__dpmi_physical_address_mapping(&dpinf))  Error=1;
 	if (__dpmi_get_segment_base_address(_my_ds(),&BaseDS)==-1) Error=1;
 	LimitDS=dpinf.address+dpinf.size-1-BaseDS;
@@ -1043,11 +1043,11 @@ int InitVesa()
 	  if (CptMode!=curMode) {
 	    ListMode[NbMode]=curMode; NbMode++; }
 	}
-	
+
 
 	if ((TbMode=(ModeInfo *)malloc(sizeof(ModeInfo)*(NbMode+2)))==NULL)
 	  return 0;
-	
+
 	for (CptMode=i=0;i<NbMode;i++)
 	   { bzero(&r,sizeof(__dpmi_regs));
 	     r.x.ax = 0x4f01;
@@ -1056,7 +1056,7 @@ int InitVesa()
 	     r.d.edi = __tb & 0xf;
      	     __dpmi_int(0x10, &r);
 	     dosmemget(__tb,sizeof(VesaInfo),&VesaInf);
-	      
+
 	     if ( (VesaInf.ModeFlag& FLAG_SUPP)    &&
 	          (VesaInf.ModeFlag& FLAG_COLOR)   &&
 	          (VesaInf.ModeFlag& FLAG_GRAPH)   &&
@@ -1078,7 +1078,7 @@ int InitVesa()
 	}
 	NbMode=CptMode;
 	free(ListMode);
-	
+
 	InitVesaPMI();
 	if (VesaPMIOk) {
 	  SetPalette=ProtectSetPalette;
@@ -1111,12 +1111,12 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
              ScreenSize = ResHz*ResVt*pixelsize;
              if ((ScreenSize*NbPage)>Sizelfb)
 	       return 0;
-	     
+
 	     if (Video==1 && VSurf!=NULL) { free(VSurf); VSurf=NULL; }
 	     VSurf=(Surf *)malloc(sizeof(Surf)*(NbPage+1));
 	     if (VSurf==NULL)
 	       return 0;
-	     
+
 	     Video==1; cvlfb=lfb;
 	     for (j=0;j<NbPage;j++) {
 	        VSurf[j].vlfb=VSurf[j].rlfb= cvlfb;
@@ -1133,7 +1133,7 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 	        VSurf[j].OrgY= ResVt-1;
                 VSurf[j].BitsPixel=BitPixel;
 		VSurf[j].ScanLine=ResHz*pixelsize;
-		
+
 	        SetOrgSurf(&VSurf[j],0,0);
 	        cvlfb+= ScreenSize;
 	     }
@@ -1150,7 +1150,7 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 	     r.x.bx = mode;
 	   	__dpmi_int(0x10, &r);
 	     if ((r.x.ax&0x4f)!=0x4f) return 0;
-	     
+
 // Get DAC Palette format
 	     if (BitPixel==8) GetPaletteDAC();
              return 1;
@@ -1185,7 +1185,7 @@ void InitVesaPMI() {
 	   SetPalPMI=VesaPMI+((unsigned short*)(VesaPMI))[2];
 	   // scan for io ports
 	   PortMem=VesaPMI+((unsigned short*)(VesaPMI))[3];
-	   
+
 	   // jump over io ports
 	   for (i=0;;i++) {
 	     if (PortMem[i]==0xffff) {
@@ -1214,7 +1214,7 @@ void InitVesaPMI() {
 		}
 		else
 		  __dpmi_free_physical_address_mapping(&memMPIO);
-		
+
 	     }
 //unsigned short		SelMPIO;
 
@@ -1229,7 +1229,7 @@ void InitVesaPMI() {
 	   }
 //	   getch();
 
-	   
+
 	   VesaPMIOk=1;
 	  }
 }
@@ -1557,7 +1557,7 @@ int  LoadMemPCX(Surf *S,void *In,void *PalBGR1024,int SizeIn)
 int  LoadPCX(Surf *S,const char *Fname,void *PalBGR1024)
 {	FILE *InPCX;
 	HeadPCX hpcx;
-	void *BuffIn;
+	void *BuffIn = NULL;
 	char PalRGB[768];
 	int FinIn,ResHz,ResVt,i;
 
@@ -1575,20 +1575,22 @@ int  LoadPCX(Surf *S,const char *Fname,void *PalBGR1024)
 	   ((char*)(PalBGR1024))[i*4]=PalRGB[i*3+2];
 	   ((char*)(PalBGR1024))[i*4+1]=PalRGB[i*3+1];
 	   ((char*)(PalBGR1024))[i*4+2]=PalRGB[i*3];
-	  }
+	}
 	FinIn=ftell(InPCX);
 	CreateSurf(S,ResHz,ResVt,8);
 	if (S->OffVMem!=-1) { fclose(InPCX); return 0; }
   	fseek(InPCX,sizeof(HeadPCX),SEEK_SET);
 	if (hpcx.Comp==1) {
-	  BuffIn=malloc(FinIn-sizeof(HeadPCX)+1);
-	  if (BuffIn==NULL)
-	    { DestroySurf(S); fclose(InPCX); return 0; }
-	  fread(BuffIn,FinIn-sizeof(HeadPCX)+1,1,InPCX);
-	  InRLE(BuffIn,S->rlfb,ResHz*ResVt);
+		BuffIn=malloc(FinIn-sizeof(HeadPCX)+1);
+		if (BuffIn==NULL) {
+			DestroySurf(S);
+			fclose(InPCX);
+			return 0;
+		}
+		fread(BuffIn,FinIn-sizeof(HeadPCX)+1,1,InPCX);
+		InRLE(BuffIn,S->rlfb,ResHz*ResVt);
 	 }
 	 else {
-	   free(BuffIn);
 	   fclose(InPCX);
 	   return 0;
 	 }
@@ -1608,7 +1610,7 @@ int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024)
 	   PalRGB[i*3]=(((char*)(PalBGR1024))[i*4+2]);
 	   PalRGB[i*3+1]=(((char*)(PalBGR1024))[i*4+1]);
 	   PalRGB[i*3+2]=(((char*)(PalBGR1024))[i*4]);
-	  }
+	}
 	hpcx.Sign=0xa; hpcx.Ver=5; hpcx.BitPixel=8;
 	hpcx.X1=hpcx.Y1=0;
 	hpcx.X2=S->ResH-1;	hpcx.Y2=S->ResV-1;
@@ -1620,7 +1622,7 @@ int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024)
 	hpcx.resv=0;
 	for (i=0;i<54;i++) hpcx.resv2[i]=0;
 	memcpy(&hpcx.Pal,&PalRGB,48);
-	
+
 	i=SizeOutRLE((void*)(S->rlfb),S->SizeSurf,S->ResH);
 	hpcx.Comp=1;
 	BuffOut=(void*) malloc(i);
@@ -1842,7 +1844,7 @@ int  LoadMemBMP(Surf *S,void *In,void *PalBGR1024,int SizeIn) {
 	// no mem
 	if (CreateSurf(S,ibmp.ImgWidth,ibmp.ImgHeight,8)==0)
 	   return 0;
-	
+
 	// copy palette
 	memcpy(PalBGR1024,In+sizeof(HeadBMP)+sizeof(InfoBMP),1024);
 
@@ -1857,7 +1859,7 @@ int  LoadMemBMP(Surf *S,void *In,void *PalBGR1024,int SizeIn) {
 	  CurInBMP+=ibmp.ImgWidth;
 	  if (padd) CurInBMP+=(4-padd);
 	}
-	
+
 	return 1;
 }
 int  LoadBMP(Surf *S,const char *Fname,void *PalBGR1024) {
@@ -1893,7 +1895,7 @@ int  LoadBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	if (CreateSurf(S,ibmp.ImgWidth,ibmp.ImgHeight,8)==0) {
 	   fclose(InBMP); return 0;
 	}
-	
+
 	// read palette
 	fread(PalBGR1024,1024,1,InBMP);
 
@@ -1906,7 +1908,7 @@ int  LoadBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	  fread(Linedata,ibmp.ImgWidth,1,InBMP);
 	  if (padd) fseek(InBMP,4-padd,SEEK_CUR);
 	}
-	
+
 	fclose(InBMP);
 	return 1;
 }
@@ -1915,7 +1917,7 @@ int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024) {
 	HeadBMP *hbmp;
 	InfoBMP *ibmp;
 	void *palBMP,*lineOut;
-	
+
 	char *Linedata;
 	unsigned char *tempLine;
 
@@ -1939,10 +1941,10 @@ int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024) {
 	ibmp->ImgWidth=S->ResH;  ibmp->ImgHeight=S->ResV;
 	ibmp->Planes=1;
 	ibmp->BitsPixel=8;
-	
+
 	// write palette
 	memcpy(palBMP,PalBGR1024,1024);
-	
+
 	// compute padd
 	padd=(ibmp->ImgWidth)&3;
 	if (padd>0) padd=4-padd;
@@ -1951,7 +1953,7 @@ int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024) {
 	tempLine = (unsigned char*)malloc(sizeline);
 	// clear
 	bzero(tempLine,sizeline);
-	
+
 	// write data
 	if (tempLine!=NULL) {
 	  lineOut=Out+hbmp->DataOffset;
@@ -1992,7 +1994,7 @@ int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	ibmp.ImgWidth=S->ResH;  ibmp.ImgHeight=S->ResV;
 	ibmp.Planes=1;
 	ibmp.BitsPixel=8;
-	
+
 
 	// write header
 	fwrite(&hbmp,sizeof(HeadBMP),1,OutBMP);
@@ -2000,7 +2002,7 @@ int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	fwrite(&ibmp,sizeof(InfoBMP),1,OutBMP);
 	// write palette
 	fwrite(PalBGR1024,1024,1,OutBMP);
-	
+
 	// compute padd
 	padd=(ibmp.ImgWidth)&3;
 	if (padd>0) padd=4-padd;
@@ -2009,7 +2011,7 @@ int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	tempLine = (unsigned char*)malloc(sizeline);
 	// clear
 	bzero(tempLine,sizeline);
-	
+
 	// write data
 	if (tempLine!=NULL) {
 	  for (j=ibmp.ImgHeight-1;j>=0;j--) {
@@ -2057,7 +2059,7 @@ int  LoadMemBMP16(Surf *S,void *In,int SizeIn) {
 
 	// read info
 	memcpy(&ibmp,In+sizeof(HeadBMP),sizeof(InfoBMP));
-	
+
 
 	if (ibmp.ImgWidth==0 || ibmp.ImgHeight==0 ||
 	    ibmp.BitsPixel!=24 || ibmp.Compression!=0)
@@ -2066,7 +2068,7 @@ int  LoadMemBMP16(Surf *S,void *In,int SizeIn) {
 	// no mem
 	if (CreateSurf(S,ibmp.ImgWidth,ibmp.ImgHeight,16)==0)
 	   return 0;
-	
+
 
 	// seek to data
 	CurInBMP=hbmp.DataOffset;
@@ -2082,11 +2084,11 @@ int  LoadMemBMP16(Surf *S,void *In,int SizeIn) {
 		((tempLine[BfPos+2]>>3)<<11);
 	      BfPos+=3;
 	  }
-	  
+
 	  CurInBMP+=ibmp.ImgWidth*3;
 	  if (padd) CurInBMP+=(4-padd);
 	}
-	
+
 	return 1;
 }
 int  LoadBMP16(Surf *S,const char *Fname) {
@@ -2128,7 +2130,7 @@ int  LoadBMP16(Surf *S,const char *Fname) {
 	fseek(InBMP,hbmp.DataOffset,SEEK_SET);
 	// alloc temporary
 	tempLine = (unsigned char*)malloc(ibmp.ImgWidth*3);
-	
+
 	// read data
 	if (tempLine!=NULL) {
 	  padd=(ibmp.ImgWidth*3)&3;
@@ -2174,14 +2176,14 @@ int  SaveMemBMP16(Surf *S,void *Out) {
 	ibmp->ImgWidth=S->ResH;  ibmp->ImgHeight=S->ResV;
 	ibmp->Planes=1;
 	ibmp->BitsPixel=24;
-	
+
 	// compute padd
 	padd=(ibmp->ImgWidth*3)&3;
 	if (padd>0) padd=4-padd;
 	sizeline=ibmp->ImgWidth*3+padd;
 	tempLine =
 	  (unsigned char*)(Out+sizeof(HeadBMP)+sizeof(InfoBMP));
-	
+
 	// read data
 	if (tempLine!=NULL) {
 	  for (j=ibmp->ImgHeight-1;j>=0;j--) {
@@ -2225,20 +2227,20 @@ int  SaveBMP16(Surf *S,const char *Fname) {
 	ibmp.ImgWidth=S->ResH;  ibmp.ImgHeight=S->ResV;
 	ibmp.Planes=1;
 	ibmp.BitsPixel=24;
-	
+
 
 	// write header
 	fwrite(&hbmp,sizeof(HeadBMP),1,OutBMP);
 	// read info
 	fwrite(&ibmp,sizeof(InfoBMP),1,OutBMP);
-	
+
 	// compute padd
 	padd=(ibmp.ImgWidth*3)&3;
 	if (padd>0) padd=4-padd;
 	sizeline=ibmp.ImgWidth*3+padd;
 	// alloc temporary
 	tempLine = (unsigned char*)malloc(sizeline);
-	
+
 	// read data
 	if (tempLine!=NULL) {
 	  for (j=ibmp.ImgHeight-1;j>=0;j--) {

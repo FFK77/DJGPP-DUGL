@@ -6,14 +6,14 @@
 
 #define TIMER_TICK_SEC 1193180
 #define SIZE_SYNCH_BUFF 168
-extern unsigned int Time,TimerFreq,TimerTickVal;
+extern unsigned int DgTime, DgTimerFreq, DgTimerTickVal;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int  InstallTimer(unsigned int Freq);  // Min Freq 19
-void UninstallTimer();
+int  DgInstallTimer(unsigned int Freq);  // Min Freq 19
+void DgUninstallTimer();
 int  InitSynch(void *SynchBuff,int *Pos,float Freq); // init Synch buffer and start synching
 void StartSynch(void *SynchBuff,int *Pos); // Restart Synching
 int  Synch(void *SynchBuff,int *Pos); // synch

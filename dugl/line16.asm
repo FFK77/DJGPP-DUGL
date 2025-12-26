@@ -196,7 +196,7 @@ _Line16:
 		SUB       	ESI,EBX
 		SUB       	EDI,ECX
 		OR        	ESI,ESI
-		
+
 		JZ		.cas2
 		JNS		.PasNegESI2
 		NEG		ESI
@@ -760,7 +760,7 @@ ALIGN 4
 		DEC		ESI
 		LEA		EDI,[EDI+2] ; + 2 : 16 bpp
 		JNZ		.lp4
-		
+
 		JMP		SHORT .FinLine
 ;********CAS 5 : (DX=0, DY=0)***********************************************
 .cas5:
@@ -813,7 +813,7 @@ _LineBlnd16:
 
 		MOV		EDX,[EBP+PBlnd16P1]
 		MOV		ECX,[EBP+PBlnd16P2]
-		
+
 		MOV		EAX,[EDX]   ; X1
 		MOV		EBX,[ECX]   ; X2
 		MOV		ESI,[EDX+4] ; Y1
@@ -825,7 +825,8 @@ _LineBlnd16:
 		MOV		[YP2],EDI 	; Y2
 		;MOV		[clr],EAX
 		; blend precomputing-------------
-.DoLine16	;MOV       	EAX,[clr] ;
+.DoLine16:
+		;MOV       	EAX,[clr] ;
 		MOV       	EBX,EAX ;
 		MOV       	ECX,EAX ;
 		MOV       	EDX,EAX ;
@@ -1204,12 +1205,12 @@ ALIGN 4
 		@SolidBlndQ
 		MOVD		EAX,mm0
 		MOV		[EDI+EDX*2],AX
-		
+
 .FinLine:
 		POP		ESI
 		POP		EDI
 		POP		EBX
-		
+
 		;EMMS
                 RETURN
 
@@ -1645,7 +1646,7 @@ ALIGN 4
 		DEC		ESI
 		LEA		EDI,[EDI+2] ; + 2 : 16 bpp
 		JNZ		.lp4
-		
+
 		JMP		.FinLine
 ;********CAS 5 : (DX=0, DY=0)***********************************************
 .cas5:

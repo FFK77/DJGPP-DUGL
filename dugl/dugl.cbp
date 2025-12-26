@@ -34,7 +34,6 @@
 				</Linker>
 			</Target>
 		</Build>
-		<Unit filename="CONTROL.ASM" />
 		<Unit filename="CONTROLC.C">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -53,10 +52,12 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="KEYBOARD.ASM" />
 		<Unit filename="MFill16.asm">
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="MOUSE.ASM" />
 		<Unit filename="PTS_LINE.ASM">
 			<Option compile="0" />
 			<Option link="0" />
@@ -65,6 +66,7 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="TIMER.ASM" />
 		<Unit filename="cpuid.asm" />
 		<Unit filename="fill16.asm">
 			<Option compile="0" />

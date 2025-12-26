@@ -112,7 +112,7 @@ void DestroyKbMAP(KbMAP *KM) {
 
 int  InitSynch(void *SynchBuff,int *Pos,float Freq) {
    SynchTime *ST;
-   if (!TimerFreq) return 0;
+   if (!DgTimerFreq) return 0;
    // start Sync
    StartSynch(SynchBuff,Pos);
    // save parameters
@@ -124,31 +124,31 @@ int  InitSynch(void *SynchBuff,int *Pos,float Freq) {
 int  Synch(void *SynchBuff,int *Pos) {
    SynchTime *ST;
    int ipos;
-   if (TimerFreq==0 || SynchBuff==NULL) return 0;
+   if (DgTimerFreq==0 || SynchBuff==NULL) return 0;
    ST=((SynchTime*)(SynchBuff));
    ST->LastSynchNull=0;
    // continu only if time changed
-   if (ST->LastTimeValue==Time) {
+   if (ST->LastTimeValue==DgTime) {
       if (Pos!=NULL) *Pos=ST->LastPos;
       ST->NbNullSynch++;
       ST->LastSynchNull=1;
       return 0; // delta Synch 0
    }
    // reset the history table if 32 time counter reaching the end
-   if (Time<ST->LastTimeValue)
+   if (DgTime<ST->LastTimeValue)
      StartSynch(SynchBuff,Pos);
 
    // Add a new time value
    if (ST->hstNbItems<SYNCH_HST_SIZE) { // time table not yet full ?
      ST->hstIdxFin=(ST->hstIdxDeb+ST->hstNbItems)&(SYNCH_HST_SIZE-1);
-     ST->LastTimeValue=Time;
+     ST->LastTimeValue=DgTime;
      ST->TimeHst[ST->hstIdxFin]=ST->LastTimeValue;
      ST->hstNbItems++;
    }
    else { // time table full
      ST->hstIdxDeb=(ST->hstIdxDeb+1)&(SYNCH_HST_SIZE-1);
      ST->hstIdxFin=(ST->hstIdxDeb+SYNCH_HST_SIZE-1)&(SYNCH_HST_SIZE-1);
-     ST->LastTimeValue=Time;
+     ST->LastTimeValue=DgTime;
      ST->TimeHst[ST->hstIdxFin]=ST->LastTimeValue;
      if(ST->hstIdxFin==0)
      {
@@ -166,11 +166,11 @@ int  Synch(void *SynchBuff,int *Pos) {
 
 void StartSynch(void *SynchBuff,int *Pos) {
    SynchTime *ST;
-   if (TimerFreq==0 || SynchBuff==NULL) return;
+   if (DgTimerFreq==0 || SynchBuff==NULL) return;
    ST=((SynchTime*)(SynchBuff));
    // start Sync
    ST->LastPos=0.0;
-   ST->FirstTimeValue=Time;
+   ST->FirstTimeValue=DgTime;
    ST->LastTimeValue=ST->FirstTimeValue;
    bzero(&ST->TimeHst[0],SYNCH_HST_SIZE*sizeof(unsigned int));
    ST->TimeHst[0]=ST->FirstTimeValue;
@@ -184,17 +184,17 @@ void StartSynch(void *SynchBuff,int *Pos) {
 
 float SynchAccTime(void *SynchBuff) {
    SynchTime *ST;
-   if (TimerFreq==0 || SynchBuff==NULL) return 0;
+   if (DgTimerFreq==0 || SynchBuff==NULL) return 0;
    ST=((SynchTime*)(SynchBuff));
-   return (float)(Time-ST->FirstTimeValue)/(float)(TimerFreq);
+   return (float)(DgTime-ST->FirstTimeValue)/(float)(DgTimerFreq);
 }
 
 float SynchAverageTime(void *SynchBuff) {
    SynchTime *ST;
-   int i,idxDeb,idxFin;
+   unsigned int i,idxDeb,idxFin;
    int SumSyncTime=0;
    ST=((SynchTime*)(SynchBuff));
-   if (TimerFreq==0 || ST==NULL || ST->hstNbItems<2) return 0.0;
+   if (DgTimerFreq==0 || ST==NULL || ST->hstNbItems<2) return 0.0;
    for (i=0;i<ST->hstNbItems-1;i++) {
      idxDeb = (ST->hstIdxDeb+i)&(SYNCH_HST_SIZE-1);
      idxFin = (ST->hstIdxDeb+i+1)&(SYNCH_HST_SIZE-1);
@@ -202,27 +202,27 @@ float SynchAverageTime(void *SynchBuff) {
    }
    i=ST->LastNbNullSynch;
    //ST->NbNullSynch=0;
-   return (float)(SumSyncTime)/(float)((ST->hstNbItems-1+i)*TimerFreq);
+   return (float)(SumSyncTime)/(float)((ST->hstNbItems-1+i)*DgTimerFreq);
 }
 
 float SynchLastTime(void *SynchBuff) {
    SynchTime *ST;
-   int i,idxDeb,idxAFin;
+   int idxDeb,idxAFin;
    int SumSyncTime;
    ST=((SynchTime*)(SynchBuff));
-   if (TimerFreq==0 || ST==NULL || ST->hstNbItems<2 || ST->LastSynchNull)
+   if (DgTimerFreq==0 || ST==NULL || ST->hstNbItems<2 || ST->LastSynchNull)
      return 0.0;
    idxDeb=(ST->hstIdxDeb+ST->hstNbItems-2)&(SYNCH_HST_SIZE-1);
    idxAFin=(ST->hstIdxDeb+ST->hstNbItems-1)&(SYNCH_HST_SIZE-1);
    SumSyncTime=ST->TimeHst[idxAFin]-ST->TimeHst[idxDeb];
 
-   return (float)(SumSyncTime)/(float)(TimerFreq);
+   return (float)(SumSyncTime)/(float)(DgTimerFreq);
 }
 
 int  WaitSynch(void *SynchBuff,int *Pos) {
    SynchTime *ST;
    ST=((SynchTime*)(SynchBuff));
-   if (TimerFreq==0 || ST==NULL) return 0;
+   if (DgTimerFreq==0 || ST==NULL) return 0;
    int dpos=ST->LastPos;
    for (;;) {
      Synch(SynchBuff,Pos);

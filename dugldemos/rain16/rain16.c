@@ -145,11 +145,11 @@ int main (int argc, char ** argv)
     if (!LoadFONT(&F1,"hello.chr")) {
       printf("Error loading hello.chr\n"); exit(-1); }
 
-    if (!InstallTimer(500)) {
+    if (!DgInstallTimer(500)) {
        CloseVesa(); printf("Timer error\n"); exit(-1);
     }
     if (!InstallKeyboard()) {
-       CloseVesa(); UninstallTimer();
+       CloseVesa(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
 
@@ -319,7 +319,7 @@ int main (int argc, char ** argv)
 
     CloseVesa();
     UninstallKeyboard();
-    UninstallTimer();
+    DgUninstallTimer();
     TextMode();
 
     return 0;

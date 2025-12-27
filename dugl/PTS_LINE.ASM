@@ -1,373 +1,4 @@
 
-;***************************************************************************
-;------ *InPut*Surf --------------------------------------------------------
-;***************************************************************************
-_InPutMaskSurf:
-	ARG	InMsS, 4, InMsSX, 4, InMsSY, 4, InMsType, 4, MXIn, 4, MYIn, 4
-		MOVD		mm0,EBX
-		MOVD		mm1,ESI
-		MOVD		mm2,EDI
-
-		MOV		ESI,[EBP+InMsS] ; copy la surface -----------
-		MOV		EDI,Svlfb
-		CopySurf
-		;MOV		ECX,16
-		;REP		MOVSD
-						 ; determine les bornes -----
-		MOV		EAX,[EBP+InMsSX] ; MaxX
-		MOV		EBX,[EBP+InMsSY] ; MaxY
-		MOV		ECX,EAX 	 ; MinX
-		MOV		EDX,EBX 	 ; MinY
-
-		MOV		ESI,[EBP+InMsType]
-		TEST		ESI,1
-		JZ		.NormHzPut
-		SUB		EAX,[SMinX]
-		SUB		ECX,[SMaxX]
-		JMP		NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
-.InvHzPut:
-		TEST		ESI,2
-		JZ		.NormVtPut
-		SUB		EBX,[SMinY]
-		SUB		EDX,[SMaxY]
-		JMP		NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
-.InvVtPut:
-		CMP		EAX,[_MinX]
-		JL		NEAR .NotMaskIn
-		CMP		EBX,[_MinY]
-		JL		NEAR .NotMaskIn
-		CMP		ECX,[_MaxX]
-		JG		NEAR .NotMaskIn
-		CMP		EDX,[_MaxY]
-		JG		NEAR .NotMaskIn
-
-		CMP		EAX,[_MaxX]
-		JLE		.PasNvMaxX
-		MOV		EAX,[_MaxX]
-.PasNvMaxX:	CMP		EBX,[_MaxY]
-		JLE		.PasNvMaxY
-		MOV		EBX,[_MaxY]
-.PasNvMaxY:	CMP		ECX,[_MinX]
-		JGE		.PasNvMinX
-		MOV		ECX,[_MinX]
-.PasNvMinX:	CMP		EDX,[_MinY]
-		JGE		.PasNvMinY
-		MOV		EDX,[_MinY]
-.PasNvMinY:
-
-		CMP		EAX,[EBP+MXIn]
-		JL		.NotMaskIn
-		CMP		ECX,[EBP+MXIn]
-		JG		.NotMaskIn
-		CMP		EBX,[EBP+MYIn]
-		JL		.NotMaskIn
-		CMP		EDX,[EBP+MYIn]
-		JG		.NotMaskIn
-
-		MOV		ESI,[EBP+MXIn]
-		MOV		EDI,[EBP+MYIn]
-
-		TEST            DWORD [EBP+InMsType],1 ; InvHz
-		JNZ		.InvHZCalc
-		SUB		ESI,ECX  ; MXIn-MinX
-		JMP		SHORT .PInvHzCalc
-.InvHZCalc: 	NEG		ESI
-		ADD		ESI,EAX  ; MaxX-MXIn
-.PInvHzCalc:
-		TEST            DWORD [EBP+InMsType],2 ; InvVt
-		JNZ		.InvVTCalc
-		NEG		EDI
-		ADD		EDI,EBX  ; MaxY-MXIn
-		JMP		SHORT .PInvVtCalc
-.InvVTCalc:
-		SUB		EDI,EDX  ; MXIn-MinY
-.PInvVtCalc:
-		IMUL		EDI,[SResH]
-		ADD		ESI,EDI
-		ADD		ESI,[Srlfb]
-		MOV		AL,[ESI]
-		OR		AL,AL
-		JZ		.NotMaskIn
-
-.MaskIn:	OR		EAX,BYTE -1
-		JMP		SHORT .FinInMask
-.NotMaskIn:	XOR		EAX,EAX
-.FinInMask:
-		MOVD		EBX,mm0
-		MOVD		ESI,mm1
-		MOVD		EDI,mm2
-		;EMMS
-		RETURN
-
-ALIGN 32
-_InPutSurf:
-	ARG	InS, 4, InSX, 4, InSY, 4, InType, 4, XIn, 4, YIn, 4
-		MOVD		mm0,EBX
-		MOVD		mm1,ESI
-		MOVD		mm2,EDI
-
-		MOV		ESI,[EBP+InS] ; copy la surface -----------
-		MOV		EDI,Svlfb
-		CopySurf
-		;MOV		ECX,16
-		;REP		MOVSD
-						 ; determine les bornes -----
-		MOV		EAX,[EBP+InSX] ; MaxX
-		MOV		EBX,[EBP+InSY] ; MaxY
-		MOV		ECX,EAX 	 ; MinX
-		MOV		EDX,EBX 	 ; MinY
-
-		MOV		ESI,[EBP+InType]
-		TEST		ESI,1
-		JZ		.NormHzPut
-		SUB		EAX,[SMinX]
-		SUB		ECX,[SMaxX]
-		JMP		NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
-.InvHzPut:
-		TEST		ESI,2
-		JZ		.NormVtPut
-		SUB		EBX,[SMinY]
-		SUB		EDX,[SMaxY]
-		JMP		NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
-.InvVtPut:
-		CMP		EAX,[_MinX]
-		JL		.NotMaskIn
-		CMP		EBX,[_MinY]
-		JL		.NotMaskIn
-		CMP		ECX,[_MaxX]
-		JG		.NotMaskIn
-		CMP		EDX,[_MaxY]
-		JG		.NotMaskIn
-
-		CMP		EAX,[_MaxX]
-		JLE		.PasNvMaxX
-		MOV		EAX,[_MaxX]
-.PasNvMaxX:	CMP		EBX,[_MaxY]
-		JLE		.PasNvMaxY
-		MOV		EBX,[_MaxY]
-.PasNvMaxY:	CMP		ECX,[_MinX]
-		JGE		.PasNvMinX
-		MOV		ECX,[_MinX]
-.PasNvMinX:	CMP		EDX,[_MinY]
-		JGE		.PasNvMinY
-		MOV		EDX,[_MinY]
-.PasNvMinY:
-		CMP		EAX,[EBP+XIn]
-		JL		.NotMaskIn
-		CMP		ECX,[EBP+XIn]
-		JG		.NotMaskIn
-		CMP		EBX,[EBP+YIn]
-		JL		.NotMaskIn
-		CMP		EDX,[EBP+YIn]
-		JG		.NotMaskIn
-
-.MaskIn:	OR		EAX,BYTE -1
-		JMP		SHORT .FinInMask
-.NotMaskIn:	XOR		EAX,EAX
-.FinInMask:
-		MOVD		EBX,mm0
-		MOVD		ESI,mm1
-		MOVD		EDI,mm2
-		;EMMS
-		RETURN
-
-;----------- RView --------------------
-ALIGN 32
-_RViewInPutMaskSurf:
-	ARG	RVPMS,4, VInMsS,4, VInMsSX,4, VInMsSY,4, VInMsType,4, VMXIn,4, VMYIn,4
-		MOVD		mm0,EBX
-		MOVD		mm1,ESI
-		MOVD		mm2,EDI
-
-		MOV		ESI,[EBP+VInMsS] ; copy la surface ----------
-		MOV		EDI,Svlfb
-		CopySurf
-		;MOV		ECX,16
-		;REP		MOVSD
-		MOV		ESI,[EBP+RVPMS] ; copy la View --------------
-		MOV		EDI,S2MaxX
-		ADD		ESI,BYTE 4   ; View MaxX
-		MOV		ECX,4
-		REP		MOVSD
-						 ; determine les bornes -----
-		MOV		EAX,[EBP+VInMsSX] ; MaxX
-		MOV		EBX,[EBP+VInMsSY] ; MaxY
-		MOV		ECX,EAX 	 ; MinX
-		MOV		EDX,EBX 	 ; MinY
-
-		MOV		ESI,[EBP+VInMsType]
-		TEST		ESI,1
-		JZ		.NormHzPut
-		SUB		EAX,[SMinX]
-		SUB		ECX,[SMaxX]
-		JMP		NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
-.InvHzPut:
-		TEST		ESI,2
-		JZ		.NormVtPut
-		SUB		EBX,[SMinY]
-		SUB		EDX,[SMaxY]
-		JMP		NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
-.InvVtPut:
-		CMP		EAX,[S2MinX]
-		JL		NEAR .NotMaskIn
-		CMP		EBX,[S2MinY]
-		JL		NEAR .NotMaskIn
-		CMP		ECX,[S2MaxX]
-		JG		NEAR .NotMaskIn
-		CMP		EDX,[S2MaxY]
-		JG		NEAR .NotMaskIn
-
-		CMP		EAX,[S2MaxX]
-		JLE		.PasNvMaxX
-		MOV		EAX,[S2MaxX]
-.PasNvMaxX:	CMP		EBX,[S2MaxY]
-		JLE		.PasNvMaxY
-		MOV		EBX,[S2MaxY]
-.PasNvMaxY:	CMP		ECX,[S2MinX]
-		JGE		.PasNvMinX
-		MOV		ECX,[S2MinX]
-.PasNvMinX:	CMP		EDX,[S2MinY]
-		JGE		.PasNvMinY
-		MOV		EDX,[S2MinY]
-.PasNvMinY:
-
-		CMP		EAX,[EBP+VMXIn]
-		JL		.NotMaskIn
-		CMP		ECX,[EBP+VMXIn]
-		JG		.NotMaskIn
-		CMP		EBX,[EBP+VMYIn]
-		JL		.NotMaskIn
-		CMP		EDX,[EBP+VMYIn]
-		JG		.NotMaskIn
-
-		MOV		ESI,[EBP+VMXIn]
-		MOV		EDI,[EBP+VMYIn]
-
-		TEST            DWORD [EBP+VInMsType],1 ; InvHz
-		JNZ		.InvHZCalc
-		SUB		ESI,ECX  ; MXIn-MinX
-		JMP		SHORT .PInvHzCalc
-.InvHZCalc: 	NEG		ESI
-		ADD		ESI,EAX  ; MaxX-MXIn
-.PInvHzCalc:
-		TEST            DWORD [EBP+VInMsType],2 ; InvVt
-		JNZ		.InvVTCalc
-		NEG		EDI
-		ADD		EDI,EBX  ; MaxY-MXIn
-		JMP		SHORT .PInvVtCalc
-.InvVTCalc:
-		SUB		EDI,EDX  ; MXIn-MinY
-.PInvVtCalc:
-		IMUL		EDI,[SResH]
-		ADD		ESI,EDI
-		ADD		ESI,[Srlfb]
-		MOV		AL,[ESI]
-		OR		AL,AL
-		JZ		.NotMaskIn
-
-.MaskIn:	OR		EAX,BYTE -1
-		JMP		SHORT .FinInMask
-.NotMaskIn:	XOR		EAX,EAX
-.FinInMask:
-		MOVD		EBX,mm0
-		MOVD		ESI,mm1
-		MOVD		EDI,mm2
-		;EMMS
-		RETURN
-
-ALIGN 32
-_RViewInPutSurf:
-	ARG	RVPS,4, VInS,4, VInSX,4, VInSY,4, VInType,4, VXIn,4, VYIn,4
-		MOVD		mm0,EBX
-		MOVD		mm1,ESI
-		MOVD		mm2,EDI
-
-		MOV		ESI,[EBP+VInS] ; copy la surface ------------
-		MOV		EDI,Svlfb
-		CopySurf
-		;MOV		ECX,16
-		;REP		MOVSD
-		MOV		ESI,[EBP+RVPS] ; copy la View ---------------
-		MOV		EDI,S2MaxX
-		ADD		ESI,BYTE 4   ; View MaxX
-		MOV		ECX,4
-		REP		MOVSD
-						 ; determine les bornes -----
-		MOV		EAX,[EBP+VInSX] ; MaxX
-		MOV		EBX,[EBP+VInSY] ; MaxY
-		MOV		ECX,EAX 	 ; MinX
-		MOV		EDX,EBX 	 ; MinY
-
-		MOV		ESI,[EBP+VInType]
-		TEST		ESI,1
-		JZ		.NormHzPut
-		SUB		EAX,[SMinX]
-		SUB		ECX,[SMaxX]
-		JMP		NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
-.InvHzPut:
-		TEST		ESI,2
-		JZ		.NormVtPut
-		SUB		EBX,[SMinY]
-		SUB		EDX,[SMaxY]
-		JMP		NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
-.InvVtPut:
-		CMP		EAX,[S2MinX]
-		JL		.NotMaskIn
-		CMP		EBX,[S2MinY]
-		JL		.NotMaskIn
-		CMP		ECX,[S2MaxX]
-		JG		.NotMaskIn
-		CMP		EDX,[S2MaxY]
-		JG		.NotMaskIn
-
-		CMP		EAX,[S2MaxX]
-		JLE		.PasNvMaxX
-		MOV		EAX,[S2MaxX]
-.PasNvMaxX:	CMP		EBX,[S2MaxY]
-		JLE		.PasNvMaxY
-		MOV		EBX,[S2MaxY]
-.PasNvMaxY:	CMP		ECX,[S2MinX]
-		JGE		.PasNvMinX
-		MOV		ECX,[S2MinX]
-.PasNvMinX:	CMP		EDX,[S2MinY]
-		JGE		.PasNvMinY
-		MOV		EDX,[S2MinY]
-.PasNvMinY:
-		CMP		EAX,[EBP+VXIn]
-		JL		.NotMaskIn
-		CMP		ECX,[EBP+VXIn]
-		JG		.NotMaskIn
-		CMP		EBX,[EBP+VYIn]
-		JL		.NotMaskIn
-		CMP		EDX,[EBP+VYIn]
-		JG		.NotMaskIn
-
-.MaskIn:	OR		EAX,BYTE -1
-		JMP		SHORT .FinInMask
-.NotMaskIn:	XOR		EAX,EAX
-.FinInMask:
-		MOVD		EBX,mm0
-		MOVD		ESI,mm1
-		MOVD		EDI,mm2
-		;EMMS
-		RETURN
-
 ;****************************************************************************
 ;****************************************************************************
 ALIGN 32
@@ -443,13 +74,13 @@ _PutMaskSurf:
 		NEG		EDI
 		ADD		EDI,ECX
 		ADD		EDI,[_vlfb]
-                
+
 		MOV		EDX,[_ResH]
 		SUB		EDX,[SResH]
 
 		TEST		BYTE [PType],1
                 JNZ             .InvHzPSurf
-                
+
 .BcPutSurf:	MOV		EBX,[SResH]
 ;**********************
 		TEST		EBX,0xfffffffc
@@ -493,7 +124,7 @@ ALIGN 4
 		JNZ		.BcPutSurf
 
 		JMP		.PasPutSurf
-                
+
 .InvHzPSurf:    ; inverser horizontal
                 ADD		ESI,[SResH]
 .IBcPutSurf:	MOV		EBX,[SResH]
@@ -810,13 +441,13 @@ _PutSurf:
 		NEG		EDI
 		ADD		EDI,ECX
 		ADD		EDI,[_vlfb]
-                
+
 		MOV		EDX,[_ResH]
 		SUB		EDX,[SResH]
 
 		TEST		BYTE [PType],1
                 JNZ             .InvHzPSurf
-                
+
 .BcPutSurf:	MOV		EBX,[SResH]
 .BcStBAv:	TEST		EDI,3
 		JZ		.FPasStBAv
@@ -859,7 +490,7 @@ ALIGN 4
 		JNZ		.BcPutSurf
 
 		JMP		.PasPutSurf
-                
+
 .InvHzPSurf:    ; inverser horizontal
                 ADD		ESI,[SResH]
 .IBcPutSurf:	MOV		EBX,[SResH]
@@ -899,7 +530,7 @@ ALIGN 4
 		LEA		EDI,[EDI+8]
 
 		JNZ		.IStoMMX
-                
+
 		AND		EBX,BYTE 7
 		JZ		.IFinSHLine
 .IStDAp:	TEST		EBX,4
@@ -909,7 +540,7 @@ ALIGN 4
 		BSWAP		EAX
 		STOSD
 		SUB		EBX,BYTE 4
-                
+
 .IStBAp:	OR		EBX,EBX
 		JZ		.IPasStBAp
 .IBcStBAp:	DEC		ESI
@@ -1043,7 +674,7 @@ ALIGN 4
 		LEA		ESI,[ESI+8]
 		LEA		EDI,[EDI+8]
 		JNZ		.CStoMMX
-                
+
 		AND		EBX,BYTE 7
 		JZ		.CFinSHLine
 .CStDAp: 	TEST		EBX,4
@@ -1065,7 +696,7 @@ ALIGN 4
 		DEC		EBP
 		JNZ		.CBcPutSurf
 		JMP		.PasPutSurf
-                
+
 .CInvHzPSurf:   ; clipper et inverser horizontalement
                 ADD		ESI,EDX
 .CIBcPutSurf:	MOV		EBX,EDX
@@ -1179,7 +810,7 @@ _Line:
 		;CMP		EBX,[_MaxY]
 		MOV		ECX,[EBP+PtrP2]
 		;JG		NEAR .FinLine
-		
+
 		MOV		EAX,[EDX]   ; X1
 		MOV		EBX,[ECX]   ; X2
 		MOV		ESI,[EDX+4] ; Y1
@@ -1341,7 +972,7 @@ _Line:
 		SUB       	ESI,EBX
 		SUB       	EDI,ECX
 		OR        	ESI,ESI
-		
+
 		JZ		NEAR .cas2
 		JNS		.PasNegESI2
 		NEG		ESI
@@ -1901,7 +1532,7 @@ _LineMap:
 		DEC		ESI
 		LEA		EDI,[EDI+1]
 		JNZ		.lp4
-		
+
 		JMP		SHORT .FinLine
 ;********CAS 5 : (DX=0, DY=0)***********************************************
 .cas5:

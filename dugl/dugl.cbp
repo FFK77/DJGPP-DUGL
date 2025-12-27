@@ -26,11 +26,14 @@
 				<Option compiler="djgpp_gnu_gcc_compiler" />
 				<Option createDefFile="1" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-Wall" />
+					<Add option="-m32" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-static-libgcc" />
+					<Add option="-m32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -89,6 +92,7 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="mgraph.asm" />
 		<Unit filename="mgraphc.c">
 			<Option compilerVar="CC" />
 		</Unit>

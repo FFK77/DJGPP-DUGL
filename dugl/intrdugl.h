@@ -71,8 +71,6 @@ typedef struct
 } VesaInfo;
 
 // from graph.asm
-extern int vlfb,OffVMem,ResH,ResV,MaxX,MaxY,MinX,MinY,rlfb,SizeSurf;
-extern int OrgX,OrgY,RMaxX,RMaxY,RMinX,RMinY;
 extern int TexXDeb[2048];
 extern int TexXFin[2048],TexYDeb[2048],TexYFin[2048];
 extern int PColDeb[2048],PColFin[2048];

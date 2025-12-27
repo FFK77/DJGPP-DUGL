@@ -9,7 +9,6 @@ typedef struct
 	int	SizeSurf;
 	int	OffVMem;
 	int	rlfb;
-	int	RMaxX, RMaxY, RMinX, RMinY;
 	int	BitsPixel;
 	int	ScanLine,Mask,Resv2;
 } Surf;
@@ -110,16 +109,11 @@ int  GetMaxResVSetSurf(); // Max Height in pixels for a surf used with SetSurf
 void GetSurf(Surf *S); // get the current surf
 void SetOrgSurf(Surf *S,int LOrgX,int LOrgY);
 void SetSurfView(Surf *S, View *V);
-void SetSurfRView(Surf *S, View *V);
 void SetSurfInView(Surf *S, View *V);
-void SetSurfInRView(Surf *S, View *V);
 void GetSurfView(Surf *S, View *V);
-void GetSurfRView(Surf *S, View *V);
 void SetOrgVSurf(int OrgX,int OrgY);
 void SetVView(View *V);
-void SetVRView(View *V);
 void SetVInView(View *V);
-void SetVInRView(View *V);
 int  CreateSurf(Surf *S, int ResHz, int ResVt, char BitPixel);
 void DestroySurf(Surf *S);
 int  CreateSurfBuff(Surf *S, int ResHz, int ResVt, char BitPixel,void *Buff);
@@ -192,10 +186,6 @@ int  SensPoly(void *ListPt);
 #define INV_VT_PUT	2 // reversed vertically
 void PutSurf(Surf *S,int X,int Y,int PType);
 void PutMaskSurf(Surf *S,int X,int Y,int PType);
-int  InPutSurf(Surf *S,int X,int Y,int PType,int XIn,int YIn);
-int  InPutMaskSurf(Surf *S,int X,int Y,int PType,int XIn,int YIn);
-int  RViewInPutSurf(View *V,Surf *S,int X,int Y,int PType,int XIn,int YIn);
-int  RViewInPutMaskSurf(View *V,Surf *S,int X,int Y,int PType,int XIn,int YIn);
 
 // 8 bpp Drawing helper functions provided for convenience
 // -------------------------------------------------------

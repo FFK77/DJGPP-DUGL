@@ -82,7 +82,7 @@ InFillTEXT16:
 		@InCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -100,7 +100,7 @@ InFillTEXT16:
 		MOV		ESI,[_TexYFin+EBX]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -120,7 +120,7 @@ ALIGN 32
 ClipFillTEXT16:
                 @ClipCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 
 		MOV		EBP,[FinYPoly]
 		CopySurf  ; copy the source texture surface
@@ -144,7 +144,7 @@ ClipFillTEXT16:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -194,7 +194,7 @@ InFillMASK_TEXT16:
 		@InCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -212,7 +212,7 @@ InFillMASK_TEXT16:
 		MOV		ESI,[_TexYFin+EBX]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -232,7 +232,7 @@ ALIGN 32
 ClipFillMASK_TEXT16:
                 @ClipCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 
 		MOV		EBP,[FinYPoly]
 		CopySurf  ; copy the source texture surface
@@ -256,7 +256,7 @@ ClipFillMASK_TEXT16:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -323,9 +323,9 @@ InFillRGB16:
 		SHR		ESI,1
 		PUSH		EBX
 		INC		ESI
-		
+
 		@InRGBHLine16
-		
+
 		POP		EBX
 		POP		EDX
 		DEC		EBX
@@ -579,13 +579,13 @@ InFillTEXT_BLND16:
 		MOVQ		[QBlue16Blend],mm3
 		MOVQ		[QGreen16Blend],mm4
 		MOVQ		[QRed16Blend],mm5
-		
+
 ; end prepare blend
 		@InCalcTextCnt
-		
+
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -603,7 +603,7 @@ InFillTEXT_BLND16:
 		MOV		ESI,[_TexYFin+EBX]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -660,7 +660,7 @@ ClipFillTEXT_BLND16:
 		MOVQ		[QRed16Blend],mm5
 ; end prepare blend
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 
 		MOV		EBP,[FinYPoly]
 		CopySurf  ; copy the source texture surface
@@ -684,7 +684,7 @@ ClipFillTEXT_BLND16:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -753,7 +753,7 @@ InFillMASK_TEXT_BLND16:
 		IMUL		BX,AX
 		IMUL		CX,AX
 		IMUL		DX,AX
-		
+
 		MOVD		mm7,EBP
 		MOVD		mm3,EBX
 		MOVD		mm4,ECX
@@ -770,13 +770,13 @@ InFillMASK_TEXT_BLND16:
 		MOVQ		[QBlue16Blend],mm3
 		MOVQ		[QGreen16Blend],mm4
 		MOVQ		[QRed16Blend],mm5
-		
+
 ; end prepare blend
 		@InCalcTextCnt
-		
+
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -794,7 +794,7 @@ InFillMASK_TEXT_BLND16:
 		MOV		ESI,[_TexYFin+EBX]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -833,7 +833,7 @@ ClipFillMASK_TEXT_BLND16:
 		IMUL		BX,AX
 		IMUL		CX,AX
 		IMUL		DX,AX
-		
+
 		MOVD		mm7,EBP
 		MOVD		mm3,EBX
 		MOVD		mm4,ECX
@@ -852,7 +852,7 @@ ClipFillMASK_TEXT_BLND16:
 		MOVQ		[QRed16Blend],mm5
 ; end prepare blend
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 
 		MOV		EBP,[FinYPoly]
 		CopySurf  ; copy the source texture surface
@@ -876,7 +876,7 @@ ClipFillMASK_TEXT_BLND16:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX

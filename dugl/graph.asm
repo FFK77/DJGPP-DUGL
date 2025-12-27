@@ -6,8 +6,7 @@ GLOBAL	_PutPixel,_GetPixel,_line,_Line,_linemap,_LineMap,_SetSurf,_SurfCopy
 GLOBAL	_SetSrcSurf,_GetSurf,_Clear,_ProtectSetPalette,_ProtectViewSurf
 GLOBAL	_ProtectViewSurfWaitVR,_WaitRetrace,_GetMaxResVSetSurf
 ;********************
-GLOBAL	_Poly,_SensPoly,_ValidSPoly,_PutSurf,_PutMaskSurf,_InPutSurf,_InPutMaskSurf ;-)
-GLOBAL	_RViewInPutSurf,_RViewInPutMaskSurf
+GLOBAL	_Poly,_SensPoly,_ValidSPoly,_PutSurf,_PutMaskSurf
 GLOBAL	_InRLE,_OutRLE,_SizeOutRLE,_InLZW
 GLOBAL	_SetFONT, _GetFONT,_OutText,_LargText,_LargPosText,_PosLargText
 ; 16bpp
@@ -15,15 +14,13 @@ GLOBAL	_PutPixel16,_GetPixel16
 GLOBAL	_PutSurf16,_PutMaskSurf16,_PutSurfBlnd16,_PutMaskSurfBlnd16
 GLOBAL	_PutSurfTrans16,_PutMaskSurfTrans16
 GLOBAL	_SurfCopyBlnd16,_SurfMaskCopyBlnd16,_SurfCopyTrans16,_SurfMaskCopyTrans16
-GLOBAL	_line16,_Line16,_linemap16,_LineMap16,_lineblnd16,_LineBlnd16,
+GLOBAL	_line16,_Line16,_linemap16,_LineMap16,_lineblnd16,_LineBlnd16
 GLOBAL	_linemapblnd16,_LineMapBlnd16,_Poly16
 GLOBAL	_Clear16,_OutText16
 
 
 ; GLOBAL DATA
-GLOBAL	_vlfb, _OffVMem, _ResH, _ResV, _MaxX, _MaxY, _MinX, _MinY
-GLOBAL	_OrgX, _OrgY, _rlfb, _SizeSurf, _RMaxX, _RMaxY, _RMinX, _RMinY
-GLOBAL	_CurViewVSurf, _CurSurf
+GLOBAL	_CurViewVSurf, _CurSurf, _SrcSurf
 GLOBAL	_CurFONT, _FntPtr, _FntHaut, _FntDistLgn, _FntLowPos, _FntHighPos
 GLOBAL	_FntSens, _FntTab, _FntX, _FntY, _FntCol
 GLOBAL	_PtrTbColConv
@@ -37,7 +34,7 @@ EXTERN	_PColDeb, _PColFin, _TbDegCol
 ; --GIF------
 EXTERN	_Prefix, _Suffix, _DStack
 Prec		EQU	12
-MaxResV		EQU	2048
+MaxResV		EQU	4096
 BlendMask	EQU	0x1f
 SurfUtilSize    EQU     80
 CMaskB_RGB16	EQU	0x1f	 ; blue bits 0->4
@@ -402,7 +399,7 @@ _SetSrcSurf:
 		PUSH	        ESI
 
 		MOV		ESI,[EBP+SrcS]
-		MOV		EDI,Svlfb
+		MOV		EDI, _SrcSurf
 		CopySurf
 
 		POP		ESI
@@ -2125,19 +2122,12 @@ _OrgX		DD	0
 _SizeSurf	DD	0
 _OffVMem	DD	0
 _rlfb		DD	0
-_RMaxX		DD	0
-_RMaxY		DD	0
-_RMinX		DD	0
-_RMinY		DD	0;-----------------------
-_BitsPixel      DD      0
-_ScanLine       DD	0
+_BitsPixel  DD  0
+_ScanLine   DD	0
 _Mask  		DD	0
-_Resv2  	DD	0
-_Resv3		DD	0
-_Resv4		DD	0
-_Resv5		DD	0
-_Resv6		DD	0;-----------------------
+_Resv2  	DD	0 ;-----------------------
 ; source texture
+_SrcSurf:
 Svlfb		DD	0
 SResH		DD	0
 SResV		DD	0
@@ -2150,43 +2140,10 @@ SOrgX		DD	0
 SSizeSurf	DD	0
 SOffVMem	DD	0
 Srlfb		DD	0
-SRMaxX		DD	0
-SRMaxY		DD	0
-SRMinX		DD	0
-SRMinY		DD	0;-----------------------
-SBitsPixel      DD      0
-SScanLine       DD	0
+SBitsPixel  DD  0
+SScanLine   DD	0
 SMask		DD	0
-SResv2  	DD	0
-SResv3		DD	0
-SResv4		DD	0
-SResv5		DD	0
-SResv6		DD	0;-----------------------
-
-S2vlfb		DD	0
-S2ResH		DD	0
-S2ResV		DD	0
-S2MaxX		DD	0
-S2MaxY		DD	0
-S2MinX		DD	0
-S2MinY		DD	0
-S2OrgY		DD	0;-----------------------
-S2OrgX		DD	0
-S2SizeSurf	DD	0
-S2OffVMem	DD	0
-S2rlfb		DD	0
-S2RMaxX		DD	0
-S2RMaxY		DD	0
-S2RMinX		DD	0
-S2RMinY		DD	0;-----------------------
-S2BitsPixel     DD      0
-S2ScanLine      DD	0
-S2Mask		DD	0
-S2Resv2  	DD	0
-S2Resv3		DD	0
-S2Resv4		DD	0
-S2Resv5		DD	0
-S2Resv6		DD	0;-----------------------
+SResv2  	DD	0;-----------------------
 
 XP1		DD	0
 YP1		DD	0

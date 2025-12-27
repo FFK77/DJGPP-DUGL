@@ -352,9 +352,9 @@ void DestroyFONT(FONT *F)
 }
 
 void ClearText()
-{	if (FntSens) FntX=MaxX;
-	else FntX=MinX;
- 	FntY=MaxY-FntHighPos;
+{	if (FntSens) FntX=CurSurf.MaxX;
+	else FntX=CurSurf.MinX;
+ 	FntY=CurSurf.MaxY-FntHighPos;
 }
 
 void SetTextAttrib(int TX,int TY,int TCol)
@@ -382,27 +382,27 @@ int  OutTextMode(const char *str,int Mode)
 	    break;
 	  case 1:
 	    L=LargText(str);
-	    if (FntSens) FntX=(MinX+MaxX+L)/2;
-	    else FntX=(MinX+MaxX-L)/2;
+	    if (FntSens) FntX=(CurSurf.MinX+CurSurf.MaxX+L)/2;
+	    else FntX=(CurSurf.MinX+CurSurf.MaxX-L)/2;
 	    break;
 	  case 2:
-	    if (FntSens) FntX=MaxX;
-	    else FntX=MinX;
+	    if (FntSens) FntX=CurSurf.MaxX;
+	    else FntX=CurSurf.MinX;
 	    break;
 	  case 3:
 	    L=LargText(str);
-	    if (FntSens) FntX=MinX+L;
-	    else FntX=MaxX-L;
+	    if (FntSens) FntX=CurSurf.MinX+L;
+	    else FntX=CurSurf.MaxX-L;
 	    break;
 	  case 4:
 	    L=LargText(str);
-	    if (FntSens) FntX=MinX+L;
-	    else FntX=MinX;
+	    if (FntSens) FntX=CurSurf.MinX+L;
+	    else FntX=CurSurf.MinX;
 	    break;
 	  case 5:
 	    L=LargText(str);
-	    if (FntSens) FntX=MaxX;
-	    else FntX=MaxX-L;
+	    if (FntSens) FntX=CurSurf.MaxX;
+	    else FntX=CurSurf.MaxX-L;
 	    break;
 	  default:
 	    return;
@@ -419,27 +419,27 @@ int  GetXOutTextMode(const char *str,int Mode)
   	    x=FntX; break;
 	  case 1:
 	    L=LargText(str);
-	    if (FntSens) x=(MinX+MaxX+L)/2;
-	    else x=(MinX+MaxX-L)/2;
+	    if (FntSens) x=(CurSurf.MinX+CurSurf.MaxX+L)/2;
+	    else x=(CurSurf.MinX+CurSurf.MaxX-L)/2;
 	    break;
 	  case 2:
-	    if (FntSens) x=MaxX;
-	    else x=MinX;
+	    if (FntSens) x=CurSurf.MaxX;
+	    else x=CurSurf.MinX;
 	    break;
 	  case 3:
 	    L=LargText(str);
-	    if (FntSens) x=MinX+L;
-	    else x=MaxX-L;
+	    if (FntSens) x=CurSurf.MinX+L;
+	    else x=CurSurf.MaxX-L;
 	    break;
 	  case 4:
 	    L=LargText(str);
-	    if (FntSens) x=MinX+L;
-	    else x=MinX;
+	    if (FntSens) x=CurSurf.MinX+L;
+	    else x=CurSurf.MinX;
 	    break;
 	  case 5:
 	    L=LargText(str);
-	    if (FntSens) x=MaxX;
-	    else x=MaxX-L;
+	    if (FntSens) x=CurSurf.MaxX;
+	    else x=CurSurf.MaxX-L;
 	    break;
 	  default:
 	    return;
@@ -448,7 +448,7 @@ int  GetXOutTextMode(const char *str,int Mode)
 }
 
 int GetFntYMID() {
-    return (MaxY+MinY)/2-FntHaut/2-FntLowPos;
+    return (CurSurf.MaxY+CurSurf.MinY)/2-FntHaut/2-FntLowPos;
 }
 
 int  OutTextYMode(int TY,const char *str,int Mode)
@@ -463,17 +463,17 @@ void RViewClearText(View *V)
 }
 
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  RViewOutTextMode(View *V,const char *str,int Mode)
+int  ViewOutTextMode(View *V,const char *str,int Mode)
 {
    View saveView;
    int x;
-   GetSurfRView(&CurSurf, &saveView);
+   GetSurfView(&CurSurf, &saveView);
    x=OutTextMode(str,Mode);
-   SetSurfRView(&CurSurf, &saveView);
+   SetSurfView(&CurSurf, &saveView);
    return x;
 }
 
-int  RViewGetXOutTextMode(View *V,const char *str,int Mode)
+int  ViewGetXOutTextMode(View *V,const char *str,int Mode)
 {	int L,y,x;
 	switch (Mode) {
 	  case 0:
@@ -508,18 +508,18 @@ int  RViewGetXOutTextMode(View *V,const char *str,int Mode)
 	return x;
 }
 
-int  RViewOutTextYMode(View *V,int TY,const char *str,int Mode)
+int  ViewOutTextYMode(View *V,int TY,const char *str,int Mode)
 {	FntY=TY;
-	return RViewOutTextMode(V,str,Mode);
+	return ViewOutTextMode(V,str,Mode);
 }
 
-int  RViewOutTextXYMode(View *V,int TXY,int TY,const char *str)
+int  ViewOutTextXYMode(View *V,int TXY,int TY,const char *str)
 {	FntX=TXY; FntY=TY;
-	return RViewOutTextMode(V,str,AJ_CUR_POS);
+	return ViewOutTextMode(V,str,AJ_CUR_POS);
 }
 
 
-int RViewGetFntYMID(View *V) {
+int ViewGetFntYMID(View *V) {
     return (V->MaxY+V->MinY)/2-FntHaut/2-FntLowPos;
 }
 
@@ -539,27 +539,27 @@ int  OutText16Mode(const char *str,int Mode)
 	    break;
 	  case 1:
 	    L=LargText(str);
-	    if (FntSens) FntX=(MinX+MaxX+L)/2;
-	    else FntX=(MinX+MaxX-L)/2;
+	    if (FntSens) FntX=(CurSurf.MinX+CurSurf.MaxX+L)/2;
+	    else FntX=(CurSurf.MinX+CurSurf.MaxX-L)/2;
 	    break;
 	  case 2:
-	    if (FntSens) FntX=MaxX;
-	    else FntX=MinX;
+	    if (FntSens) FntX=CurSurf.MaxX;
+	    else FntX=CurSurf.MinX;
 	    break;
 	  case 3:
 	    L=LargText(str);
-	    if (FntSens) FntX=MinX+L;
-	    else FntX=MaxX-L;
+	    if (FntSens) FntX=CurSurf.MinX+L;
+	    else FntX=CurSurf.MaxX-L;
 	    break;
 	  case 4:
 	    L=LargText(str);
-	    if (FntSens) FntX=MinX+L;
-	    else FntX=MinX;
+	    if (FntSens) FntX=CurSurf.MinX+L;
+	    else FntX=CurSurf.MinX;
 	    break;
 	  case 5:
 	    L=LargText(str);
-	    if (FntSens) FntX=MaxX;
-	    else FntX=MaxX-L;
+	    if (FntSens) FntX=CurSurf.MaxX;
+	    else FntX=CurSurf.MaxX-L;
 	    break;
 	  default:
 	    return;
@@ -576,24 +576,24 @@ int  OutText16YMode(int TY,const char *str,int Mode)
 }
 
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  RViewOutText16Mode(View *V,const char *str,int Mode)
+int  ViewOutText16Mode(View *V,const char *str,int Mode)
 {
    View saveView;
    int x;
-   GetSurfRView(&CurSurf, &saveView);
+   GetSurfView(&CurSurf, &saveView);
    x=OutText16Mode(str,Mode);
-   SetSurfRView(&CurSurf, &saveView);
+   SetSurfView(&CurSurf, &saveView);
    return x;
 }
 
-int  RViewOutText16YMode(View *V,int TY,const char *str,int Mode)
+int  ViewOutText16YMode(View *V,int TY,const char *str,int Mode)
 {	FntY=TY;
-	return RViewOutText16Mode(V,str,Mode);
+	return ViewOutText16Mode(V,str,Mode);
 }
 
-int  RViewOutText16XYMode(View *V,int TXY,int TY,const char *str)
+int  ViewOutText16XYMode(View *V,int TXY,int TY,const char *str)
 {	FntX=TXY; FntY=TY;
-	return RViewOutText16Mode(V,str,AJ_CUR_POS);
+	return ViewOutText16Mode(V,str,AJ_CUR_POS);
 }
 
 
@@ -612,7 +612,7 @@ void linemap(int X1,int Y1,int X2,int Y2,int LgCol,unsigned int Map)
 }*/
 
 void ClearSurf(int clrcol) {
-	bar(MinX,MinY,MaxX,MaxY,clrcol);
+	bar(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY,clrcol);
 }
 
 void Bar(void *Pt1,void *Pt2,int bcol)
@@ -677,7 +677,7 @@ int GetPixelSize(int bitsPixel) {
 
 void SetOrgSurf(Surf *S,int LOrgX,int LOrgY)
 {	int dx,dy;
-        int pixelsize=GetPixelSize(S->BitsPixel);
+	int pixelsize=GetPixelSize(S->BitsPixel);
 	dx=LOrgX-S->OrgX;
 	dy=LOrgY-S->OrgY;
 	S->MinX-= dx;
@@ -686,10 +686,10 @@ void SetOrgSurf(Surf *S,int LOrgX,int LOrgY)
 	S->MaxY-= dy;
 	S->OrgX= LOrgX;
 	S->OrgY= LOrgY;
-        if (pixelsize>1)
-	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
-        else
-	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
+	if (pixelsize>1)
+		S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
+	else
+		S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
 }
 
 void SetOrgVSurf(int OrgX,int OrgY)
@@ -710,9 +710,9 @@ int  CreateSurf(Surf *S, int ResHz, int ResVt, char BitPixel)
 	  S->OffVMem= -1;
 	  S->ResH= ResHz;
 	  S->ResV= ResVt;
-	  S->RMaxY= ResVt-1;
-	  S->RMaxX= S->MaxX= ResHz-1;
-	  S->RMinX= S->RMinY=  S->MaxY= S->MinX= 0;
+
+	  S->MaxX= ResHz-1;
+	  S->MaxY= S->MinX= 0;
 	  S->MinY= -ResVt+1;      //axe Y montant
 	  S->SizeSurf= ResHz*ResVt*pixelsize;
 	  S->Mask= 0;
@@ -741,9 +741,9 @@ int  CreateSurfBuff(Surf *S, int ResHz, int ResVt, char BitPixel,void *Buff)
 	S->OffVMem= -1;
 	S->ResH= ResHz;
 	S->ResV= ResVt;
-	S->RMaxY= ResVt-1;
-	S->RMaxX= S->MaxX= ResHz-1;
-	S->RMinX= S->RMinY=  S->MaxY= S->MinX= 0;
+
+	S->MaxX= ResHz-1;
+	S->MaxY= S->MinX= 0;
 	S->MinY= -ResVt+1;      //axe Y montant
 	S->SizeSurf= ResHz*ResVt*pixelsize;
 	S->OrgX= 0;
@@ -765,104 +765,54 @@ void SetVView(View *V)
 	   SetSurfView(&VSurf[i],V);
 }
 
-void SetVRView(View *V)
-{	int i;
- 	for (i=0;i<NbVSurf;i++)
-	   SetSurfRView(&VSurf[i],V);
-}
-
 void SetVInView(View *V)
 {	int i;
  	for (i=0;i<NbVSurf;i++)
 	   SetSurfInView(&VSurf[i],V);
 }
 
-void SetVInRView(View *V)
-{	int i;
- 	for (i=0;i<NbVSurf;i++)
-	   SetSurfInRView(&VSurf[i],V);
-}
 
+void SetSurfView(Surf *S, View *V) {
+	int pixelsize;
+	int RMaxX= ((V->MaxX+V->OrgX)<S->ResH) ? V->MaxX+V->OrgX : S->ResH-1;
+	int RMaxY= ((V->MaxY+V->OrgY)<S->ResV) ? V->MaxY+V->OrgY : S->ResV-1;
+	int RMinX= ((V->MinX+V->OrgX)>=0) ? V->MinX+V->OrgX : 0;
+	int RMinY= ((V->MinY+V->OrgY)>=0) ? V->MinY+V->OrgY : 0;
 
-// les coordonnees des limite sont relative a l'ecran
-void SetSurfView(Surf *S, View *V)
-{       int pixelsize;
-	pixelsize=GetPixelSize(S->BitsPixel);
-        S->OrgX= V->OrgX;
- 	S->OrgY= V->OrgY;
-	// limite reel dans l'ecran
-	S->RMaxX= (V->MaxX<S->ResH) ? V->MaxX : S->ResH-1;
-	S->RMaxY= (V->MaxY<S->ResV) ? V->MaxY : S->ResV-1;
-	S->RMinX= (V->MinX>=0) ? V->MinX : 0;
-	S->RMinY= (V->MinY>=0) ? V->MinY : 0;
-	// limite par rapport a OrgX,OrgY
-	S->MaxX= S->RMaxX-S->OrgX;
-	S->MinX= S->RMinX-S->OrgX;
-	S->MaxY= S->RMaxY-S->OrgY;
-	S->MinY= S->RMinY-S->OrgY;
-        if (pixelsize>1)
-	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
-        else
-	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
-}
-
-// les coordonnees des limite sont relative a l'origine de l'ecran
-void SetSurfRView(Surf *S, View *V)
-{       int pixelsize;
 	pixelsize=GetPixelSize(S->BitsPixel);
  	S->OrgX= V->OrgX;
  	S->OrgY= V->OrgY;
-	S->RMaxX= ((V->MaxX+S->OrgX)<S->ResH) ? V->MaxX+S->OrgX : S->ResH-1;
-	S->RMaxY= ((V->MaxY+S->OrgY)<S->ResV) ? V->MaxY+S->OrgY : S->ResV-1;
-	S->RMinX= ((V->MinX+S->OrgX)>=0) ? V->MinX+S->OrgX : 0;
-	S->RMinY= ((V->MinY+S->OrgY)>=0) ? V->MinY+S->OrgY : 0;
-	S->MaxX= S->RMaxX-S->OrgX;
-	S->MinX= S->RMinX-S->OrgX;
-	S->MaxY= S->RMaxY-S->OrgY;
-	S->MinY= S->RMinY-S->OrgY;
-        if (pixelsize>1)
+	S->MaxX= RMaxX-S->OrgX;
+	S->MinX= RMinX-S->OrgX;
+	S->MaxY= RMaxY-S->OrgY;
+	S->MinY= RMinY-S->OrgY;
+	if (pixelsize>1)
 	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
-        else
+    else
 	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
-}
-
-// les coordonnees des limite sont relative a l'ecran
-void SetSurfInView(Surf *S, View *V)
-{       int pixelsize;
-	pixelsize=GetPixelSize(S->BitsPixel);
-	S->OrgX= V->OrgX;
- 	S->OrgY= V->OrgY;
-	// limite reel dans l'ecran
-	S->RMaxX= (V->MaxX<=S->RMaxX) ? V->MaxX : S->RMaxX;
-	S->RMaxY= (V->MaxY<=S->RMaxY) ? V->MaxY : S->RMaxY;
-	S->RMinX= (V->MinX>=S->RMinX) ? V->MinX : S->RMinX;
-	S->RMinY= (V->MinY>=S->RMinY) ? V->MinY : S->RMinY;
-	// limite par rapport a OrgX,OrgY
-	S->MaxX= S->RMaxX-S->OrgX;
-	S->MinX= S->RMinX-S->OrgX;
-	S->MaxY= S->RMaxY-S->OrgY;
-	S->MinY= S->RMinY-S->OrgY;
-        if (pixelsize>1)
-	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
-        else
-	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
-
 }
 
 // les coordonnees des limite sont relative a l'origine de l'ecran
-void SetSurfInRView(Surf *S, View *V)
-{       int pixelsize;
+void SetSurfInView(Surf *S, View *V) {
+	int pixelsize;
 	pixelsize=GetPixelSize(S->BitsPixel);
+
+	int SRMaxX= (S->MaxX+S->OrgX);
+	int SRMaxY= (S->MaxY+S->OrgY);
+	int SRMinX= (S->MinX+S->OrgX);
+	int SRMinY= (S->MinY+S->OrgY);
+
+	int RMaxX= ((V->MaxX+V->OrgX)<=SRMaxX) ? V->MaxX+V->OrgX : SRMaxX;
+	int RMaxY= ((V->MaxY+V->OrgY)<=SRMaxY) ? V->MaxY+V->OrgY : SRMaxY;
+	int RMinX= ((V->MinX+V->OrgX)>=SRMinX) ? V->MinX+V->OrgX : SRMinX;
+	int RMinY= ((V->MinY+V->OrgY)>=SRMinY) ? V->MinY+V->OrgY : SRMinY;
+
 	S->OrgX= V->OrgX;
  	S->OrgY= V->OrgY;
-	S->RMaxX= ((V->MaxX+S->OrgX)<=S->RMaxX) ? V->MaxX+S->OrgX : S->RMaxX;
-	S->RMaxY= ((V->MaxY+S->OrgY)<=S->RMaxY) ? V->MaxY+S->OrgY : S->RMaxY;
-	S->RMinX= ((V->MinX+S->OrgX)>=S->RMinX) ? V->MinX+S->OrgX : S->RMinX;
-	S->RMinY= ((V->MinY+S->OrgY)>=S->RMinY) ? V->MinY+S->OrgY : S->RMinY;
-	S->MaxX= S->RMaxX-S->OrgX;
-	S->MinX= S->RMinX-S->OrgX;
-	S->MaxY= S->RMaxY-S->OrgY;
-	S->MinY= S->RMinY-S->OrgY;
+	S->MaxX= SRMaxX-S->OrgX;
+	S->MinX= SRMinX-S->OrgX;
+	S->MaxY= SRMaxY-S->OrgY;
+	S->MinY= SRMinY-S->OrgY;
         if (pixelsize>1)
 	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
         else
@@ -870,12 +820,6 @@ void SetSurfInRView(Surf *S, View *V)
 }
 
 void GetSurfView(Surf *S, View *V)
-{	V->OrgX=S->OrgX;  V->OrgY=S->OrgY;
-	V->MaxX=S->RMaxX; V->MaxY=S->RMaxY;
-	V->MinX=S->RMinX; V->MinY=S->RMinY;
-}
-
-void GetSurfRView(Surf *S, View *V)
 {	V->OrgX=S->OrgX;  V->OrgY=S->OrgY;
 	V->MaxX=S->MaxX;  V->MaxY=S->MaxY;
 	V->MinX=S->MinX;  V->MinY=S->MinY;
@@ -1122,17 +1066,16 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 	        VSurf[j].vlfb=VSurf[j].rlfb= cvlfb;
 	        VSurf[j].OffVMem= cvlfb-lfb;
 	        VSurf[j].ResH= ResHz;
-                VSurf[j].ResV= ResVt;
-	        VSurf[j].RMaxY= ResVt-1;
-	        VSurf[j].RMaxX= VSurf[j].MaxX= ResHz-1;
-	        VSurf[j].RMinX= VSurf[j].RMinY=
+			VSurf[j].ResV= ResVt;
+
+	        VSurf[j].MaxX= ResHz-1;
 	        VSurf[j].MaxY= VSurf[j].MinX= 0;
 	        VSurf[j].MinY= -ResVt+1; //axe Y montant
 	        VSurf[j].SizeSurf= ScreenSize;
 	        VSurf[j].OrgX= 0;
 	        VSurf[j].OrgY= ResVt-1;
-                VSurf[j].BitsPixel=BitPixel;
-		VSurf[j].ScanLine=ResHz*pixelsize;
+            VSurf[j].BitsPixel=BitPixel;
+			VSurf[j].ScanLine=ResHz*pixelsize;
 
 	        SetOrgSurf(&VSurf[j],0,0);
 	        cvlfb+= ScreenSize;
@@ -1344,7 +1287,7 @@ void putpixel(int X,int Y,int pcol) { // utilise PutPixel
 
 void cputpixel(int X,int Y,int pcol) { // avec clip
 	int P[2];
-	if (X>MaxX || X<MinX || Y>MaxY || Y<MinY) return;
+	if (X>CurSurf.MaxX || X<CurSurf.MinX || Y>CurSurf.MaxY || Y<CurSurf.MinY) return;
 	P[0]=X; P[1]=Y;
 	PutPixel(&P,pcol);
 }
@@ -1357,7 +1300,7 @@ int getpixel(int X,int Y) { // utilise GetPixel
 
 int cgetpixel(int X,int Y) { // avec clip
 	int P[2];
-	if (X>MaxX || X<MinX || Y>MaxY || Y<MinY) return 0;
+	if (X>CurSurf.MaxX || X<CurSurf.MinX || Y>CurSurf.MaxY || Y<CurSurf.MinY) return 0;
 	P[0]=X; P[1]=Y;
 	return GetPixel(&P);
 }
@@ -1406,7 +1349,7 @@ void CPutPixelBlnd16(void *Pt1,int pcol) {
 
 
 void ClearSurf16(int clrcol) {
-	bar16(MinX,MinY,MaxX,MaxY,clrcol);
+	bar16(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY,clrcol);
 }
 
 void Bar16(void *Pt1,void *Pt2,int bcol)
@@ -1511,7 +1454,7 @@ void putpixel16(int X,int Y,int pcol) { // utilise PutPixel
 
 void cputpixel16(int X,int Y,int pcol) { // avec clip
 	int P[2];
-	if (X>MaxX || X<MinX || Y>MaxY || Y<MinY) return;
+	if (X>CurSurf.MaxX || X<CurSurf.MinX || Y>CurSurf.MaxY || Y<CurSurf.MinY) return;
 	P[0]=X; P[1]=Y;
 	PutPixel16(&P,pcol);
 }
@@ -1524,7 +1467,7 @@ int getpixel16(int X,int Y) { // utilise GetPixel
 
 int cgetpixel16(int X,int Y) { // avec clip
 	int P[2];
-	if (X>MaxX || X<MinX || Y>MaxY || Y<MinY) return 0;
+	if (X>CurSurf.MaxX || X<CurSurf.MinX || Y>CurSurf.MaxY || Y<CurSurf.MinY) return 0;
 	P[0]=X; P[1]=Y;
 	return GetPixel16(&P);
 }

@@ -11,22 +11,18 @@ DegMask		EQU		0x3f
 		MOVQ		mm2,[ESI+8]
 		MOVQ		mm3,[ESI+40]
 		MOVQ		mm4,[ESI+16]
+		MOVQ		[EDI],mm0
 		MOVQ		mm5,[ESI+48]
+		MOVQ		[EDI+32],mm1
 		MOVQ		mm6,[ESI+24]
+		MOVQ		[EDI+8],mm2
 		MOVQ		mm7,[ESI+56]
 
-		MOVQ		[EDI],mm0
-		MOVQ		[EDI+32],mm1
-		MOVQ		[EDI+8],mm2
 		MOVQ		[EDI+40],mm3
-		MOVQ		mm0,[ESI+64]
-		MOVQ		mm1,[ESI+72]
 		MOVQ		[EDI+16],mm4
 		MOVQ		[EDI+48],mm5
 		MOVQ		[EDI+24],mm6
 		MOVQ		[EDI+56],mm7
-		MOVQ		[EDI+64],mm0
-		MOVQ		[EDI+72],mm1
 %%NoCopySurf:
 %endmacro
 
@@ -103,14 +99,14 @@ ClipFillSOLID:
 		JNS		.BcFillSolid
 .FinClipSOLID:
 		RET
-                
+
 ;******* POLYTYPE = TEXT
 ALIGN 32
 InFillTEXT:
 		@InCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -128,7 +124,7 @@ InFillTEXT:
 		MOV		ESI,[_TexYFin+EBX]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -148,7 +144,7 @@ ClipFillTEXT:
                 @ClipCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		;XOR		ECX,ECX
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		;OR		ECX,BYTE 16  ; == MOV ECX,16
 
 		MOV		EBP,[FinYPoly]
@@ -175,7 +171,7 @@ ClipFillTEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -222,7 +218,7 @@ InFillMASK_TEXT:
 		@InCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		;MOV		ECX,16
 		SUB		EBX,[FinYPoly] ; -
@@ -240,7 +236,7 @@ InFillMASK_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -259,7 +255,7 @@ ALIGN 32
 ClipFillMASK_TEXT:
                 @ClipCalcTextCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 ;		MOV		ECX,16
 
 		MOV		EBP,[FinYPoly]
@@ -286,7 +282,7 @@ ClipFillMASK_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -383,7 +379,7 @@ InFillDEG:
 		MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
 		MOV		EBP,[_PColDeb+EDX+EBX*4]
 		MOV		EAX,[_PColFin+EDX+EBX*4]
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -408,7 +404,7 @@ ClipFillDEG:
 		SHL		ESI,6 ; ESI*=32 Ptr TbDegCol
 		ADD		ESI,_TbDegCol  ; ESI+=OFFSET _TbDegCol
 		MOVD		mm5,ESI
-		
+
 		MOV		EBP,[FinYPoly]
 		SUB		EBP,[_OrgY]
 		MOV		EBX,[DebYPoly] ; -
@@ -471,7 +467,7 @@ ClipFillDEG:
 		JNS		.BcFillDEG
 .FinClipDEG:
 		RET
-		
+
 ;******* POLYTYPE = FLAT_DEG_TEXT
 ALIGN 32
 InFillFLAT_DEG_TEXT:
@@ -485,7 +481,7 @@ InFillFLAT_DEG_TEXT:
 		AND		EAX,DegMask	  ; **
 		;XOR		ECX,ECX
 		ADD		EAX,_TbDegCol	  ; ***
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		MOV		[PtrTbDegCol],EAX ; ****
 		LEA		EDX,[EBX*4]    ; -
 		;OR		ECX,BYTE 16    ; == MOV ECX,16
@@ -504,7 +500,7 @@ InFillFLAT_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -529,7 +525,7 @@ ClipFillFLAT_DEG_TEXT:
 		AND		EAX,DegMask	  ; **
 		;XOR		ECX,ECX
 		ADD		EAX,_TbDegCol	  ; ***
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		MOV		[PtrTbDegCol],EAX ; ****
 		;OR		ECX,BYTE 16  ; == MOV ECX,16
 
@@ -557,7 +553,7 @@ ClipFillFLAT_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -614,7 +610,7 @@ InFillMASK_FLAT_DEG_TEXT:
 		AND		EAX,DegMask	  ; **
 		;XOR		ECX,ECX
 		ADD		EAX,_TbDegCol	  ; ***
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		MOV		[PtrTbDegCol],EAX ; ****
 		LEA		EDX,[EBX*4]    ; -
 		;OR		ECX,BYTE 16    ; == MOV ECX,16
@@ -633,7 +629,7 @@ InFillMASK_FLAT_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -660,7 +656,7 @@ ClipFillMASK_FLAT_DEG_TEXT:
 		AND		EAX,DegMask	  ; **
 		;XOR		ECX,ECX
 		ADD		EAX,_TbDegCol	  ; ***
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		MOV		[PtrTbDegCol],EAX ; ****
 		;OR		ECX,BYTE 16  ; == MOV ECX,16
 
@@ -687,7 +683,7 @@ ClipFillMASK_FLAT_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -739,7 +735,7 @@ InFillDEG_TEXT:
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
 		;XOR		ECX,ECX
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		;OR		ECX,BYTE 16    ; == MOV ECX,16
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -749,12 +745,12 @@ InFillDEG_TEXT:
 ;ALIGN 4
 .BcFillText:	MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
 		MOV		ECX,[_TPolyAdFin+EDX+EBX*4]
-		
+
 		MOV		EBP,[_PColDeb+EDX+EBX*4]
 		MOV		EAX,[_PColFin+EDX+EBX*4]
 		MOV		[Col1],EBP
 		MOV		[Col2],EAX
-		
+
 		MOV		EAX,[_TexXDeb+EDX+EBX*4]
 		MOV		ESI,[_TexYDeb+EDX+EBX*4]
 		MOV		[XT1],EAX
@@ -763,7 +759,7 @@ InFillDEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -784,7 +780,7 @@ ClipFillDEG_TEXT:
 		@ClipCalcDColCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		;XOR		ECX,ECX
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		;OR		ECX,BYTE 16  ; == MOV ECX,16
 
 		MOV		EBP,[FinYPoly]
@@ -816,7 +812,7 @@ ClipFillDEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -868,7 +864,7 @@ InFillMASK_DEG_TEXT:
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		MOV		EBX,[DebYPoly] ; -
 		;XOR		ECX,ECX
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		LEA		EDX,[EBX*4]    ; -
 		;OR		ECX,BYTE 16    ; == MOV ECX,16
 		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
@@ -878,12 +874,12 @@ InFillMASK_DEG_TEXT:
 ;ALIGN 4
 .BcFillText:	MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
 		MOV		ECX,[_TPolyAdFin+EDX+EBX*4]
-		
+
 		MOV		EBP,[_PColDeb+EDX+EBX*4]
 		MOV		EAX,[_PColFin+EDX+EBX*4]
 		MOV		[Col1],EBP
 		MOV		[Col2],EAX
-		
+
 		MOV		EAX,[_TexXDeb+EDX+EBX*4]
 		MOV		ESI,[_TexYDeb+EDX+EBX*4]
 		MOV		[XT1],EAX
@@ -892,7 +888,7 @@ InFillMASK_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -913,7 +909,7 @@ ClipFillMASK_DEG_TEXT:
 		@ClipCalcDColCnt
 		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
 		;XOR		ECX,ECX
-		MOV		EDI,Svlfb
+		MOV		EDI,_SrcSurf
 		;OR		ECX,BYTE 16  ; == MOV ECX,16
 
 		MOV		EBP,[FinYPoly]
@@ -945,7 +941,7 @@ ClipFillMASK_DEG_TEXT:
 		MOV		ESI,[_TexYFin+EDX+EBX*4]
 		MOV		[XT2],EAX
 		MOV		[YT2],ESI
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -1004,7 +1000,7 @@ InFillEFF_FDEG:
 .BcFillDEG:
 		MOV		ECX,[_TPolyAdFin+EDX+EBX*4]
 		MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX
@@ -1028,7 +1024,7 @@ ClipFillEFF_FDEG:
 		AND		ESI,DegMask
 		ADD		ESI,_TbDegCol  ; ESI+=OFFSET _TbDegCol
 		MOVD		mm5,ESI
-		
+
 		MOV		EBP,[FinYPoly]
 		SUB		EBP,[_OrgY]
 		MOV		EBX,[DebYPoly] ; -
@@ -1203,7 +1199,7 @@ InFillEFF_COLCONV:
 .BcFillDEG:
 		MOV		ECX,[_TPolyAdFin+EDX+EBX*4]
 		MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
-                
+
 		CMP		ECX,EDI
 		JG		.PasSwapAd
 		XCHG		EDI,ECX

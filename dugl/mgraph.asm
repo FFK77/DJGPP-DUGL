@@ -11,8 +11,6 @@ GLOBAL	_MPtrTrisList16
 
 ; GLOBAL DATA
 GLOBAL	_CurMSurf, _CurMSrcSurf
-GLOBAL	_Mvlfb, _MOffVMem, _MResH, _MResV, _MMaxX, _MMaxY, _MMinX, _MMinY
-GLOBAL	_MOrgX, _MOrgY, _Mrlfb, _MSizeSurf, _MRMaxX, _MRMaxY, _MRMinX, _MRMinY
 
 
 ; EXTERN DATA
@@ -178,7 +176,7 @@ _SetSrcMSurf:
 		JMP		SHORT .endbpp
 .bpp32: 	LEA		EAX,[EAX+EDI*4]
 .endbpp:
-		
+
 		MOV		EDX,[MSScanLine]
 		JZ		SHORT .Aligned4
 		XOR		ESI,BYTE 0x3
@@ -315,7 +313,7 @@ _MSetCol:
 		MOV		EAX,[EBP+PMCol]
 		MOV		[MCurCol],EAX
 		RETURN
-		
+
 ALIGN 32
 _MPutPixels16:
 	ARG	PMPixelsCount, 4
@@ -387,7 +385,7 @@ ALIGN 4
 		LEA		ESI,[ESI+4]
 		MOV		[EDX+ECX*2],AX
 		JNZ		SHORT .BcVC_PPs
-		
+
 		POP		ESI
 		POP             EDI
 		POP		EBX
@@ -428,7 +426,7 @@ ALIGN 4
 .NoVC:		DEC		EBX
 		LEA		ESI,[ESI+4]
 		JNZ		SHORT .BcVC_PPs
-		
+
 		POP		ESI
 		POP             EDI
 		POP		EBX
@@ -462,7 +460,7 @@ ALIGN 4
 		JL		SHORT .NoVC
 		CMP		ECX,[_MMinX]
 		JL		SHORT .NoVC
-		
+
 		ADD		EDX,[_MOrgY]
 		MOV		AX,[EBP]
 		MOV		EDX,[_MTSurfAdDeb+EDX*4]
@@ -709,7 +707,7 @@ ALIGN 4
 
 		MOVD		EBX,mm5
 		MOVD		ESI,mm4
-		
+
 		SUB		EBX,BYTE 2
 		LEA		ESI,[ESI+8]
 		JNZ		SHORT .BcVC_LLs
@@ -759,7 +757,7 @@ ALIGN 4
 
 		MOVD		EBX,mm5
 		MOVD		ESI,mm4
-		
+
 		DEC		EBX
 		LEA		ESI,[ESI+4]
 		JNZ		SHORT .BcVC_LSs
@@ -791,7 +789,7 @@ _MPtrTrisList16:
 		LEA		EDI,[EAX*4+ClFillMTriProc16]
 		MOV		[MFncFillInPtr],EBP
 		MOV		[MFncFillClpPtr],EDI
-		
+
 ALIGN 4
 .BcVC_TLs:
 		PUSH		ESI
@@ -800,7 +798,7 @@ ALIGN 4
 		MOV		EBP,[ESI+8]
 		MOV		ESI,[ESI+4]
 		MOV		[MPtrV1],EDI
-		
+
 ;----------------
 .verifSens:
 		MOV		ECX,[MVectXPlus]
@@ -837,7 +835,7 @@ ALIGN 4
 ;----------------
 		MOV		EBX,[MVectXPlus]
 		MOV		EDX,[MVectYPlus]
-		
+
 		MOV		EAX,[EDI+EBX] ; = maxx ? V1.X
 		MOV		ECX,[EBP+EBX] ; = minx ? V3.x
 		CMP		ECX,EAX ; minx > maxx ?
@@ -899,7 +897,7 @@ ALIGN 4
 .NoDrawTri:
 		POP		ECX
 		POP		ESI
-		
+
 		SUB		ECX,BYTE 3
 		LEA		ESI,[ESI+12]
 		JNZ		.BcVC_TLs

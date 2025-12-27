@@ -22,10 +22,11 @@ int 			MPColDeb[MaxResV],MPColFin[MaxResV];
 void SetOrgMSurf(int IDSurf,int LOrgX,int LOrgY) {
    Surf *S = (IDSurf==0)?(&CurMSurf):(&CurMSrcSurf);
    int dox = LOrgX - S->OrgX;
-   
+
    SetOrgSurf(S,LOrgX, LOrgY);
-   MSetDeltaOrgX(IDSurf, dox);   
+   MSetDeltaOrgX(IDSurf, dox);
 }
+
 
 void SetMSurfView(int IDSurf, View *V) {
    Surf *S = (IDSurf==0)?(&CurMSurf):(&CurMSrcSurf);
@@ -35,27 +36,12 @@ void SetMSurfView(int IDSurf, View *V) {
    MSetDeltaOrgX(IDSurf, dox);
 }
 
-void SetMSurfRView(int IDSurf, View *V) {
-   Surf *S = (IDSurf==0)?(&CurMSurf):(&CurMSrcSurf);
-   int dox = V->OrgX - S->OrgX;
-
-   SetSurfRView(S, V);
-   MSetDeltaOrgX(IDSurf, dox);
-}
 
 void SetMSurfInView(int IDSurf, View *V) {
    Surf *S = (IDSurf==0)?(&CurMSurf):(&CurMSrcSurf);
    int dox = V->OrgX - S->OrgX;
 
    SetSurfInView(S, V);
-   MSetDeltaOrgX(IDSurf, dox);
-}
-
-void SetMSurfInRView(int IDSurf, View *V) {
-   Surf *S = (IDSurf==0)?(&CurMSurf):(&CurMSrcSurf);
-   int dox = V->OrgX - S->OrgX;
-
-   SetSurfInRView(S, V);
    MSetDeltaOrgX(IDSurf, dox);
 }
 

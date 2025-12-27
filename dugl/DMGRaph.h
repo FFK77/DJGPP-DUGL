@@ -18,9 +18,7 @@ void GetMSurf(Surf *S); // get the current surf
 #define MGRAPH_CURSRCSURF_ID 1
 void SetOrgMSurf(int IDSurf,int LOrgX,int LOrgY);
 void SetMSurfView(int IDSurf, View *V);
-void SetMSurfRView(int IDSurf, View *V);
 void SetMSurfInView(int IDSurf, View *V);
-void SetMSurfInRView(int IDSurf, View *V);
 void MSetVectX(void *pVectX, int PlusNextX);
 void MSetVectY(void *pVectY, int PlusNextY);
 void MSetVectZ(void *pVectZ, int PlusNextZ);

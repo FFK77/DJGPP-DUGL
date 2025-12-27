@@ -2,8 +2,8 @@
 
 #define DUGL_H
 
-#define DUGL_VERSION "1.16WIP"
-#define DUGL_DATE_DMY "19/12/2025"
+#define DUGL_VERSION "2.0WIP"
+#define DUGL_DATE_DMY "27/12/2025"
 
 #include <stdbool.h>
 #include <stdint.h>

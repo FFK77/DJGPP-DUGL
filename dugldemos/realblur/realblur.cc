@@ -1,7 +1,8 @@
 /*  DUGL Dos Ultimate Game Library -  version 1.10+ */
 /*  Real-time bluring and rendering on DUGL */
 /*  History :
-    2 march 2008 : first release */
+    2 march 2008 : first release
+    3 december 2025: update to synch with DUGL changes */
 
 #include <dos.h>
 #include <stdio.h>
@@ -13,8 +14,8 @@
 #include <string.h>
 #include <sys/movedata.h>
 #include <sys/segments.h>
-#include <dugl/dugl.h>
-#include <dugl/duglplus.h>
+#include <dugl.h>
+#include <duglplus.h>
 
 typedef struct {
   int x,  // pos x
@@ -118,22 +119,22 @@ int main(int argc,char *argv[])
 
 
    // Inits
-   if (!InstallTimer(500)) {
+   if (!DgInstallTimer(500)) {
      CloseVesa(); printf("Timer error\n"); exit(-1);
    }
    if (!InstallKeyboard()) {
-     CloseVesa(); UninstallTimer(); //UninstallMouse();
+     CloseVesa(); DgUninstallTimer(); //UninstallMouse();
      printf("Keyboard error\n");  exit(-1);
    }
 
    // init the video mode
    if (!InitVesaMode(ScrResH,ScrResV,16,1))
-       { UninstallTimer(); UninstallKeyboard();
+       { DgUninstallTimer(); UninstallKeyboard();
          printf("VESA mode error\n"); exit(-1); }
-         
+
    // set the used FONT
    SetFONT(&F1);
-   
+
    Surf *pSurfRend=&rendSurf16,
         *pSurfBlur=&convSurf16,*pSurfTemp;
 
@@ -144,7 +145,7 @@ int main(int argc,char *argv[])
 
    // start the main loop
    for (j=0;;j++) {
-   
+
      FREE_MMX();
      // synchronise
      Synch(SynchBuff,NULL);
@@ -153,7 +154,7 @@ int main(int argc,char *argv[])
            lastFps=SynchLastTime(SynchBuff);
 
      SetSurf(pSurfRend);
-   
+
      // render a moving text
      ClearText(); // clear test position to upper left
      SetTextCol(0xff00);
@@ -191,7 +192,7 @@ int main(int argc,char *argv[])
      ListObjRGB[1].y = (rand()&255)+10;
      ListObjRGB[2].x = (rand()&255)+10;
      ListObjRGB[2].y = (rand()&255)+10;
-       
+
      ListObjRGB[0].RGB=rand()&0xffff;
      ListObjRGB[1].RGB=rand()&0xffff;
      ListObjRGB[2].RGB=rand()&0xffff;
@@ -200,14 +201,14 @@ int main(int argc,char *argv[])
 
      // blur
      BlurSurf16(pSurfBlur,&CurSurf);
-     
+
      // display fps
      SetSurf(pSurfBlur);
 
      ClearText(); // clear test position to upper left
      SetTextCol(0x0);
      OutText16Mode(text,AJ_RIGHT); // clear last text with black
-           
+
      FREE_MMX();
 
      ClearText(); // clear test position to upper left
@@ -221,26 +222,26 @@ int main(int argc,char *argv[])
      //SetSurf(&VSurf[0]);
      //DGWaitRetrace();
      SurfCopy(&VSurf[0],pSurfBlur);
-     
+
 //     PutSurf16(pSurfBlur,0,0,0);
 
      // exit if esc pressed
-     if (BoutApp(0x1)) break;
+     if (IsKeyDown(KB_KEY_ESC)) break;
      // swap rend and blur Surf
      pSurfTemp=pSurfRend;
      pSurfRend=pSurfBlur;
      pSurfBlur=pSurfTemp;
-     
+
      // create a screenshot
      // tab + ctrl + shift
-     if (BoutApp(0xf) && (KbFLAG&SHIFT_PR) && (KbFLAG&CTRL_PR))
+     if (IsKeyDown(KB_KEY_TAB) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
        SaveBMP16(&VSurf[0],"realblur.bmp");
-      
+
    }
 
    CloseVesa();
    UninstallKeyboard();
-   UninstallTimer();
+   DgUninstallTimer();
    TextMode();
    return 0;
 }

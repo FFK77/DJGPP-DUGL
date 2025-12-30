@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <conio.h>
 #include <unistd.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "dgui.h"
 
 #define RGB16(r,g,b) ((r>>3)|((g>>2)<<5)|((b>>3)<<11))
@@ -128,7 +128,7 @@ void CGraphContext::DrawFHaut(int x,int y,int fcol) {
    cputpixel(x+2,y+2,fcol);
    FREE_MMX();
 }
-   
+
 void CGraphContext::DrawFBas(int x,int y,int fcol) {
    line(x,y+2,x+4,y+2,fcol); line(x+1,y+1,x+3,y+1,fcol);
    cputpixel(x+2,y,fcol);
@@ -178,7 +178,7 @@ void CGraphContext::DrawButtFGauche(int x,int y,int etat) {
   } else { CadWin(x,y,x+12,y+12); DrawFGauche(x+5,y+4,WinNoir); }
   FREE_MMX();
 }
-  
+
 int CGraphContext::In(int x1,int y1,int x2,int y2, int PosX, int PosY) {
     if (PosX<x1 || PosY<y1 || PosX>x2 || PosY>y2) return 0;
     else return 1;

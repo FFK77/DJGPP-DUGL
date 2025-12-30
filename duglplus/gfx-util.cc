@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 
 // resize a 16bpp Surf into an another Surf
 void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapVt = false)
@@ -17,7 +17,7 @@ void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapV
 
   Surf OldSurf,SrcSurf;
   Surf *SSrc=SSrcSurf;
-      
+
   int srcMinX = 0;
   int srcMinY = 0;
   int srcMaxX = 0;
@@ -56,13 +56,13 @@ void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapV
      SrcSurf=*SSrcSurf;
      SSrc=&SrcSurf;
   }
-  
+
   // Get Current Surf
   GetSurf(&OldSurf);
 
   // set dest Surf as destination
   SetSurf(SDstSurf);
-  
+
   // draw the resize polygone inside the dest Surf
   Poly16(ListPt1, SSrc, POLY16_TEXT, 0);
 

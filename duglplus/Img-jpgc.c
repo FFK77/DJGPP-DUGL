@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include <jpeglib.h>
 #include <png.h>
 #include <setjmp.h>
@@ -47,7 +47,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
 
    // read the jpeg image header
    jpeg_read_header(cinfo, TRUE);
-   
+
    // valid jpeg
    if (cinfo->image_width<=0 || cinfo->image_height<=0) {
      jpeg_destroy_decompress(cinfo);
@@ -70,7 +70,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
    if (cinfo->num_components==3) {
      // get image scanlines
      for (iscan=0;cinfo->output_scanline<cinfo->image_height;iscan++) {
-   
+
        jpeg_read_scanlines(cinfo,row_pointer, 1);
        outScan=(short*)(S->rlfb+(S->ScanLine*iscan));
        BfPos=0;
@@ -86,7 +86,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
    if (cinfo->num_components==1) {
      // get image scanlines
      for (iscan=0;cinfo->output_scanline<cinfo->image_height;iscan++) {
-   
+
        jpeg_read_scanlines(cinfo,row_pointer, 1);
        outScan=(short*)(S->rlfb+(S->ScanLine*iscan));
        // gray 8bpp -> BGR 16 (565)
@@ -100,7 +100,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
    // free ressources
    jpeg_finish_decompress(cinfo);
    jpeg_destroy_decompress(cinfo);
-   
+
    free(row_pointer[0]);
    return 1;
 
@@ -136,7 +136,7 @@ int LoadJPG16(Surf *S,char *filename) {
    retGet=GetJpegImg(S,&cinfo);
    // close file
    fclose(jpgFile);
-   
+
    return retGet;
 }
 
@@ -217,9 +217,9 @@ int LoadMemJPG16(Surf *S,void *buffJpeg,int sizeBuff) {
 
    // attach the file as source
    jpeg_memory_src(&cinfo, buffJpeg,sizeBuff);
-   
+
    retGet=GetJpegImg(S,&cinfo);
-   
+
    return retGet;
 }
 
@@ -243,7 +243,7 @@ int SaveJPG16(Surf *S,char *filename,int quality) {
    // alloc line data
    row_pointer[0] = (unsigned char *)malloc(S->ResH*3);
    ScanPtr=row_pointer[0];
-   
+
    // non mem ?
    if (row_pointer[0]==NULL)
      return 0;
@@ -293,7 +293,7 @@ int SaveJPG16(Surf *S,char *filename,int quality) {
        ScanPtr[BfPos+0]=(InScan[irow]&0xf800)>>8;
        BfPos+=3;
      }
-    
+
 //   while (cinfo.next_scanline<cinfo.image_height) {
 
      jpeg_write_scanlines(&cinfo,row_pointer,1);

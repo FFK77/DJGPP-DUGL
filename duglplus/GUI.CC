@@ -3,7 +3,7 @@
 #include <conio.h>
 #include <unistd.h>
 #include <string.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "intrdugl.h"
 #include "dgui.h"
 
@@ -32,10 +32,10 @@ void WinHandler::Scan() {
    Surf SaveSurf;
    NodeFly *FlyParcNode=NULL,*FlyFoundNode=NULL;
    GetSurf(&SaveSurf);
-   
+
    GetAscii(&Ascii,&AsciiFLAG);
    GetKey(&Key,&KeyFLAG);
-   
+
    if (!FlyList->Empty()) {
      FlyMsUp=0;
      FlyParcNode=FlyList->FirstNode;
@@ -53,7 +53,7 @@ void WinHandler::Scan() {
      else
        if (CurWinNode && CurWinNode->Item->ActivMenu)
          CurWinNode->Item->MyMenu->Scan();
-         
+
 /*     if (FlyFoundNode!=NULL)
        m_GraphCtxt->WinFreeMs=0;
      else
@@ -61,7 +61,7 @@ void WinHandler::Scan() {
 
      if (FlyFoundNode!=FlyList->Nodes && FlyList->Nodes)
        FlyList->Nodes->Item->Scan();
-       
+
      if (((MsButton&MS_LEFT_BUTT) || (MsButton&MS_RIGHT_BUTT)) && m_GraphCtxt->WinFreeMs &&
          (!FlyFoundNode) && (!(FlyMsLftDwn || FlyMsRghDwn)))
        DelAllFly();
@@ -112,11 +112,11 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
    if (x1>S.MaxX || x2<S.MinX || y1>S.MaxY || y2<S.MinY) return;
    GetSurf(&SaveSurf);
    SetSurf(&S);
-   GetSurfRView(&S,&V1);
+   GetSurfView(&S,&V1);
    V1.MinX=x1; V1.MinY=y1;
    V1.MaxX=x2; V1.MaxY=y2;
-   SetSurfInRView(&CurSurf,&V1);
-   GetSurfRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
+   GetSurfView(&CurSurf,&V1);
    FREE_MMX();
    m_GraphCtxt->bar(x1,y1,x2,y2,BackCol);
    ParcNode=WinList->FirstNode;
@@ -126,7 +126,7 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
 	  if (!( ParcNode->Item->X2<x1 || ParcNode->Item->X>x2 ||
 	         ParcNode->Item->Y2<y1 || ParcNode->Item->Y>y2 ))
 	    if (ParcNode->Item->Visible) {
-	      SetSurfRView(&CurSurf,&V1);
+	      SetSurfView(&CurSurf,&V1);
 	      m_GraphCtxt->PutSurf(&ParcNode->Item->S,ParcNode->Item->X,
 	      	      ParcNode->Item->Y,NORM_PUT);
 	    }
@@ -137,7 +137,7 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
      if (!( ParcNode->Item->X2<x1 || ParcNode->Item->X>x2 ||
             ParcNode->Item->Y2<y1 || ParcNode->Item->Y>y2 ))
        if (ParcNode->Item->Visible) {
-         SetSurfRView(&CurSurf,&V1);
+         SetSurfView(&CurSurf,&V1);
          m_GraphCtxt->PutSurf(&ParcNode->Item->S,ParcNode->Item->X,
 	          ParcNode->Item->Y,NORM_PUT);
        }
@@ -147,7 +147,7 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
       do {
         if (!( FlyParcNode->Item->X2<x1 || FlyParcNode->Item->X1>x2 ||
 	       FlyParcNode->Item->Y2<y1 || FlyParcNode->Item->Y1>y2 )) {
-	  SetSurfRView(&CurSurf,&V1);
+	  SetSurfView(&CurSurf,&V1);
           FREE_MMX();
 	  FlyParcNode->Item->Draw();
 	}
@@ -230,7 +230,7 @@ void MainWin::Scan() {
    AsciiFLAG= MWWinHand->AsciiFLAG;
    Key= MWWinHand->Key;
    KeyFLAG= MWWinHand->KeyFLAG;
-   
+
    if (MyMenu) {
      MyMenu->Scan();
      if (ActivMenu) return;
@@ -259,7 +259,7 @@ void MainWin::Scan() {
      }
    }
    if (Key==1 || Ascii==0x1b)   // Echap
-     if (EchapNode) 
+     if (EchapNode)
        if (EchapNode->Item->Visible) {
          EchapNode->Item->Validate(); return; }
 
@@ -283,9 +283,9 @@ void MainWin::Draw() {
    Surf SaveSurf;
    View SaveView,V1;
    Node *ParcNode,*Next;
-   
+
    GetSurf(&SaveSurf);
-   
+
    SetSurf(&S);
    m_GraphCtxt->Clear(m_GraphCtxt->WinGris);
    m_GraphCtxt->CadWin(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY);
@@ -300,7 +300,7 @@ void MainWin::Draw() {
      m_GraphCtxt->bar(CurSurf.MinX+3,CurSurf.MaxY-5-FntHaut,CurSurf.MaxX-3,CurSurf.MaxY-3,m_GraphCtxt->WinGrisF);
      FntCol=m_GraphCtxt->WinGris;
    }
-   SetSurfRView(&CurSurf,&V1);
+   SetSurfView(&CurSurf,&V1);
    ClearText();
    m_GraphCtxt->OutText(Label.StrPtr);
    FREE_MMX();
@@ -308,7 +308,7 @@ void MainWin::Draw() {
    ParcNode=ChList->Nodes;  //Last Node
    if (ParcNode!=NULL) {
       do {
-   	 SetSurfRView(&CurSurf,&VActiv);
+   	 SetSurfView(&CurSurf,&VActiv);
          FREE_MMX();
          if (ParcNode!=CurFocusNode && ParcNode->Item->Visible)
 	   ParcNode->Item->Draw();
@@ -316,12 +316,12 @@ void MainWin::Draw() {
        } while (ParcNode!=NULL);
      }
    if ((ParcNode=CurFocusNode)) {
-     SetSurfRView(&CurSurf,&VActiv);
+     SetSurfView(&CurSurf,&VActiv);
      FREE_MMX();
      if (ParcNode->Item->Visible) ParcNode->Item->Draw();
    }
    if (MyMenu) {
-     SetSurfRView(&CurSurf,&VActiv);
+     SetSurfView(&CurSurf,&VActiv);
      MyMenu->Draw();
      FREE_MMX();
    }
@@ -334,18 +334,18 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
    Node *ParcNode,*Next;
    View V1;
    int PlusX=X+VActiv.OrgX,PlusY=Y+VActiv.OrgY;
-   
+
    if (x1>VActiv.MaxX || x2<VActiv.MinX || y1>VActiv.MaxY || y2<VActiv.MinY)
      return;
    GetSurf(&SaveSurf);
    SetSurf(&S);
-   SetSurfRView(&CurSurf,&VActiv);
+   SetSurfView(&CurSurf,&VActiv);
    V1=VActiv;
    V1.MinX=x1; V1.MinY=y1;
    V1.MaxX=x2; V1.MaxY=y2;
-   SetSurfInRView(&CurSurf,&V1);
-   GetSurfRView(&CurSurf,&V1);
-   
+   SetSurfInView(&CurSurf,&V1);
+   GetSurfView(&CurSurf,&V1);
+
    m_GraphCtxt->bar(V1.MinX,V1.MinY,V1.MaxX,V1.MaxY,m_GraphCtxt->WinGris);
    ParcNode=ChList->Nodes;
    if (ParcNode!=NULL) {
@@ -354,7 +354,7 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
 	  if (!( ParcNode->Item->XC2<x1 || ParcNode->Item->XC1>x2 ||
 	         ParcNode->Item->YC2<y1 || ParcNode->Item->YC1>y2 ))
 	    if (ParcNode->Item->Visible) {
-	      SetSurfRView(&CurSurf,&V1);
+	      SetSurfView(&CurSurf,&V1);
               FREE_MMX();
 	      ParcNode->Item->Draw();
 	    }
@@ -365,7 +365,7 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
      if (!( ParcNode->Item->XC2<x1 || ParcNode->Item->XC1>x2 ||
             ParcNode->Item->YC2<y1 || ParcNode->Item->YC1>y2 ))
        if (ParcNode->Item->Visible) {
-         SetSurfRView(&CurSurf,&V1);
+         SetSurfView(&CurSurf,&V1);
          FREE_MMX();
          ParcNode->Item->Draw();
        }
@@ -373,7 +373,7 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
    if (MyMenu) {
      if (!( MyMenu->XC2<x1 || MyMenu->XC1>x2 ||
             MyMenu->YC2<y1 || MyMenu->YC1>y2 )) {
-         SetSurfRView(&CurSurf,&V1);
+         SetSurfView(&CurSurf,&V1);
          FREE_MMX();
          MyMenu->Draw();
        }
@@ -387,27 +387,27 @@ void MainWin::Redraw() {
    MainWin::Draw();
    MWWinHand->Redraw(X,Y,X2,Y2);
 }
-   
+
 void MainWin::DrawSurf(Surf *DestSurf) {
    Surf SaveSurf;
    View SaveView;
    Node *ParcNode;
-   
+
    GetSurf(&SaveSurf);
    SetSurf(DestSurf);
-   GetSurfRView(DestSurf,&SaveView);
+   GetSurfView(DestSurf,&SaveView);
    FREE_MMX();
    ParcNode=ChList->Nodes;  // last node
    if (ParcNode!=NULL) {
       do {
          if (ParcNode->Item->Visible) {
-   	   SetSurfRView(DestSurf,&SaveView);
+   	   SetSurfView(DestSurf,&SaveView);
 	   ParcNode->Item->DrawSurf(DestSurf);
 	 }
          ParcNode=ParcNode->Prev;
        } while (ParcNode!=NULL);
      }
-   SetSurfRView(DestSurf,&SaveView);
+   SetSurfView(DestSurf,&SaveView);
    SetSurf(&SaveSurf);
    FREE_MMX();
 }
@@ -597,15 +597,15 @@ void Child::Scan() {
      MsDown=1;
    } else DblClick=0;
    if ((!m_GraphCtxt->WinFreeMs) && (!(MsButton&MS_LEFT_BUTT)) && MsDown) {
-     if (!MsDownD) { MsDownD=1; LastMsDownTime=Time; }
+     if (!MsDownD) { MsDownD=1; LastMsDownTime=DgTime; }
      else
-       if (MsDownD && TimerFreq) {
-         DblClick=((Time-LastMsDownTime)<TimerFreq/3); MsDownD=0; }
+       if (MsDownD && DgTimerFreq) {
+         DblClick=((DgTime-LastMsDownTime)<DgTimerFreq/3); MsDownD=0; }
      LostMsDown=1;
      m_GraphCtxt->WinFreeMs=1;
      MsDown=0;
    }
-   if (MsDownD && TimerFreq && (Time-LastMsDownTime)>=TimerFreq/2) MsDownD=0;
+   if (MsDownD && DgTimerFreq && (DgTime-LastMsDownTime)>=DgTimerFreq/2) MsDownD=0;
    if (m_GraphCtxt->WinFreeMs && MsDown) MsDown=0;
 }
 
@@ -678,10 +678,10 @@ void ContBox::Draw() {
    View V1;
    Node *ParcNode;
    int lgTxt=LargText(Label.StrPtr);
-   
+
    GetSurf(&SaveSurf);
    SetSurf(&Main->S);
-   SetSurfRView(&CurSurf,&Main->VActiv);
+   SetSurfView(&CurSurf,&Main->VActiv);
 
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinGris);
    m_GraphCtxt->rect(XC1+1,YC1,XC2,YC2-4-1,m_GraphCtxt->WinGrisC);
@@ -695,26 +695,26 @@ void ContBox::Draw() {
      FntX=XC1+6;   FntY=YC2-FntHighPos; FntCol=m_GraphCtxt->WinNoir;
      m_GraphCtxt->OutText(Label.StrPtr);
    }
-   
-   SetSurfInRView(&CurSurf,&VActiv);
-   GetSurfRView(&CurSurf,&V1);
+
+   SetSurfInView(&CurSurf,&VActiv);
+   GetSurfView(&CurSurf,&V1);
    FREE_MMX();
-   
+
    ParcNode=SsChList->Nodes;  //Last Node
    if (ParcNode!=NULL) {
       do {
-   	 SetSurfRView(&CurSurf,&V1);
+   	 SetSurfView(&CurSurf,&V1);
          if (ParcNode!=CurFocusInNode && ParcNode->Item->Visible)
 	   ParcNode->Item->Draw();
          ParcNode=ParcNode->Prev;
        } while (ParcNode!=NULL);
      }
    if ((ParcNode=CurFocusInNode)) {
-     SetSurfRView(&CurSurf,&V1);
+     SetSurfView(&CurSurf,&V1);
      FREE_MMX();
      if (ParcNode->Item->Visible) ParcNode->Item->Draw();
    }
-   
+
    SetSurf(&SaveSurf);
    FREE_MMX();
 }
@@ -771,7 +771,7 @@ void ContBox::SetFocus() {
    Node *CurNode=*CurFocusNode,*ParcNode;
    Node *CN=CurFocusInNode;
    int NoSetFoc=0;
-   
+
    if (CN && (!CN->Item->Visible)) {
      CN->Item->UnsetFocus(); CN=CurFocusInNode=NULL; }
    if (CN) {
@@ -898,9 +898,9 @@ void Button::Draw() {
    V1.OrgX=XC1+3+CurSurf.OrgX;  V1.OrgY=YC1+3+CurSurf.OrgY;
    V1.MinX=V1.MinY=0;
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
-   SetSurfInRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
    FntCol=m_GraphCtxt->WinNoir;
-   
+
    if (Etat) {
      FntY=RViewGetFntYMID(&V1)-1;
      FntX=RViewGetXOutTextMode(&V1,Label.StrPtr,AJ_MID)+1;
@@ -972,7 +972,7 @@ ImgButton::ImgButton(int x1,int y1,int x2,int y2,MainWin *Father,Surf *img,
      m_Img=NULL;
 
    DrawFocus=false; // by default don't draw focus
-   
+
    if (Main->DefNode && def) {
      Main->DefNode->Item->Default=0;
      Main->DefNode->Item->Redraw();
@@ -1077,13 +1077,13 @@ Label::~Label() { }
 
 void Label::Draw() {
    View V1;
-   
+
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinGris);
    V1.OrgX=XC1+3+CurSurf.OrgX;  V1.OrgY=YC1+3+CurSurf.OrgY;
    V1.MinX=V1.MinY=0;
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
-   SetSurfInRView(&CurSurf,&V1);
-   
+   SetSurfInView(&CurSurf,&V1);
+
    FntY=RViewGetFntYMID(&V1);
    FntCol=m_GraphCtxt->WinNoir;
    m_GraphCtxt->RViewOutTextMode(&V1,Text.StrPtr,Text_AJ);
@@ -1143,7 +1143,7 @@ void TextBox::Draw() {
    V1.OrgX=XC1+3+CurSurf.OrgX;  V1.OrgY=YC1+3+CurSurf.OrgY;
    V1.MinX=V1.MinY=0;
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
-   SetSurfInRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
    FntCol=m_GraphCtxt->WinNoir;
    FntY=RViewGetFntYMID(&V1);
    if ((!Focus) || TextInBox)
@@ -1158,7 +1158,7 @@ void TextBox::DrawSurf(Surf *DestSurf) {
    View V1;
    int larg,x1,l;
    char *cstr;
-   
+
    if (password) {
       cstr=(char*)alloca((l=strlen(Text.StrPtr))+1);
       memset(cstr,charpw, l);
@@ -1168,11 +1168,11 @@ void TextBox::DrawSurf(Surf *DestSurf) {
      V1=*MyVActiv;
      V1.OrgX+=Main->X; V1.OrgY+=Main->Y;
      SetSurf(DestSurf);
-     SetSurfRView(&CurSurf,&V1);
+     SetSurfView(&CurSurf,&V1);
      V1.MinX=XC1+3; V1.MinY=YC1+3;
      V1.MaxX=XC2-3; V1.MaxY=YC2-3;
-     SetSurfInRView(&CurSurf,&V1);
-     if ((TimerFreq && ((Time/(TimerFreq/10))&1)) || (!TimerFreq)) {
+     SetSurfInView(&CurSurf,&V1);
+     if ((DgTimerFreq && ((DgTime/(DgTimerFreq/10))&1)) || (!DgTimerFreq)) {
       	larg=LargPosText(cstr,PosCursor);
 	if (larg>0) larg++;
         FntY=RViewGetFntYMID(&V1);
@@ -1192,7 +1192,7 @@ void TextBox::Scan() {
    unsigned int TestPosCursor;
    int l;
    char *cstr;
-   
+
    Child::Scan();
    if (MsDown && (!Focus))
      SetFocus();
@@ -1221,7 +1221,7 @@ void TextBox::Scan() {
 	    PosCursor=TestPosCursor;
 	  }
         } else PosCursor=Text.AddCursChar(PosCursor,Main->Ascii,Insert);
-       
+
      switch(Main->Key) {
        case 0x52:   // Ins
        case 0xd2:   // ext-Ins
@@ -1321,7 +1321,7 @@ char TextBox::GetPassWord() {
 
 void TextBox::TextCatInBox() {
    unsigned int len,PosLarg;
-   
+
    if (TextInBox) {
      if (TextInBox && (LargText(Text.StrPtr)>=(MaxLargText)))
      {
@@ -1402,12 +1402,12 @@ void GraphBox::GetOrg(int *Orgx,int *Orgy) {
 }
 
 void GraphBox::Draw() {
-   SetSurfRView(&CurSurf,MyVActiv);
+   SetSurfView(&CurSurf,MyVActiv);
    m_GraphCtxt->rect(XC1,YC1,XC2,YC2,ContCol);
    if (Focus && DrawFocus)
      m_GraphCtxt->rectmap(XC1,YC1,XC2,YC2,m_GraphCtxt->WinNoir,0xaaaaaaaa);
    if (GraphBoxDraw) {
-     SetSurfInRView(&CurSurf,&VGraphBox);
+     SetSurfInView(&CurSurf,&VGraphBox);
      GraphBoxDraw(this);
    }
 }
@@ -1415,7 +1415,7 @@ void GraphBox::Draw() {
 void GraphBox::Scan() {
    Surf SaveSurf;
    GetSurf(&SaveSurf);
-   
+
    Child::Scan();
    if (MsDown && (!Focus)) SetFocus();
    MouseX=MsX-Main->X-VGraphBox.OrgX;
@@ -1455,8 +1455,8 @@ void GraphBox::UnsetFocus() {
 
 void GraphBox::SetView() {
    SetSurf(&Main->S);
-   SetSurfRView(&CurSurf,MyVActiv);
-   SetSurfInRView(&CurSurf,&VGraphBox);
+   SetSurfView(&CurSurf,MyVActiv);
+   SetSurfInView(&CurSurf,&VGraphBox);
    FREE_MMX();
 }
 
@@ -1490,13 +1490,13 @@ CocheBox::~CocheBox() { }
 void CocheBox::Draw() {
    View V1;
    int hlgtext;
-   
-   SetSurfInRView(&CurSurf,MyVActiv);
+
+   SetSurfInView(&CurSurf,MyVActiv);
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinGris);
-   GetSurfRView(&CurSurf,&V1);
+   GetSurfView(&CurSurf,&V1);
    V1.MinX=XC1; V1.MinY=YC1;
    V1.MaxX=XC2; V1.MaxY=YC2;
-   SetSurfInRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
    if (FntSens) {
      if (Etat)
        m_GraphCtxt->bar(XC2-13,YC2-16,XC2-1,YC2-4,m_GraphCtxt->WinBlanc);
@@ -1539,7 +1539,7 @@ void CocheBox::Scan() {
        }
      }
      if (Main->Ascii==0x20) {    // espace
-       Redr=1; 
+       Redr=1;
        True=(True)?0:1;
        if (Changed) { Redraw(); Changed(True); return; }
      }
@@ -1624,13 +1624,13 @@ void OptionButt::Draw() {
    int Pt[16];
    int ListPt[9]={ 8,(int)&Pt[0], (int)&Pt[2], (int)&Pt[4], (int)&Pt[6],
    		     (int)&Pt[8], (int)&Pt[10], (int)&Pt[12], (int)&Pt[14] };
-   
-   SetSurfInRView(&CurSurf,MyVActiv);
+
+   SetSurfInView(&CurSurf,MyVActiv);
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinGris);
-   GetSurfRView(&CurSurf,&V1);
+   GetSurfView(&CurSurf,&V1);
    V1.MinX=XC1; V1.MinY=YC1;
    V1.MaxX=XC2; V1.MaxY=YC2;
-   SetSurfInRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
    if (FntSens) {
      x1=XC2-13; y1=YC2-16; x2=XC2-1; y2=YC2-4;
      Pt[0 ]= x1+ 4; Pt[1 ]= y1+ 0;     Pt[2 ]= x2- 4; Pt[3 ]= y1+ 0;
@@ -1691,7 +1691,7 @@ void OptionButt::Draw() {
      Pt[4 ]= x2+ 0; Pt[5 ]= y1+ 3;     Pt[6 ]= x2+ 0; Pt[7 ]= y2- 3;
      Pt[8 ]= x2- 3; Pt[9 ]= y2+ 0;     Pt[10]= x1+ 3; Pt[11]= y2+ 0;
      Pt[12]= x1+ 0; Pt[13]= y2- 3;     Pt[14]= x1+ 0; Pt[15]= y1+ 3;
-     
+
      m_GraphCtxt->Line((void*)ListPt[1],(void*)ListPt[2],m_GraphCtxt->WinGris);
      m_GraphCtxt->Line((void*)ListPt[2],(void*)ListPt[3],m_GraphCtxt->WinGris);
      m_GraphCtxt->Line((void*)ListPt[3],(void*)ListPt[4],m_GraphCtxt->WinGris);
@@ -1700,7 +1700,7 @@ void OptionButt::Draw() {
      m_GraphCtxt->Line((void*)ListPt[6],(void*)ListPt[7],m_GraphCtxt->WinNoir);
      m_GraphCtxt->Line((void*)ListPt[7],(void*)ListPt[8],m_GraphCtxt->WinNoir);
      m_GraphCtxt->Line((void*)ListPt[8],(void*)ListPt[1],m_GraphCtxt->WinNoir);
-     
+
      if (True) {
        m_GraphCtxt->bar(XC1+6,YC2-12,XC1+8,YC2-8,m_GraphCtxt->WinNoir);
        m_GraphCtxt->bar(XC1+5,YC2-11,XC1+9,YC2-9,m_GraphCtxt->WinNoir); }
@@ -1832,8 +1832,8 @@ void ListBox::Draw() {
    V1.OrgX=XC1+3+CurSurf.OrgX;  V1.OrgY=YC1+3+CurSurf.OrgY;
    V1.MinX=V1.MinY=0;
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
-   if (scrollact) GetSurfRView(&CurSurf,&V2);
-   SetSurfInRView(&CurSurf,&V1);
+   if (scrollact) GetSurfView(&CurSurf,&V2);
+   SetSurfInView(&CurSurf,&V1);
 
    RViewClearText(&V1); FntY--;
    for (i=FirstInd;i<FirstInd+MaxNbItem;i++) {
@@ -1855,10 +1855,10 @@ void ListBox::Draw() {
      FntY-=(FntHaut+1); }
 
    if (scrollact) {
-     SetSurfRView(&CurSurf,&V2);
+     SetSurfView(&CurSurf,&V2);
      V2.MinX=XC1; V2.MinY=YC1;
      V2.MaxX=XC2; V2.MaxY=YC2;
-     SetSurfInRView(&CurSurf,&V2);
+     SetSurfInView(&CurSurf,&V2);
      m_GraphCtxt->DrawButtFHaut(xbth,ybth,etatbth);
      m_GraphCtxt->bar(xbtb,ybtb+13,xbth+12,ybth-1,m_GraphCtxt->WinGrisC);
      m_GraphCtxt->DrawButtFBas(xbtb,ybtb,etatbtb);
@@ -1908,8 +1908,8 @@ void ListBox::Scan() {
              else listdown=1;
            }
        if (listdown) {
-         if (TimerFreq) oldbtime=((Time/(TimerFreq/8))&1);
-       } else if (TimerFreq) oldbtime=((Time/(TimerFreq/16))&1);
+         if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/8))&1);
+       } else if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/16))&1);
        InitSynch(SynchBuff,&PosSynch,DGUI_REPEAT_RATE);
        TimeAcc=0.0;
        firstdown=1; Redraw();
@@ -1924,7 +1924,7 @@ void ListBox::Scan() {
        //firstdown=0;
      }
      if (Focus) {
-     
+
        if (Main->Key)
          switch(Main->Key) {
            case 0xc8:  // haut
@@ -1951,11 +1951,11 @@ void ListBox::Scan() {
 	     PosCursor=LStr->NbElement()-1;
 	     if (AjFirstInd()|| OldPosCursor!=PosCursor) Redraw();
          }
-         
+
        if ((!MsDown)&& (btbdown|| bthdown|| bardown|| pbardown|| listdown|| scrldown)) {
          btbdown=bthdown=bardown=pbardown=scrldown=listdown=0; Redraw(); }
 
-         
+
        if (bardown) {
          if (YPosBar!=(downYPosBar+(msydown-MyMsY))) {
 	   YPosBar=(downYPosBar+(msydown-MyMsY));
@@ -1980,7 +1980,7 @@ void ListBox::Scan() {
           }
        }
        if (listdown) {
-         if ((MyMsY<=YC2-3 && MyMsY>(YC2-3-(MaxNbItem*(FntHaut+1)))) || (!TimerFreq)) {
+         if ((MyMsY<=YC2-3 && MyMsY>(YC2-3-(MaxNbItem*(FntHaut+1)))) || (!DgTimerFreq)) {
            OldPosCursor=PosCursor;
 	   if (YC2-3>=MyMsY)
 	     PosCursor=FirstInd+(YC2-3-MyMsY)/(FntHaut+1);
@@ -1988,9 +1988,9 @@ void ListBox::Scan() {
 	   if (PosCursor<0) PosCursor=0;
 	   if (PosCursor>=LStr->NbElement()) PosCursor=LStr->NbElement()-1;
 	   if (AjFirstInd()|| OldPosCursor!=PosCursor) Redraw();
-         } else if ((TimerFreq && (oldbtime^((Time/(TimerFreq/8))&1))) || firstdown) {
+         } else if ((DgTimerFreq && (oldbtime^((DgTime/(DgTimerFreq/8))&1))) || firstdown) {
              OldPosCursor=PosCursor; firstdown=0;
-  	     if (TimerFreq) oldbtime=((Time/(TimerFreq/8))&1);
+  	     if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/8))&1);
 	     if (YC2-3>=MyMsY)
 	       PosCursor=FirstInd+(YC2-3-MyMsY)/(FntHaut+1);
 	     else PosCursor=FirstInd-((MyMsY-YC2+3)/(FntHaut+1))-1;
@@ -2001,13 +2001,13 @@ void ListBox::Scan() {
        }
        if (scrollact) {
          if (MsIn && btbdown && m_GraphCtxt->In(xbtb,ybtb,xbtb+12,ybtb+12,MyMsX,MyMsY)) {
-           if (TimerFreq) {
+           if (DgTimerFreq) {
              if ((FirstInd+MaxNbItem)<LStr->NbElement() &&
 	         (/*(oldbtime^((Time/(TimerFreq/16))&1))*/canDelaystep || firstdown))
                {
                  if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) FirstInd++;
                  etatbtb=1; Redraw();
-	         if (!firstdown) oldbtime=((Time/(TimerFreq/16))&1);
+	         if (!firstdown) oldbtime=((DgTime/(DgTimerFreq/16))&1);
 	         firstdown=0; }
                else if (!etatbtb) { etatbtb=1; Redraw(); }
              } else {
@@ -2016,14 +2016,14 @@ void ListBox::Scan() {
                  else if (!etatbtb) { etatbtb=1; Redraw(); }
              }
          } else if (etatbtb) { etatbtb=0; Redraw(); }
-     
+
          if (MsIn && bthdown && m_GraphCtxt->In(xbth,ybth,xbth+12,ybth+12,MyMsX,MyMsY)) {
-           if (TimerFreq) {
+           if (DgTimerFreq) {
              if (FirstInd &&
                (/*(oldbtime^((Time/(TimerFreq/16))&1))*/canDelaystep || firstdown)) {
                  if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) FirstInd--;
                  etatbth=1; Redraw();
-	         if (!firstdown) oldbtime=((Time/(TimerFreq/16))&1);
+	         if (!firstdown) oldbtime=((DgTime/(DgTimerFreq/16))&1);
 	         firstdown=0; }
              else if (!etatbth) { etatbth=1; Redraw(); }
            } else {
@@ -2125,7 +2125,7 @@ int ListBox::AjFirstInd() {
      if (PosCursor<FirstInd && PosCursor!=-1) {
        FirstInd=PosCursor; return 1;
      }
-       
+
    return 0;
 }
 
@@ -2204,7 +2204,7 @@ void VtScrollBar::Scan() {
            OldVtVal=VtVal; VtVal=VtMaxVal; redr=1; Main->Key=0; break;
        }
      if (MsIn && btbdown && m_GraphCtxt->In(xbtb,ybtb,xbtb+12,ybtb+12,MyMsX,MyMsY)) {
-       if (TimerFreq) {
+       if (DgTimerFreq) {
          if (VtVal<VtMaxVal &&
            (canDelaystep || firstdown)) {
 	   if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) VtVal++; etatbtb=1; redr=1;
@@ -2216,9 +2216,9 @@ void VtScrollBar::Scan() {
          else if (!etatbtb) { etatbtb=1; redr=1; }
        }
      } else if (etatbtb) { etatbtb=0; redr=1; }
-     
+
      if (MsIn && bthdown && m_GraphCtxt->In(xbth,ybth,xbth+12,ybth+12,MyMsX,MyMsY)) {
-       if (TimerFreq) {
+       if (DgTimerFreq) {
          if (VtVal>VtMinVal && (canDelaystep || firstdown)) {
            if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) VtVal--;
            etatbth=1; redr=1;
@@ -2416,7 +2416,7 @@ void HzScrollBar::Scan() {
            OldHzVal=HzVal; HzVal=HzMaxVal; redr=1; Main->Key=0; break;
        }
      if (MsIn && btbdown && m_GraphCtxt->In(xbtb,ybtb,xbtb+12,ybtb+12,MyMsX,MyMsY)) {
-       if (TimerFreq) {
+       if (DgTimerFreq) {
          if (HzVal<HzMaxVal && (canDelaystep || firstdown)) {
            if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) HzVal++;
            etatbtb=1; redr=1;
@@ -2428,9 +2428,9 @@ void HzScrollBar::Scan() {
          else if (!etatbtb) { etatbtb=1; redr=1; }
        }
      } else if (etatbtb) { etatbtb=0; redr=1; }
-     
+
      if (MsIn && bthdown && m_GraphCtxt->In(xbth,ybth,xbth+12,ybth+12,MyMsX,MyMsY)) {
-       if (TimerFreq) {
+       if (DgTimerFreq) {
          if (HzVal>HzMinVal && (canDelaystep || firstdown)) {
            if (TimeAcc>DGUI_DELAY_REPEAT || firstdown) HzVal--;
            etatbth=1; redr=1;
@@ -2466,7 +2466,7 @@ void HzScrollBar::Scan() {
        firstdown=0;
        if (loldval!=HzVal) redr=1;
      }
-     
+
    }
    if (!MsDown) {
      btbdown=bthdown=bardown=pbardown=scrldown=0; redr=1; }
@@ -2681,7 +2681,7 @@ void HzSlider::SetMinMaxVal(int MinVal,int MaxVal) {
    Redraw();
    if (HzVal!=OldHzVal)
      if (Changed!=NULL) Changed(HzVal);
-     
+
 }
 
 void HzSlider::GetMinMaxVal(int *MinVal,int *MaxVal) {

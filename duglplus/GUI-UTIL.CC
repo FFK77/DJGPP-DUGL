@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <dir.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "intrdugl.h"
 #include "dgui.h"
 
@@ -59,7 +59,7 @@ void MessageBox(WinHandler *MsgBoxWH,char *NmWin, char *Msg,
    if (LargMsgBox<150) LargMsgBox=150;
    XPosMsgBox=MsgBoxWH->S.ResH/2-(LargMsgBox/2);
    XPosButton=(LargMsgBox-6)/2-(LargButtons/2);
-   
+
    TbMsgBox[CptMsgBx].ClickOk=clickOk;
    TbMsgBox[CptMsgBx].ClickNo=clickNo;
    TbMsgBox[CptMsgBx].ClickCancel=clickCancel;
@@ -152,7 +152,7 @@ void FilesBox(WinHandler *FilesBoxWH,char *NmWin,
    char *nmOk,*nmCancel,Drv[4]="a:/";
    View V1;
    bzero(&FileBox,sizeof(FilesBoxInfo));
-   GetSurfRView(&FilesBoxWH->S,&V1);
+   GetSurfView(&FilesBoxWH->S,&V1);
 
    FileBox.bSortFilesDirs = SortFilesDirs;
    FileBox.bSortAsc = sortAsc;
@@ -174,7 +174,7 @@ void FilesBox(WinHandler *FilesBoxWH,char *NmWin,
    FileBox.LBFiles= new ListBox(10,70,200,240,FileBox.FilesBoxWin);
    FileBox.LBFiles->Changed=LBFilesChanged; FileBox.LBFiles->ValidateString=LBFilesValidateStr;
    FileBox.LabFiles= new Label(10,242,190,260,FileBox.FilesBoxWin,"Files:",AJ_SRC);
-   
+
    FileBox.LBReps= new ListBox(210,70,400,220,FileBox.FilesBoxWin);
    FileBox.LBReps->ValidateString=LBRepsValidateStr;
    FileBox.LabReps= new Label(210,222,380,240,FileBox.FilesBoxWin,"Directories:",AJ_SRC);
@@ -210,7 +210,7 @@ void FilesBox(WinHandler *FilesBoxWH,char *NmWin,
    FileBox.ButtCancel=new Button(250,10,400,18+FntHaut,FileBox.FilesBoxWin,nmCancel,0,1);
    FileBox.ButtCancel->Click=FilesBoxClickCancel;
    FileBox.FilesBoxWin->Enable();
-   
+
    Drv[0]='a'+i; // name current drive
    FileBox.CmBLect->Select=FileBox.CmBLect->LStr->Index(Drv, 0);
    FileBox.CmBLect->Scan();
@@ -379,7 +379,7 @@ void FBChgdCmB(String *SLect,int SelectLect,String *SType,int SelectType) {
    }
    if(FileBox.bSortFilesDirs)
       FileBox.LBReps->LStr->Sort(FileBox.bSortAsc);
-   
+
    getwd(FileBox.LabCurDir->Text.StrPtr); FileBox.LabCurDir->Redraw();
    if (SelectType!=-1) {
      if (SelectType>=FileBox.LStrMask->NbElement()) {
@@ -388,7 +388,7 @@ void FBChgdCmB(String *SLect,int SelectLect,String *SType,int SelectType) {
                   "Ok", NULL, NULL, NULL, NULL, NULL);
        return;
      }
-     
+
      if (FileBox.CmBType->Select!=-1) {
        ListString *LSMasks = NULL;
 

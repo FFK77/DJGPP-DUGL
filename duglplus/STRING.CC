@@ -3,7 +3,7 @@
 #include <conio.h>
 #include <unistd.h>
 #include <string.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "dgui.h"
 
 //**************** class ListString *******************************
@@ -43,10 +43,10 @@ void ListString::DeleteCurNode() {
       delete (CurNode->Items[i]);
     NbElt-=CurNode->NbItems;
   }
-  
+
   // free table of pointers
   free(CurNode->Items);
-  
+
   if (CurNode->Next!=NULL) {
     CurNode=CurNode->Next;
     CurNode->Prev=delNode->Prev;
@@ -60,7 +60,7 @@ void ListString::DeleteCurNode() {
   }
   CurNodeFirstIdx=-1;
   CurNode=NULL;
-  
+
   delete delNode;
 }
 
@@ -406,7 +406,7 @@ void QuickSortLS(ListString *LS, int begin, int end, bool bAsc)
       LS->Swap(left, right);
   }
   LS->Swap(begin, right);
-  
+
   QuickSortLS(LS, begin, right-1, bAsc);
   QuickSortLS(LS, right+1, end, bAsc);
 }
@@ -428,7 +428,7 @@ int PartitionLS(ListString *LS, int left, int right)
     int pivot = (*LS)[left]->Length();
     String *pStr = NULL;
     while(true) {
-    
+
       while((*LS)[right]->Length() > pivot) right --;
       while((*LS)[left]->Length() < pivot) left ++;
       if(left < right && (*LS)[left]->Length() != (*LS)[right]->Length())
@@ -462,16 +462,16 @@ void  ListString::Swap(int ind1, int ind2)
    String *str2 = NULL;
    NodeString *NodeS2 = NULL;
    int indS2;
-   
+
    if((str1 = Element(ind1)) != NULL) {
       NodeS1 = CurNode;
       indS1 = ind1-CurNodeFirstIdx;
-   
+
       if((str2 = Element(ind2)) != NULL) {
          CurNode->Items[ind2-CurNodeFirstIdx] = str1;
          NodeS1->Items[indS1] = str2;
       }
-      
+
    }
 }
 
@@ -572,7 +572,7 @@ int String::Length() {
   return strlen(StrPtr);
 }
 
-   
+
 int String::GetInt() {
    return atoi(StrPtr);
 }
@@ -937,7 +937,7 @@ String* String::SubString(int Pos, int length) {
       lncpy; // length of copy
   char *substr = NULL;
   String *SRet = NULL;
-  
+
   if (Pos>=ln || length==0 || ln==0) lncpy=0;
   else {
     if (Pos+length<=ln) lncpy=length;
@@ -952,7 +952,7 @@ String* String::SubString(int Pos, int length) {
   }
   else
      SRet = new String("");
-  
+
   return SRet;
 }
 
@@ -984,7 +984,7 @@ ListString* String::Split(char delim) {
  int cpos = 0;
  int lngth = Length();
  int findpos = 0;
- 
+
  ListString *newLStr= new ListString();
  if (newLStr==NULL) return NULL; // no mem
  if (lngth<=0) {
@@ -1016,7 +1016,7 @@ ListString* String::SplitPos(int Pos,char delim) {
  sep[0]=delim; sep[1]=0;
  char **strp;
  char *frag,*pdeb;
- 
+
  ListString *newLStr= new ListString();
  if (newLStr==NULL) return NULL; // no mem
  if (Length()<=0) return newLStr; // empty str

@@ -3,7 +3,7 @@
 #include <conio.h>
 #include <unistd.h>
 #include <string.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "intrdugl.h"
 #include "dgui.h"
 
@@ -273,11 +273,11 @@ void FlyListBox::Draw() {
    View V1,V2;
    m_GraphCtxt->bar(X1,Y1,X2,Y2,m_GraphCtxt->WinBlanc);
    m_GraphCtxt->rect(X1,Y1,X2,Y2,m_GraphCtxt->WinNoir);
-   GetSurfRView(&CurSurf,&V1);
+   GetSurfView(&CurSurf,&V1);
    V1.MinX=X1+3; V1.MinY=Y1+3;
    V1.MaxX=X2-3; V1.MaxY=Y2-3;
-   if (scrollact) GetSurfRView(&CurSurf,&V2);
-   SetSurfInRView(&CurSurf,&V1);
+   if (scrollact) GetSurfView(&CurSurf,&V2);
+   SetSurfInView(&CurSurf,&V1);
 
    RViewClearText(&V1); FntY--;
    for (i=FirstInd;i<FirstInd+MaxNbItem;i++) {
@@ -297,10 +297,10 @@ void FlyListBox::Draw() {
      FntY-=(FntHaut+1); }
 
    if (scrollact) {
-     SetSurfRView(&CurSurf,&V2);
+     SetSurfView(&CurSurf,&V2);
      V2.MinX=X1; V2.MinY=Y1;
      V2.MaxX=X2; V2.MaxY=Y2;
-     SetSurfInRView(&CurSurf,&V2);
+     SetSurfInView(&CurSurf,&V2);
      m_GraphCtxt->DrawButtFHaut(xbth,ybth,etatbth);
      m_GraphCtxt->bar(xbtb,ybtb+13,xbth+12,ybth-1,m_GraphCtxt->WinGrisC);
      m_GraphCtxt->DrawButtFBas(xbtb,ybtb,etatbtb);
@@ -312,7 +312,7 @@ void FlyListBox::Draw() {
 
 void FlyListBox::Scan() {
    int XK1,YK1,XK2,YK2,redr=0;
-   
+
    FlyObj::Scan();
    if (MyList->Nodes!=MyNode) {
      if (FlyMsLftDwn && (!(MsButton&MS_LEFT_BUTT))) FlyMsLftDwn=0;
@@ -333,8 +333,8 @@ void FlyListBox::Scan() {
          else
 	   if (m_GraphCtxt->In(XK1,YK1,XK2,YK2,MsX,MsY)) listdown=1;
        if (listdown) {
-         if (TimerFreq) oldbtime=((Time/(TimerFreq/8))&1);
-       } else if (TimerFreq) oldbtime=((Time/(TimerFreq/16))&1);
+         if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/8))&1);
+       } else if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/16))&1);
        firstdown=1; redr=1;
      }
    if (LStr->NbElement()) {
@@ -418,7 +418,7 @@ void FlyListBox::Scan() {
        }
      }
      if (listdown) {
-       if ((MsY<=Y2-3 && MsY>(Y2-3-(MaxNbItem*(FntHaut+1))))|| (!TimerFreq)) {
+       if ((MsY<=Y2-3 && MsY>(Y2-3-(MaxNbItem*(FntHaut+1))))|| (!DgTimerFreq)) {
          OldPosCursor=PosCursor;
 	 if (Y2-3>=MsY)
            PosCursor=FirstInd+(Y2-3-MsY)/(FntHaut+1);
@@ -428,9 +428,9 @@ void FlyListBox::Scan() {
 	 if (AjFirstInd()|| OldPosCursor!=PosCursor) redr=1;
        }
        else
-         if ((TimerFreq && (oldbtime^((Time/(TimerFreq/8))&1))) || firstdown) {
+         if ((DgTimerFreq && (oldbtime^((DgTime/(DgTimerFreq/8))&1))) || firstdown) {
            OldPosCursor=PosCursor; firstdown=0;
-           if (TimerFreq) oldbtime=((Time/(TimerFreq/8))&1);
+           if (DgTimerFreq) oldbtime=((DgTime/(DgTimerFreq/8))&1);
 	     if (Y2-3>=MsY)
 	       PosCursor=FirstInd+(Y2-3-MsY)/(FntHaut+1);
 	     else PosCursor=FirstInd-((MsY-Y2+3)/(FntHaut+1))-1;
@@ -441,11 +441,11 @@ void FlyListBox::Scan() {
        }
      if (scrollact) {
        if (btbdown && m_GraphCtxt->In(xbtb,ybtb,xbtb+12,ybtb+12,MsX,MsY)) {
-         if (TimerFreq) {
+         if (DgTimerFreq) {
            if ((FirstInd+MaxNbItem)<LStr->NbElement() &&
-             ((oldbtime^((Time/(TimerFreq/16))&1)) || firstdown)) {
+             ((oldbtime^((DgTime/(DgTimerFreq/16))&1)) || firstdown)) {
 	     FirstInd++; etatbtb=1; redr=1;
-	     if (!firstdown) oldbtime=((Time/(TimerFreq/16))&1);
+	     if (!firstdown) oldbtime=((DgTime/(DgTimerFreq/16))&1);
 	         firstdown=0;
 	   }
            else
@@ -457,12 +457,12 @@ void FlyListBox::Scan() {
            else if (!etatbtb) { etatbtb=1; redr=1; }
          }
        } else if (etatbtb) { etatbtb=0; redr=1; }
-     
+
        if (bthdown && m_GraphCtxt->In(xbth,ybth,xbth+12,ybth+12,MsX,MsY)) {
-         if (TimerFreq) {
-           if (FirstInd && ((oldbtime^((Time/(TimerFreq/16))&1)) || firstdown)) {
+         if (DgTimerFreq) {
+           if (FirstInd && ((oldbtime^((DgTime/(DgTimerFreq/16))&1)) || firstdown)) {
 	     FirstInd--; etatbth=1; redr=1;
-	     if (!firstdown) oldbtime=((Time/(TimerFreq/16))&1);
+	     if (!firstdown) oldbtime=((DgTime/(DgTimerFreq/16))&1);
 	     firstdown=0;
 	   }
            else
@@ -656,12 +656,12 @@ void ComBox::Draw() {
    View V1,VS;
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinBlanc);
    m_GraphCtxt->CadBoxWin(XC1,YC1,XC2,YC2);
-   
-   GetSurfRView(&CurSurf,&VS);
+
+   GetSurfView(&CurSurf,&VS);
    V1.OrgX=XC1+3+CurSurf.OrgX; V1.OrgY=YC1+3+CurSurf.OrgY;
    V1.MinX=V1.MinY=0;
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
-   SetSurfInRView(&CurSurf,&V1);
+   SetSurfInView(&CurSurf,&V1);
    if (Focus) {
      m_GraphCtxt->ClearSurf(m_GraphCtxt->WinRougeF);
      m_GraphCtxt->rectmap(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY,m_GraphCtxt->WinBlanc,0xaaaaaaaa);
@@ -670,7 +670,7 @@ void ComBox::Draw() {
    else FntCol=m_GraphCtxt->WinNoir;
    FntY=RViewGetFntYMID(&V1);
    if (Select!=-1) m_GraphCtxt->RViewOutTextMode(&V1,((*LStr)[Select])->StrPtr,AJ_SRC);
-   SetSurfRView(&CurSurf,&VS);
+   SetSurfView(&CurSurf,&VS);
 
    m_GraphCtxt->bar(XC2-14,YC1+2,XC2-2,YC2-2,m_GraphCtxt->WinGris);
    m_GraphCtxt->DrawFBas(XC2-10,YC2-10,m_GraphCtxt->WinNoir);
@@ -693,7 +693,7 @@ void ComBox::Scan() {
    //if (ActFLB && (!MsDown)) { ActFLB=0; EnableFLB=1; }
    if ((Select!=-1 && (Select<0 || Select>=LStr->NbElement())) ||
        ((!LStr->NbElement()) && Select!=-1)) {
-     Select=OldSelect=-1; *OldString=""; Redraw(); 
+     Select=OldSelect=-1; *OldString=""; Redraw();
      if (Changed) Changed(NULL,Select); return;
    }
    else
@@ -719,7 +719,7 @@ void ComBox::Scan() {
        Redraw();
      }
    }
-    
+
    //if (LostMsDown && (!EnableFLB)) EnableFLB=1;
    //if ((!MsDown) && (MsButton&MS_LEFT_BUTT) && (!EnableFLB))
    //  EnableFLB=1;

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <sys/movedata.h>
 #include <sys/segments.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include "intrdugl.h"
 #include "dsound.h"
 
@@ -44,7 +44,7 @@ int  LoadSoundDRV(SoundDRV **SndDrv,char *Fname)
 	  return 0;
 	}
 
-	InitDriver=SD.InitDriverPtr+(unsigned int)(*SndDrv);
+	InitDriver=(void (*)())(SD.InitDriverPtr+(unsigned int)(*SndDrv));
 	(*SndDrv)->DrvBuffPtr=Buff;
 	InitDriver();
 	fclose(InSoundDRV);
@@ -64,7 +64,8 @@ int  LoadMemSoundDRV(SoundDRV **SndDrv,void *In,int SizeIn)
 	else
 	   *SndDrv=(SoundDRV*)Buff;
 	memcpy(Buff,In,SD.SizeDrv);
-	InitDriver=SD.InitDriverPtr+(unsigned int)(*SndDrv);
+	//D:\mywrk\GITHUB\DJGPP-DUGL\duglplus\SOUNDC.C|47|error: invalid conversion from 'unsigned int' to 'void (*)()' [-fpermissive]|
+	InitDriver=(void (*)())(SD.InitDriverPtr+(unsigned int)(*SndDrv));
 	(*SndDrv)->DrvBuffPtr=Buff;
 	InitDriver();
 	return 1;
@@ -97,7 +98,7 @@ int  LoadWAV(Voice *Vc,char *Fname)
 	  if (hwav.BitEchant==8) Vc->Type=1;
 	     else Vc->Type=3;
 	} else { free(Buff); fclose(InWAV); return 0; }
-	
+
 	if (fread(Buff,hwav.SizeDATA,1,InWAV)<1)
 	  { free(Buff); fclose(InWAV); return 0; }
 	Vc->Ptr=Buff;

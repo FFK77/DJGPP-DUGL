@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 #include <jpeglib.h>
 #include <png.h>
 #include <setjmp.h>
@@ -31,7 +31,7 @@ void CloseOpenPNG() {
          free(png_row_pointers[y]); png_row_pointers[y] = NULL;
        }
      }
-     free(png_row_pointers);     
+     free(png_row_pointers);
      png_row_pointers = NULL;
   }
   png_destroy_read_struct(&png_ptr, &png_info_ptr, &png_end_ptr);
@@ -74,7 +74,7 @@ int LoadPNGFile(char *filename) {
    }
    png_info_ptr = png_create_info_struct(png_ptr);
    if (png_info_ptr==NULL) {
-     png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL); 
+     png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
      fclose(pngFile); pngFile = NULL;
      return 0;
    }
@@ -107,14 +107,14 @@ int LoadPNGFile(char *filename) {
      png_set_palette_to_rgb(png_ptr);
      png_color_type = PNG_COLOR_TYPE_RGB;
    }
-   
+
    // Convert 1-2-4 bits grayscale images to 8 bits  grayscale.
    if (png_color_type == PNG_COLOR_TYPE_GRAY && png_bit_depth < 8)
      png_set_expand_gray_1_2_4_to_8 (png_ptr);
    if (png_get_valid (png_ptr, png_info_ptr, PNG_INFO_tRNS))
      png_set_tRNS_to_alpha (png_ptr);
-    
-   // force to 8 bits per color channel 
+
+   // force to 8 bits per color channel
    if (png_bit_depth == 16)
      png_set_strip_16 (png_ptr);
    else if (png_bit_depth < 8)
@@ -153,7 +153,7 @@ int LoadPNG16(Surf *S,char *filename)
    short *outScan;
    unsigned char *ScanPtr;
    int BfPos;
-   
+
    if (LoadPNGFile(filename) == 0)
      return 0;
    // no mem ? no RGB ? no grayscale
@@ -210,7 +210,7 @@ int LoadPNG16(Surf *S,char *filename)
          }
        }
      }
-     
+
      CloseOpenPNG();
      return 1;
 }

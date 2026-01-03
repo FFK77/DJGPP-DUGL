@@ -15,7 +15,7 @@
 #include <string.h>
 #include <sys/movedata.h>
 #include <sys/segments.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 
 typedef struct {
   int x,  // pos x
@@ -54,7 +54,7 @@ int i,j; // counters
 View GridView = { 0,0,ScrResH-40,ScrResV-30,40,50 },
      TextView = { 0,0,ScrResH-1,39,0,0 },
      AllView = { 0,0,ScrResH-1,ScrResV-1,0,0 };
-     
+
 // *** memory suface of the Sprites ****************************
 Surf MsPtr,  // mouse pointer
      LightImg; // image to apply lights over
@@ -99,22 +99,22 @@ int main(int argc,char *argv[])
 	if (!InstallMouse()) {
            CloseVesa(); printf("Mouse error\n"); exit(-1);
         }
-	if (!InstallTimer(300)) {
+	if (!DgInstallTimer(300)) {
            UninstallMouse(); CloseVesa(); printf("Timer error\n"); exit(-1);
         }
 	if (!InstallKeyboard()) {
-           CloseVesa(); UninstallTimer(); UninstallMouse();
+           CloseVesa(); DgUninstallTimer(); UninstallMouse();
 	   printf("Keyboard error\n");  exit(-1);
         }
 
         // create mem Surf
         if (!CreateSurf(&rendSurf, ScrResH,ScrResV,8)) {
-           CloseVesa(); UninstallTimer(); UninstallKeyboard();
+           CloseVesa(); DgUninstallTimer(); UninstallKeyboard();
            printf("no mem\n"); exit(-1);
         }
         // init the video mode with 3 video pages
         if (!InitVesaMode(ScrResH,ScrResV,8,3))
-          { UninstallTimer(); UninstallKeyboard();
+          { DgUninstallTimer(); UninstallKeyboard();
             printf("VESA mode error\n"); exit(-1); }
 
         SetSurf(&VSurf[0]);
@@ -125,13 +125,13 @@ int main(int argc,char *argv[])
         // set the used palette
         SetPalette(0,256,&palette);
         // build the light table of each color
-	PrBuildTbDegCol(&palette,0.6);
+        PrBuildTbDegCol(&palette,0.6);
         // mouse init
         // change the origin of the surf of the mouse pointer
         View MsView;
         SetOrgSurf(&MsPtr,0,MsPtr.ResV-1);
-        GetSurfRView(&VSurf[0],&MsView);
-        SetMouseRView(&MsView);
+        GetSurfView(&VSurf[0],&MsView);
+        SetMouseView(&MsView);
 
         int PosSynch;
         InitSynch(SynchBuff,&PosSynch,CurModeVtFreq);
@@ -161,7 +161,7 @@ int main(int argc,char *argv[])
 
            // set the current active surface for drawing
            if (!toggleMemRender)
-	     SetSurf(&VSurf[(j+1)%3]);//SetSurf(&VSurf[0]);
+            SetSurf(&VSurf[(j+1)%3]);//SetSurf(&VSurf[0]);
            else
              SetSurf(&rendSurf);
 
@@ -169,13 +169,13 @@ int main(int argc,char *argv[])
            Clear(noir); // clear with black
            // create a screenshot
            // tab + ctrl + shift
-           if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
+           if (IsKeyDown(KB_KEY_TAB) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
 //              SavePCX(&VSurf[j%3],"lights.pcx",&Pal3d);
               SaveBMP(&VSurf[j%3],"lights.bmp",&palette);
 
            // set the view of the sprites for the current drawing surf
-           SetSurfRView(&CurSurf, &GridView);
-           
+           SetSurfView(&CurSurf, &GridView);
+
            // build points, polygones and compute lightening of each point
            BuildPtsPolys();
 
@@ -185,11 +185,11 @@ int main(int argc,char *argv[])
            // draw the grid
            if (ShowGrid) DrawGrid();
            // display text
-           SetSurfRView(&CurSurf, &TextView);
+           SetSurfView(&CurSurf, &TextView);
            ClearText(); // clear test position to upper left
            SetTextCol(blanc);
            char text[100];
-           
+
            FREE_MMX();
            sprintf(text,"igrid size %02ix%02i, fps %03i, screen refresh %03i",GridNbCols,
              GridNbRows,(int)((avgFps>0.0)?(1.0/(avgFps)):-1),CurModeVtFreq);
@@ -200,13 +200,13 @@ int main(int argc,char *argv[])
               OutTextMode("VRAM rendering\n",AJ_RIGHT);
            OutTextMode("space show/hide grid|F1 VRAM render|F2 RAM render|NumPad +/- grid size|Esc exit",AJ_RIGHT);
            // set a full view to draw the mouse pointer
-           SetSurfRView(&CurSurf, &AllView);
+           SetSurfView(&CurSurf, &AllView);
            PutMaskSurf(&MsPtr,MsX,MsY,0);
 
            // if memory rendering toggled, then copy the mem surf to vmem
            if (toggleMemRender) {
              SetSurf(&VSurf[(j+1)%3]);
-             SetSurfRView(&CurSurf, &AllView);
+             SetSurfView(&CurSurf, &AllView);
              PutSurf(&rendSurf,0,0,NORM_PUT);
            }
            unsigned char keyCode;
@@ -241,7 +241,7 @@ int main(int argc,char *argv[])
 
         UninstallKeyboard();
         UninstallMouse();
-        UninstallTimer();
+        DgUninstallTimer();
         TextMode();
         return 0;
 }
@@ -251,7 +251,7 @@ void BuildPtsPolys() {
      int countcol, xstep, xtstep;
      int countrow, ystep, ytstep;
      int idx;
-     
+
      FREE_MMX();
      if (GridNbCols>1 && GridNbRows>1) {
         xstep = (CurSurf.MaxX - CurSurf.MinX)/GridNbCols;

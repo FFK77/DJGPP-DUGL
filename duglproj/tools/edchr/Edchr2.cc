@@ -14,8 +14,8 @@
 #include <sys/movedata.h>
 #include <sys/segments.h>
 #include <dir.h>
-#include <dugl/dugl.h>
-#include <dugl/duglplus.h>
+#include <dugl.h>
+#include <duglplus.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -117,34 +117,40 @@ int main(int argc,char *argv[]) {
 
    if (!InstallMouse()) {
      printf("Mouse error\n"); exit(-1); }
-   if (!InstallTimer(300)) {
+   if (!DgInstallTimer(300)) {
      UninstallMouse(); printf("Timer error\n"); exit(-1); }
    if (!InstallKeyboard()) {
-     UninstallTimer(); UninstallMouse();
+     DgUninstallTimer(); UninstallMouse();
      printf("Keyboard error\n"); exit(-1); }
    if (!SetKbMAP(KM)) {
-     UninstallTimer(); UninstallMouse();
+     DgUninstallTimer(); UninstallMouse();
      printf("Set KbMap error\n"); UninstallKeyboard(); exit(-1); }
 
    if (!LoadGIF(&SMouse,"mouseimg.gif",&mpalette)) {
-     UninstallTimer(); UninstallMouse(); UninstallKeyboard();
+     DgUninstallTimer(); UninstallMouse(); UninstallKeyboard();
      printf(" impossible d'ouvrir mouseimg.gif\n");
      exit(-1);
    }
+
+
   if (!InitVesaMode(resh,resv,8,3)) {
-    UninstallTimer(); UninstallMouse(); UninstallKeyboard();
+    DgUninstallTimer(); UninstallMouse(); UninstallKeyboard();
     CloseVesa();
     printf("error init vesa mode\n");
     exit(0);
   }
+
+  FREE_MMX();
   Yellow=FindCol(0,255,0,255,0,&palette);
+  FREE_MMX();
   SetPalette(0,256,&palette);
   SetFONT(&F1);
   SetOrgSurf(&SMouse,0,SMouse.ResV-1);
-  GetSurfRView(&VSurf[0],&MsV);
-  SetMouseRView(&MsV);
+  GetSurfView(&VSurf[0],&MsV);
+  SetMouseView(&MsV);
   SetMousePos(VSurf[0].ResH/2,VSurf[0].ResV/2);
-//**************
+
+  FREE_MMX();
   WH = new WinHandler(640,480,8,83,&palette);
 //---- Windows
   FPrinc= new MainWin(0,0,640,480,SLbFPrinc.StrPtr,WH);
@@ -196,39 +202,39 @@ int main(int argc,char *argv[]) {
   }
   else
     MenuNew();
-  OldTime=Time;
+  OldTime=DgTime;
   for (j=0;;j++) {
-    if ((Time-OldTime)<(TimerFreq/CurModeVtFreq)) WaitRetrace();
-    OldTime=Time;
+    if ((DgTime-OldTime)<(DgTimerFreq/CurModeVtFreq)) WaitRetrace();
+    OldTime=DgTime;
 
     ViewSurf(j%3);
     SetSurf(&VSurf[(j+1)%3]);
 
     // create a screenshot
     // tab + ctrl + shift
-    if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
+    if (IsKeyDown(KB_KEY_ESC) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
        SavePCX(&VSurf[j%3],"edchr.pcx",&palette);
-    
+
     WH->Scan();
     WH->DrawSurf(&CurSurf);
     PutMaskSurf(&SMouse,MsX,MsY,0);
-    if (WH->Key==45 && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR))
+    if (WH->Key== KB_KEY_QWERTY_X && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR))
        ExitNow=1;
 
     if (WH->CurWinNode->Item==FPrinc) {
       switch (WH->Key) {
-        case 59 :   // F1
+        case KB_KEY_F1 :   // F1
           break;
-        case 60 :   // F2
+        case KB_KEY_F2 :   // F2
           MenuSave();
           break;
-        case 61 :   // F3
+        case KB_KEY_F3 :   // F3
           MenuOpen();
           break;
-        case 62 :   // F4
+        case KB_KEY_F4 :   // F4
           MenuLoadImage();
           break;
-        case 63 :   // F5
+        case KB_KEY_F5 :   // F5
 //          FOuvrImg->Move(50,50);
 //          FOuvrImg->Enable();
           break;
@@ -241,7 +247,7 @@ int main(int argc,char *argv[]) {
   CloseVesa();
 
   UninstallKeyboard();
-  UninstallTimer();
+  DgUninstallTimer();
   UninstallMouse();
   return 0;
 }
@@ -262,7 +268,7 @@ int ReadCHR(char *FName) {
 */
    fread(&hchr,sizeof(HeadCHR),1,InCHR);
    if (hchr.Sign!='RHCF') { fclose(InCHR); return 0; }
-   
+
 /*   MessageBox(WH,"valid header", FName,
          "Ok", NULL, NULL, NULL, NULL, NULL);
 */
@@ -306,7 +312,7 @@ int SaveCHR(char *FName) {
    hchr.SensFnt=FSens;
    hchr.PtrBuff=sizeof(HeadCHR);
    for (i=0;i<256;i++) hchr.C[i]=InfCar[i];
-	
+
    for (h=hchr.C[1].PlusLgn,i=2;i<256;i++)   // Max BasLgn
      h=(h>hchr.C[i].PlusLgn)?hchr.C[i].PlusLgn:h;
    hchr.MinPlusLgn=h;
@@ -316,7 +322,7 @@ int SaveCHR(char *FName) {
    hchr.MaxHautLgn=h;
 
    hchr.MaxHautFnt=hchr.MaxHautLgn-hchr.MinPlusLgn+1;
-	
+
    for (BPtr=0,i=1;i<256;i++) {
      hchr.C[i].DatCar=BPtr;
      l=(InfCar[i].Lg<=32)?1:2;

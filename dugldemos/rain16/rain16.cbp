@@ -25,11 +25,14 @@
 				<Option type="1" />
 				<Option compiler="djgpp_gnu_gcc_compiler" />
 				<Compiler>
+					<Add option="-march=pentium-mmx" />
 					<Add option="-O2" />
+					<Add option="-m32" />
 					<Add directory="../../dugl" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-m32" />
 					<Add directory="../../dugl/bin/Release" />
 				</Linker>
 			</Target>

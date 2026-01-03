@@ -179,11 +179,11 @@ int main (int argc, char ** argv)
     int LastPos=PosSynch,DeltaPos;
 
     // init synchro, 30 will be the count of the enabled smoke per sec
-    InitSynch(SynchBuff,&PosSynch,30);
+    FREE_MMX(); InitSynch(SynchBuff,&PosSynch,30);
     // main loop
     for (int j=0;;j++) {
       // synchronise
-      Synch(SynchBuff,&PosSynch);
+      FREE_MMX(); Synch(SynchBuff,&PosSynch);
       //
       DeltaPos=PosSynch-LastPos;
       LastPos=PosSynch;
@@ -272,17 +272,17 @@ int main (int argc, char ** argv)
       // get key
       GetKey(&keyCode, &keyFLAG);
       switch (keyCode) {
-        case 63 : // F5 vertical synch e/d
+        case KB_KEY_F5 : // F5 vertical synch e/d
           SynchScreen=!SynchScreen; break;
-        case 64 : // F6 blur
+        case KB_KEY_F6 : // F6 blur
           BlurDisplay=!BlurDisplay; break;
-        case 65 : // F7 transparency
+        case KB_KEY_F7 : // F7 transparency
           Transparency=!Transparency; break;
       }
 
 
       if (BlurDisplay) {
-         BlurSurf16(&blurSurf16,&rendSurf16);
+         Blur16((void*)(blurSurf16.rlfb), (void*)(rendSurf16.rlfb), blurSurf16.ResH, blurSurf16.ResV, 0, (blurSurf16.ResV - 1));
          SetSurf(&blurSurf16);
       }
       else {
@@ -311,9 +311,9 @@ int main (int argc, char ** argv)
       else
          SurfCopy(&VSurf[0], &rendSurf16);
       // esc exit
-      if (IsKeyDown(0x1)) break;
+      if (IsKeyDown(KB_KEY_ESC)) break;
       // ctrl + shift + tab  = BMP screenshot
-      if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
+      if (IsKeyDown(KB_KEY_TAB) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
          SaveBMP16(&VSurf[0],"rain16.bmp");
     }
 

@@ -9,7 +9,7 @@
 #include <sys/movedata.h>
 #include <sys/segments.h>
 #include <dpmi.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 
 typedef struct
 {	unsigned char AscHG,AscHD,AscBG,AscBD;
@@ -21,7 +21,7 @@ typedef struct
 		      MaskYesCtrl;
 	unsigned int  MaskNoDef,MaskNoShifCaps,MaskNoAltGR,MaskNoAltLf,MaskNoShifNum,
 		      MaskNoCtrl;
-		      
+
 	unsigned int  DefNbElDefPrefix,DefNbElShifCapsPrefix,DefNbElAltGrPrefix,DefNbElAltLfPrefix,
 		      DefNbElShifNumPrefix,DefNbElCtrlPrefix;
 	unsigned int  ShifCapsNbElDefPrefix,ShifCapsNbElShiftCapsPrefix,ShifCapsNbElAltGrPrefix,ShifCapsNbElAltLfPrefix,
@@ -34,7 +34,7 @@ typedef struct
 		      ShifNumNbElShifNumPrefix,ShifNumNbElCtrlPrefix;
 	unsigned int  CtrlNbElDefPrefix,CtrlNbElShifCapsPrefix,CtrlNbElAltGrPrefix,CtrlNbElAltLfPrefix,
 		      CtrlNbElShifNumPrefix,CtrlNbElCtrlPrefix;
-		      
+
 	unsigned char DefAscDefTbDefPrefix, DefAscDefTbShifCapsPrefix, DefAscDefTbAltGRPrefix, DefAscDefTbAltLfPrefix,
 		      DefAscDefTbShifNumPrefix, DefAscDefTbCtrlPrefix;
 	unsigned char DefAscShifCapsTbDefPrefix, DefAscShifCapsTbShifCapsPrefix,DefAscShifCapsTbAltGRPrefix, DefAscShifCapsTbAltLfPrefix,
@@ -47,7 +47,7 @@ typedef struct
 		      DefAscShifNumTbShifNumPrefix, DefAscShifNumTbCtrlPrefix;
 	unsigned char DefAscCtrlTbDefPrefix, DefAscCtrlTbShifCapsPrefix, DefAscCtrlTbAltGRPrefix, DefAscCtrlTbAltLfPrefix,
 		      DefAscCtrlTbShifNumPrefix, DefAscCtrlTbCtrlPrefix;
-		      
+
 	unsigned char *DefTbDefPrefix, *DefTbShifCapsPrefix, *DefTbAltGRPrefix, *DefTbAltLfPrefix,
 		      *DefTbShifNumPrefix, *DefTbCtrlPrefix;
 	unsigned char *ShifCapsTbDefPrefix, *ShifCapsTbShifCapsPrefix, *ShifCapsTbAltGRPrefix, *ShifCapsTbAltLfPrefix,
@@ -219,9 +219,9 @@ KeybButton KbTb[]={
 	    { 0x34,  2+265,477-232,  2+290,477-192,":" ,0 ,1 ,&KbInf[59]  },     // :
 	    { 0x35,  2+290,477-232,  2+315,477-192,"!" ,0 ,1 ,&KbInf[60]  },     // !
 	    { 0x36,  2+315,477-232,  2+375,477-192,"RG_SHIFT" ,0 ,0 ,NULL },     // RG_SHIFT
-	    
+
 	    { 0xc8,  2+425,477-232,  2+450,477-192,"UP" ,0 ,0 ,NULL  },     // UP
-		    
+
 	    { 0x4f,  2+500,477-232,  2+525,477-192,"Num 1" ,0 ,1 ,&KbInf[61]  },     // Num 1
 	    { 0x50,  2+525,477-232,  2+550,477-192,"Num 2" ,0 ,1 ,&KbInf[62] },     // Num 2
 	    { 0x51,  2+550,477-232,  2+575,477-192,"Num 3" ,0 ,1 ,&KbInf[63] },     // Num 3
@@ -319,92 +319,96 @@ int main(int argc,char *argv[])
 {	if (argc>=2) LoadKbConfig=argv[1];
 	if (argc>=3) CreateKbMap=argv[2];
 	if (argc>=4) SaveKbConfig=argv[3];
-	if (!InitVesa())
-	  { printf("error init graphics\n"); exit(0); }
 	if ((Pal=fopen("3dpal.pal","rb"))==NULL) {
 	  printf("3dpal.pal error\n"); exit(-1); }
 	fread(&Pal3d,1024,1,Pal);
 	fclose(Pal);
+	rouge=PrFindCol(0,255,0,0,255,&Pal3d,0.4f);
+	rouge=PrFindCol(0,255,0,0,255,&Pal3d,0.4f);
+	jaune=PrFindCol(0,255,0,255,0,&Pal3d,0.4f);
+	bleu=PrFindCol(0,255,255,0,0,&Pal3d,0.4f);
+	noir=PrFindCol(0,255,0,0,0,&Pal3d,0.4f);
+	blanc=PrFindCol(0,255,255,255,255,&Pal3d,0.4f);
+	gris=PrFindCol(0,255,127,127,127,&Pal3d,0.4f);
+	grisf=PrFindCol(0,255,64,64,64,&Pal3d,0.4f);
+	grisc=PrFindCol(0,255,127+64,127+64,127+64,&Pal3d,0.4f);
+
+	FREE_MMX();
+	if (!InitVesa())
+	  { printf("error init graphics\n"); exit(0); }
+
 	for (i=0,MaxGenAscii=0;i<NbElKbTb;i++)
 	   if (KbTb[i].CanGenAscii) MaxGenAscii++;
 	for (i=0;i<MaxGenAscii;i++) KbInf[i]=InitKbInf;
 	for (i=0;i<NbElKbTb;i++)
 	   if (KbTb[i].CanGenAscii) BoutonAllocMem(&KbTb[i]);
 
+	FREE_MMX();
 	ProcedLoadConfig(); // charge Config par defaut
-	
-	rouge=PrFindCol(0,255,0,0,255,&Pal3d,0.2);
-	jaune=PrFindCol(0,255,0,255,0,&Pal3d,0.2);
-	bleu=PrFindCol(0,255,255,0,0,&Pal3d,0.2);
-	noir=PrFindCol(0,255,0,0,0,&Pal3d,0.2);
-	blanc=PrFindCol(0,255,255,255,255,&Pal3d,0.2);
-	gris=PrFindCol(0,255,127,127,127,&Pal3d,0.2);
-	grisf=PrFindCol(0,255,64,64,64,&Pal3d,0.2);
-	grisc=PrFindCol(0,255,127+64,127+64,127+64,&Pal3d,0.2);
 
 	if (!LoadGIF(&MsPtr,"mouseimg.gif",&palette))
 	  { printf("mouseimg.gif error\n"); exit(-1); }
 	SetOrgSurf(&MsPtr,0,MsPtr.ResV-1);
 	if (!LoadFONT(&F1,"hello.chr"))
 	  { printf("hello.chr error\n"); exit(-1); }
-	  
+
 	if (!InstallMouse())
 	  { printf("Mouse error\n"); exit(-1); }
-	if (!InstallTimer(300))
+	if (!DgInstallTimer(300))
 	  { UninstallMouse(); printf("Timer error\n"); exit(-1); }
 
 	if (!InstallKeyboard())
-	  { UninstallTimer(); UninstallMouse(); printf("Keyboard error\n");
+	  { DgUninstallTimer(); UninstallMouse(); printf("Keyboard error\n");
 	    exit(-1);
 	  }
 
 	if (!InitVesaMode(640,480,8,3)) {
-	  UninstallTimer(); UninstallMouse(); UninstallKeyboard();
+	  DgUninstallTimer(); UninstallMouse(); UninstallKeyboard();
 	  CloseVesa();
 	  printf("error init vesa mode\n");
 	  exit(0);
 	}
         SetPalette(0,256,&Pal3d);
 	SetFONT(&F1);
-	GetSurfRView(&VSurf[0],&MsV);
-	SetMouseRView(&MsV);
-	PrBuildTbDegCol(&Pal3d,0.2);
+	GetSurfView(&VSurf[0],&MsV);
+	SetMouseView(&MsV);
+	FREE_MMX();
 	SelAscEnter=MsDownInChxAscii=choixBMMsDown=SelMsDown=CurProc=0;
 	SelKbButt=-1;
 	for (j=0;;j++) {
 //	   if (Time-OldTime<(TimerFreq/CurModeVtFreq))
+		FREE_MMX();
 	     WaitRetrace();
-	   OldTime=Time;
-	   ViewSurf(j%3);
-	   SetSurf(&VSurf[(j+1)%3]);
-	   Clear(noir);
-           // create a screenshot
-           // tab + ctrl + shift
-           if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
-              SavePCX(&VSurf[j%3],"keybmap.pcx",&Pal3d);
+		OldTime=DgTime;
+		ViewSurf(j%3);
+		SetSurf(&VSurf[(j+1)%3]);
+		Clear(noir);
+        // create a screenshot
+        // tab + ctrl + shift
+        if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
+            SavePCX(&VSurf[j%3],"keybmap.pcx",&Pal3d);
 
-	   switch (CurProc) {
-	    case 0: NormScan(); break;
-	    case 1: BoutonMenu(&KbTb[SelKbButt]); break;
-	    case 2: ChoisirAscii(); break;
-	    case 3: TabPrefixMenu(); break;
-	    case 4: FillTabPrefix(); break;
-	    default: CurProc=0;
-	   }
+	    switch (CurProc) {
+			case 0: NormScan(); break;
+			case 1: BoutonMenu(&KbTb[SelKbButt]); break;
+			case 2: ChoisirAscii(); break;
+			case 3: TabPrefixMenu(); break;
+			case 4: FillTabPrefix(); break;
+			default: CurProc=0;
+	    }
 
 	   FntCol=blanc;
 	   FntY=10;
 	   sprintf(s,"LastKey %x, KbFLAG %x",LastKey,KbFLAG);
 	   OutTextMode(s,AJ_MID);
-
 	   PutMaskSurf(&MsPtr,MsX,MsY,0);
 	}
 	CloseVesa();
-	
+
 	UninstallMouse();
-	UninstallTimer();
+	DgUninstallTimer();
 	UninstallKeyboard();
-        TextMode();
+    TextMode();
 }
 
 void FillTabPrefix() {
@@ -413,7 +417,7 @@ void FillTabPrefix() {
 	View V1;
 	V1.OrgX=V1.OrgY=0;
 	s[1]=0;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	if (SelAscEnter) {
 	  SelAscEnter=0;
 	  if (!TFill[ChoixBMFill*2+1] && SelAscii) (*NbElFill)++;
@@ -425,7 +429,7 @@ void FillTabPrefix() {
 	for (m=n=0;m<NbElKbTb;m++) {
 	  V1.MinX=KbTb[m].x1+1; V1.MinY=KbTb[m].y1+1;
 	  V1.MaxX=KbTb[m].x2-1; V1.MaxY=KbTb[m].y2-1;
-	  SetSurfRView(&CurSurf,&V1);
+	  SetSurfView(&CurSurf,&V1);
 
 	  if (KbTb[m].CanGenAscii) {
 	    TFill[n*2]=KbTb[m].code;
@@ -445,12 +449,12 @@ void FillTabPrefix() {
 	    ClearKeyCircBuff();
 	    CurProc=2;
 	  }
-	  SetSurfRView(&CurSurf,&SaveView);
+	  SetSurfView(&CurSurf,&SaveView);
 	  rect(KbTb[m].x1,KbTb[m].y1,KbTb[m].x2,KbTb[m].y2,noir);
 	}
         GetKey(&key,&keymsk);
 	if (key==1) { CurProc=3; ClearKeyCircBuff(); }
-	SetSurfRView(&CurSurf,&SaveView);
+	SetSurfView(&CurSurf,&SaveView);
 	FntCol=blanc; FntY=40;
 	sprintf(s,"%s Nb Element %i",MsgFill,*NbElFill);
 	OutTextMode(s,AJ_MID);
@@ -461,7 +465,7 @@ void TabPrefixMenu()
 	View V1;
         unsigned char key;
         unsigned int keymsk;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	V1.OrgX=V1.OrgY=0;
 	V1.MinX=60; V1.MinY=90;
 	V1.MaxX=320; V1.MaxY=360;
@@ -525,7 +529,7 @@ void TabPrefixMenu()
 	ClearText();
 	FntCol=blanc; OutText(Msg);
 	FntCol=noir;
-	
+
 	OutText("Table ascii default");
 	if ((*NbTAscDef)) { sprintf(s,"%i\n",(*NbTAscDef)); OutTextMode(s,AJ_RIGHT); }
 	else OutText("\n");
@@ -544,7 +548,7 @@ void TabPrefixMenu()
 	OutText("Table ascii Ctrl");
 	if ((*NbTAscCtrl)) { sprintf(s,"%i\n",(*NbTAscCtrl)); OutTextMode(s,AJ_RIGHT); }
 	else OutText("\n");
-	
+
 	s[0]='\''; s[2]='\''; s[3]='\n'; s[4]=0;
 	OutText("Default ascii");
 	if ((*DefAscAscDef)) { s[1]=(*DefAscAscDef); OutTextMode(s,AJ_RIGHT); }
@@ -564,7 +568,7 @@ void TabPrefixMenu()
 	OutText("Defaut ascii Ctrl");
 	if ((*DefAscAscCtrl)) { s[1]=(*DefAscAscCtrl); OutTextMode(s,AJ_RIGHT); }
 	   else OutText("\n");*/
-	SetSurfRView(&CurSurf,&SaveView);
+	SetSurfView(&CurSurf,&SaveView);
         GetKey(&key,&keymsk);
 	if (key) { CurProc=1; ClearKeyCircBuff(); }
 }
@@ -575,7 +579,7 @@ void BoutonMenu(KeybButton *Bt)
 	View V1;
         unsigned char key;
         unsigned int keymsk;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	V1.OrgX=V1.OrgY=0;
 	V1.MinX=50; V1.MinY=20;
 	V1.MaxX=460; V1.MaxY=460;
@@ -676,7 +680,7 @@ void BoutonMenu(KeybButton *Bt)
 	  } else {
 	    OutText("Normal Ctrl\n"); OutText("Table Ascii Prefix Ctrl\n");
 	  }
-	  
+
 	} else OutText("Enable Ascii Gen\n");
 
 	if (choixBM!=-1 && (MsButton&1)) choixBMMsDown=1;
@@ -860,8 +864,8 @@ void BoutonMenu(KeybButton *Bt)
 	   case 15: if (Bt->GenAscii) Bt->IB->CtrlPrefix^=0xffffffff; break;
 	  }
 	}
-	
-	SetSurfRView(&CurSurf,&SaveView);
+
+	SetSurfView(&CurSurf,&SaveView);
         GetKey(&key,&keymsk);
 	if (key==1) CurProc=0;
 }
@@ -875,7 +879,7 @@ int  InPos(int x1,int y1,int x2,int y2,int X,int Y)
 
 void ButtonScan(Bouton *Bt)
 {	View V1;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	V1.OrgX=V1.OrgY=0;
 	V1.MinX=Bt->x1; V1.MinY=Bt->y1;
 	V1.MaxX=Bt->x2; V1.MaxY=Bt->y2;
@@ -883,7 +887,7 @@ void ButtonScan(Bouton *Bt)
 
 	if (Bt->MsDownIn) bar(Bt->x1,Bt->y1,Bt->x2,Bt->y2,jaune);
 	else bar(Bt->x1,Bt->y1,Bt->x2,Bt->y2,gris);
-	
+
 	rect(Bt->x1,Bt->y1,Bt->x2,Bt->y2,grisf);
 	ClearText();
 	FntCol=noir;
@@ -898,14 +902,14 @@ void ButtonScan(Bouton *Bt)
 	    Bt->Proced();
 	}
 
-	SetSurfRView(&CurSurf,&SaveView);
+	SetSurfView(&CurSurf,&SaveView);
 }
 
 
 void ProcedQuit()
 {	CloseVesa();
 	UninstallMouse();
-	UninstallTimer();
+	DgUninstallTimer();
 	UninstallKeyboard();
         TextMode();
 	exit(0);
@@ -916,7 +920,7 @@ void NormScan() {
 	View V1;
 	V1.OrgX=V1.OrgY=0;
 	s[1]=0;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	ButtonScan(&ButtQuit);
 	ButtonScan(&ButtCreateKeybmap);
 	ButtonScan(&ButtSauveConfig);
@@ -932,7 +936,7 @@ void NormScan() {
 	for (i=0;i<NbElKbTb;i++) {
 	  V1.MinX=KbTb[i].x1+1; V1.MinY=KbTb[i].y1+1;
 	  V1.MaxX=KbTb[i].x2-1; V1.MaxY=KbTb[i].y2-1;
-	  SetSurfRView(&CurSurf,&V1);
+	  SetSurfView(&CurSurf,&V1);
 
 	  if (IsKeyDown(KbTb[i].code)) ClearSurf(rouge);
 	  else if (KbTb[i].GenAscii) ClearSurf(grisc);
@@ -945,7 +949,7 @@ void NormScan() {
 	    s[0]=KbTb[i].IB->AscBG; OutTextMode(s,AJ_LEFT);
 	    s[0]=KbTb[i].IB->AscBD; OutTextMode(s,AJ_RIGHT);
 	  }
-	  SetSurfRView(&CurSurf,&SaveView);
+	  SetSurfView(&CurSurf,&SaveView);
 	  rect(KbTb[i].x1,KbTb[i].y1,KbTb[i].x2,KbTb[i].y2,noir);
 	}
 	for (i=0;i<NbElKbTb;i++) {
@@ -957,7 +961,7 @@ void NormScan() {
  	  } else if (SelKbButt==i && SelMsDown)
 	           { SelMsDown=0; SelKbButt=-1; }
 	}
-	SetSurfRView(&CurSurf,&SaveView);
+	SetSurfView(&CurSurf,&SaveView);
 }
 
 void ChoisirAscii() {
@@ -965,7 +969,7 @@ void ChoisirAscii() {
 	int ProbChoice;
         unsigned char key;
         unsigned int keymsk;
-	GetSurfRView(&CurSurf,&SaveView);
+	GetSurfView(&CurSurf,&SaveView);
 	int GrX1=30,GrY1=40,asciiChoix;
 	char s2[20],s3[60];
 	s2[1]=s3[0]=0;
@@ -981,7 +985,7 @@ void ChoisirAscii() {
 	  for (l=0;l<(FntHaut+2)*16;l+=(FntHaut+2)) {
 	    V1.MinX=l+1+GrX1; V1.MinY=k+GrY1+1;
 	    V1.MaxX=V1.MinX+FntHaut; V1.MaxY=V1.MinY+16;
-	    SetSurfRView(&CurSurf,&V1);
+	    SetSurfView(&CurSurf,&V1);
 	    ClearText();
 	    s2[0]=asciiChoix;
 	    OutText(s2);
@@ -1001,7 +1005,7 @@ void ChoisirAscii() {
 	  CurProc=OldCurProc; SelKbButt=OldSelKbButt; SelAscii=0;
 	  choixBM=OldChoixBM;
 	}
-	SetSurfRView(&CurSurf,&SaveView);
+	SetSurfView(&CurSurf,&SaveView);
 	ClearText();
 	OutText(s3);
 }
@@ -1055,7 +1059,7 @@ void BoutonAllocMem(KeybButton *Bt)
 	if ( (Bt->IB->CtrlTbShifNumPrefix=(unsigned char *)malloc(MaxGenAscii*2))==NULL) erreur=1;
 	if ( (Bt->IB->CtrlTbCtrlPrefix=(unsigned char *)malloc(MaxGenAscii*2))==NULL) erreur=1;
 //*******************************
-		      
+
 	if (erreur) { printf("no mem \n"); exit(-1); }
 //********************************************
 	 ZeroBuff(Bt->IB->DefTbDefPrefix     );
@@ -1133,28 +1137,28 @@ void SaveKeybButton(FILE *FSave,KeybButton *Bt) {
 	fwrite(Bt,sizeof(KeybButton),1,FSave);
 	if (Bt->CanGenAscii) {
 	  fwrite(Bt->IB,sizeof(InfoButt),1,FSave);
-	  
+
 	  fwrite(Bt->IB->DefTbDefPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->DefTbShifCapsPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->DefTbAltGRPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->DefTbAltLfPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->DefTbShifNumPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->DefTbCtrlPrefix,MaxGenAscii*2,1,FSave);
-	
+
 	  fwrite(Bt->IB->ShifCapsTbDefPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifCapsTbShifCapsPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifCapsTbAltGRPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifCapsTbAltLfPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifCapsTbShifNumPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifCapsTbCtrlPrefix,MaxGenAscii*2,1,FSave);
-		      
+
 	  fwrite(Bt->IB->AltGRTbDefPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltGRTbShifCapsPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltGRTbAltGRPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltGRTbAltLfPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltGRTbShifNumPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltGRTbCtrlPrefix,MaxGenAscii*2,1,FSave);
-		      
+
 	  fwrite(Bt->IB->AltLfTbDefPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltLfTbShifCapsPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->AltLfTbAltGRPrefix,MaxGenAscii*2,1,FSave);
@@ -1168,14 +1172,14 @@ void SaveKeybButton(FILE *FSave,KeybButton *Bt) {
 	  fwrite(Bt->IB->ShifNumTbAltLfPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifNumTbShifNumPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->ShifNumTbCtrlPrefix,MaxGenAscii*2,1,FSave);
-		      
+
 	  fwrite(Bt->IB->CtrlTbDefPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->CtrlTbShifCapsPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->CtrlTbAltGRPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->CtrlTbAltLfPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->CtrlTbShifNumPrefix,MaxGenAscii*2,1,FSave);
 	  fwrite(Bt->IB->CtrlTbCtrlPrefix,MaxGenAscii*2,1,FSave);
-		      
+
 	}
 
 }
@@ -1239,7 +1243,7 @@ void LoadKeybButton(FILE *FLoad,KeybButton *Bt) {
 	  Bt->IB->MaskYesAltLf=SaveIB.MaskYesAltLf;
 	  Bt->IB->MaskYesShifNum=SaveIB.MaskYesShifNum;
 	  Bt->IB->MaskYesCtrl=SaveIB.MaskYesCtrl;
-	  
+
 	  Bt->IB->MaskNoDef=SaveIB.MaskNoDef;
 	  Bt->IB->MaskNoShifCaps=SaveIB.MaskNoShifCaps;
 	  Bt->IB->MaskNoAltGR=SaveIB.MaskNoAltGR;
@@ -1253,21 +1257,21 @@ void LoadKeybButton(FILE *FLoad,KeybButton *Bt) {
 	  fread(Bt->IB->DefTbAltLfPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->DefTbShifNumPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->DefTbCtrlPrefix,MaxGenAscii*2,1,FLoad);
-	
+
 	  fread(Bt->IB->ShifCapsTbDefPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifCapsTbShifCapsPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifCapsTbAltGRPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifCapsTbAltLfPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifCapsTbShifNumPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifCapsTbCtrlPrefix,MaxGenAscii*2,1,FLoad);
-		      
+
 	  fread(Bt->IB->AltGRTbDefPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltGRTbShifCapsPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltGRTbAltGRPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltGRTbAltLfPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltGRTbShifNumPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltGRTbCtrlPrefix,MaxGenAscii*2,1,FLoad);
-		      
+
 	  fread(Bt->IB->AltLfTbDefPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltLfTbShifCapsPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->AltLfTbAltGRPrefix,MaxGenAscii*2,1,FLoad);
@@ -1281,14 +1285,14 @@ void LoadKeybButton(FILE *FLoad,KeybButton *Bt) {
 	  fread(Bt->IB->ShifNumTbAltLfPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifNumTbShifNumPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->ShifNumTbCtrlPrefix,MaxGenAscii*2,1,FLoad);
-		      
+
 	  fread(Bt->IB->CtrlTbDefPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->CtrlTbShifCapsPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->CtrlTbAltGRPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->CtrlTbAltLfPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->CtrlTbShifNumPrefix,MaxGenAscii*2,1,FLoad);
 	  fread(Bt->IB->CtrlTbCtrlPrefix,MaxGenAscii*2,1,FLoad);
-		      
+
 	}
 }
 
@@ -1299,7 +1303,7 @@ void ProcedCreateKeybmap() {
 	unsigned int  *TabPosSaveNormKeyb,*TabPosSaveNormPrefixKeyb;
 	unsigned int  CptTabPos,CptTabPrefixPos,PosSave,CalcAlign;
 	unsigned char AlignFile[]={ 0,0,0,0 };
-	
+
 //**************************************************************************
 	NbAscDef=NbAscShifCaps=NbAscAltGR=NbAscAltLf=NbAscShifNum=NbAscCtrl=0;
 	NbPrefixDef=NbPrefixShifCaps=NbPrefixAltGR=NbPrefixAltLf=NbPrefixShifNum=NbPrefixCtrl=0;
@@ -1341,23 +1345,23 @@ void ProcedCreateKeybmap() {
 	  if (KbTb[i].IB->DefNbElDefPrefix) NbNormPrefixKeyb++;	if (KbTb[i].IB->DefNbElShifCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->DefNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->DefNbElAltLfPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->DefNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->DefNbElCtrlPrefix) NbNormPrefixKeyb++;
-	
+
 	  if (KbTb[i].IB->ShifCapsNbElDefPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifCapsNbElShiftCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->ShifCapsNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifCapsNbElAltLfPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->ShifCapsNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifCapsNbElCtrlPrefix) NbNormPrefixKeyb++;
-	
+
 	  if (KbTb[i].IB->AltGrNbElDefPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltGrNbElShifCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->AltGrNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltGrNbElAltLfPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->AltGrNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltGrNbElCtrlPrefix) NbNormPrefixKeyb++;
-	
+
 	  if (KbTb[i].IB->AltLfNbElDefPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltLfNbElShifCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->AltLfNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltLfNbElAltLfPrefix) NbNormPrefixKeyb++;
           if (KbTb[i].IB->AltLfNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->AltLfNbElCtrlPrefix) NbNormPrefixKeyb++;
-	
+
 	  if (KbTb[i].IB->ShifNumNbElDefPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifNumNbElShifCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->ShifNumNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifNumNbElAltLfPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->ShifNumNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->ShifNumNbElCtrlPrefix) NbNormPrefixKeyb++;
-	
+
 	  if (KbTb[i].IB->CtrlNbElDefPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->CtrlNbElShifCapsPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->CtrlNbElAltGrPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->CtrlNbElAltLfPrefix) NbNormPrefixKeyb++;
 	  if (KbTb[i].IB->CtrlNbElShifNumPrefix) NbNormPrefixKeyb++; if (KbTb[i].IB->CtrlNbElCtrlPrefix) NbNormPrefixKeyb++;
@@ -1418,10 +1422,10 @@ void ProcedCreateKeybmap() {
 	  }
 //******Remplis NORM KEYB***************************************************
 //**************************************************************************
-	  
+
 	for (int i=0;i<NbElKbTb;i++)
 	  if (KbTb[i].CanGenAscii) {
-	  
+
 	    if ((!KbTb[i].IB->DefPrefix) && KbTb[i].IB->DefAscii) {
 	      TabNormKeyb[0].MaskYes=KbTb[i].IB->MaskYesDef; TabNormKeyb[0].MaskNo=KbTb[i].IB->MaskNoDef;
 	      TabNormKeyb[0].DefActiv=MDefActDef;
@@ -1465,10 +1469,10 @@ void ProcedCreateKeybmap() {
 
 	TabPosSaveNormKeyb=(unsigned int*)alloca(4*CptNbNormAscii);
 	TabPosSaveNormPrefixKeyb=(unsigned int*)alloca(4*CptNrmPrfx);
-	
+
 	if ((FSKMAP=fopen(CreateKbMap,"wb"))==NULL) return;
 	HeadKbMap.Sign='PAMK';
-	
+
 	HeadKbMap.TabPrefixKeyb=NULL;
 	HeadKbMap.TabNormPrefixKeyb=HeadKbMap.TabNormKeyb=NULL,
 	HeadKbMap.SizeKbMap=sizeof(KbMAP);
@@ -1477,10 +1481,10 @@ void ProcedCreateKeybmap() {
 	HeadKbMap.NbPrefix=CptPrfx;
 	HeadKbMap.NbNormPrefix=CptNrmPrfx;
 	HeadKbMap.NbNorm=CptNbNormAscii;
-	
+
 	HeadKbMap.KbMapPtr=(void*)(sizeof(KbMAP));
 	HeadKbMap.NbNorm=CptNbNormAscii;
-	
+
 	fseek(FSKMAP,sizeof(KbMAP),SEEK_SET); // saute l'entete
 	CptTabPos=CptTabPrefixPos=0;
 	// Sauvegarde DAT Norm KEYB -----------------------------------------
@@ -1533,7 +1537,7 @@ void ProcedCreateKeybmap() {
 	HeadKbMap.CurPrefix= NULL;
 	HeadKbMap.resv[0]= HeadKbMap.resv[1]= HeadKbMap.resv[2] =0;
 	HeadKbMap.resv2[0]= HeadKbMap.resv2[1]= HeadKbMap.resv2[2] =0;
-	
+
 	HeadKbMap.SizeKbMap=ftell(FSKMAP)-sizeof(KbMAP);
 	fseek(FSKMAP,0,SEEK_SET);
 	fwrite(&HeadKbMap,sizeof(KbMAP),1,FSKMAP);

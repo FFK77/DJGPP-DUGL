@@ -14,9 +14,13 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="../../dugl" />
+					<Add directory="../../duglplus" />
 				</Compiler>
 				<Linker>
+					<Add library="dugl" />
+					<Add library="duglplus" />
 					<Add directory="../../dugl/bin/Debug" />
+					<Add directory="../../duglplus/bin/Debug" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -27,10 +31,14 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add directory="../../dugl" />
+					<Add directory="../../duglplus" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="dugl" />
+					<Add library="duglplus" />
 					<Add directory="../../dugl/bin/Release" />
+					<Add directory="../../duglplus/bin/Release" />
 				</Linker>
 			</Target>
 		</Build>

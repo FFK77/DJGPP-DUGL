@@ -29,7 +29,7 @@ public:
 
    int		 Changed();
    int           Length();
-   
+
    int 		 GetInt();
    unsigned int  GetUInt();
    long	long int GetLLongInt();
@@ -147,7 +147,7 @@ public:
    String* Element(int ind);
    String*  operator[](int ind);
 //   String&  operator[](int ind);
-   
+
 private:
    NodeString *Nodes,*FirstNode,*LastNode;
    NodeString *CurNode,*NextNode;
@@ -234,7 +234,7 @@ public:
    void (*Poly)(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
    // low-level font
    void (*OutText)(const char *str);
-   int  (*RViewOutTextMode)(View *V,const char *str,int Mode);
+   int  (*ViewOutTextMode)(View *V,const char *str,int Mode);
    // data
    unsigned int WinNoir,WinBlanc,WinBleuF,WinGris,WinGrisF,WinGrisC,WinRougeF;
    int WinStopScan;
@@ -484,7 +484,7 @@ public:
    void GetOrg(int *Orgx,int *Orgy);
    int  GetWidth();
    int  GetHeight();
-   
+
 protected:
    void SetView();
 };
@@ -689,7 +689,7 @@ class FlyObj {
    friend class WinHandler;
    friend class NodeFly;
    friend class ListFly;
-   
+
 public:
    int  X1,Y1,X2,Y2;
    int LargHz,HautVt;

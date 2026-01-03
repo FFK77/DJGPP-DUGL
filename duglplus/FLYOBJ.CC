@@ -279,7 +279,7 @@ void FlyListBox::Draw() {
    if (scrollact) GetSurfView(&CurSurf,&V2);
    SetSurfInView(&CurSurf,&V1);
 
-   RViewClearText(&V1); FntY--;
+   ViewClearText(&V1); FntY--;
    for (i=FirstInd;i<FirstInd+MaxNbItem;i++) {
      if (i>=nb) break;
      if (i==PosCursor) {
@@ -668,8 +668,8 @@ void ComBox::Draw() {
      FntCol=m_GraphCtxt->WinBlanc;
    }
    else FntCol=m_GraphCtxt->WinNoir;
-   FntY=RViewGetFntYMID(&V1);
-   if (Select!=-1) m_GraphCtxt->RViewOutTextMode(&V1,((*LStr)[Select])->StrPtr,AJ_SRC);
+   FntY=ViewGetFntYMID(&V1);
+   if (Select!=-1) m_GraphCtxt->ViewOutTextMode(&V1,((*LStr)[Select])->StrPtr,AJ_SRC);
    SetSurfView(&CurSurf,&VS);
 
    m_GraphCtxt->bar(XC2-14,YC1+2,XC2-2,YC2-2,m_GraphCtxt->WinGris);

@@ -46,7 +46,7 @@ CGraphContext::CGraphContext(int BitsPixel,void *PalBGR1024) {
      PutSurf=::PutSurf;
      PutMaskSurf=::PutMaskSurf;
      OutText=::OutText;
-     RViewOutTextMode=::RViewOutTextMode;
+     ViewOutTextMode=::ViewOutTextMode;
      Line=::Line;
      Poly=::Poly;
      break;
@@ -61,7 +61,7 @@ CGraphContext::CGraphContext(int BitsPixel,void *PalBGR1024) {
      PutSurf=::PutSurf16;
      PutMaskSurf=::PutMaskSurf16;
      OutText=::OutText16;
-     RViewOutTextMode=::RViewOutText16Mode;
+     ViewOutTextMode=::ViewOutText16Mode;
      Line=::Line16;
      Poly=::Poly16;
      break;

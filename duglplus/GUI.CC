@@ -308,10 +308,10 @@ void MainWin::Draw() {
    ParcNode=ChList->Nodes;  //Last Node
    if (ParcNode!=NULL) {
       do {
-   	 SetSurfView(&CurSurf,&VActiv);
+        SetSurfView(&CurSurf,&VActiv);
          FREE_MMX();
          if (ParcNode!=CurFocusNode && ParcNode->Item->Visible)
-	   ParcNode->Item->Draw();
+         ParcNode->Item->Draw();
          ParcNode=ParcNode->Prev;
        } while (ParcNode!=NULL);
      }
@@ -902,11 +902,11 @@ void Button::Draw() {
    FntCol=m_GraphCtxt->WinNoir;
 
    if (Etat) {
-     FntY=RViewGetFntYMID(&V1)-1;
-     FntX=RViewGetXOutTextMode(&V1,Label.StrPtr,AJ_MID)+1;
+     FntY=ViewGetFntYMID(&V1)-1;
+     FntX=ViewGetXOutTextMode(&V1,Label.StrPtr,AJ_MID)+1;
    } else {
-     FntY=RViewGetFntYMID(&V1);
-     FntX=RViewGetXOutTextMode(&V1,Label.StrPtr,AJ_MID);
+     FntY=ViewGetFntYMID(&V1);
+     FntX=ViewGetXOutTextMode(&V1,Label.StrPtr,AJ_MID);
    }
    m_GraphCtxt->OutText(Label.StrPtr);
 }
@@ -1084,9 +1084,9 @@ void Label::Draw() {
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
    SetSurfInView(&CurSurf,&V1);
 
-   FntY=RViewGetFntYMID(&V1);
+   FntY=ViewGetFntYMID(&V1);
    FntCol=m_GraphCtxt->WinNoir;
-   m_GraphCtxt->RViewOutTextMode(&V1,Text.StrPtr,Text_AJ);
+   m_GraphCtxt->ViewOutTextMode(&V1,Text.StrPtr,Text_AJ);
 }
 
 void Label::Scan() {
@@ -1145,11 +1145,11 @@ void TextBox::Draw() {
    V1.MaxX=XC2-XC1-6; V1.MaxY=YC2-YC1-6;
    SetSurfInView(&CurSurf,&V1);
    FntCol=m_GraphCtxt->WinNoir;
-   FntY=RViewGetFntYMID(&V1);
+   FntY=ViewGetFntYMID(&V1);
    if ((!Focus) || TextInBox)
-     m_GraphCtxt->RViewOutTextMode(&V1,cstr,AJ_SRC);
+     m_GraphCtxt->ViewOutTextMode(&V1,cstr,AJ_SRC);
    else {
-       FntX=RViewGetXOutTextMode(&V1,cstr,AJ_SRC)+TextX;
+       FntX=ViewGetXOutTextMode(&V1,cstr,AJ_SRC)+TextX;
        m_GraphCtxt->OutText(cstr);
    }
 }
@@ -1175,7 +1175,7 @@ void TextBox::DrawSurf(Surf *DestSurf) {
      if ((DgTimerFreq && ((DgTime/(DgTimerFreq/10))&1)) || (!DgTimerFreq)) {
       	larg=LargPosText(cstr,PosCursor);
 	if (larg>0) larg++;
-        FntY=RViewGetFntYMID(&V1);
+        FntY=ViewGetFntYMID(&V1);
      	if (!FntSens) {
      	  x1=V1.MinX+larg+TextX;
           m_GraphCtxt->bar(x1,FntY+FntLowPos,x1+1,FntY+FntHighPos,m_GraphCtxt->WinNoir);
@@ -1835,7 +1835,7 @@ void ListBox::Draw() {
    if (scrollact) GetSurfView(&CurSurf,&V2);
    SetSurfInView(&CurSurf,&V1);
 
-   RViewClearText(&V1); FntY--;
+   ViewClearText(&V1); FntY--;
    for (i=FirstInd;i<FirstInd+MaxNbItem;i++) {
      if (i>=nb || i<0) break;
      if (i==PosCursor) {

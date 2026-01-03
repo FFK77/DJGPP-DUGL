@@ -49,7 +49,8 @@ ModeInfo		*TbMode;
 __dpmi_meminfo 		dpinf;
 ModeInfo		CurMode;
 VesaIntro 		VesaInt;
-char			ShiftPal=0,VesaPMIOk=0,MTRRa=0,Video=0,Buff_Accel=0;
+
+char				ShiftPal=0,VesaPMIOk=0,MTRRa=0,Video=0,Buff_Accel=0;
 unsigned char		VesaHiVers,VesaLoVers;
 unsigned char		tmpAlignDD;
 
@@ -68,17 +69,12 @@ void ProtectSetPalette(int Dbcol, int Nbcol, char* Tcol);
 void ProtectViewSurf(int NbSurf);
 void ProtectViewSurfWaitVR(int NbSurf);
 
-void BlurSurf16(Surf *S16Dst, Surf *S16Src)
-{	if (S16Dst==NULL || S16Src==NULL ||
-	    S16Dst->BitsPixel!=16 || S16Src->BitsPixel!=16 ||
-	    S16Dst->ResH!=S16Src->ResH ||
-	    S16Dst->ResV!=S16Src->ResV) return;
-	// convert buffers
-	TrImgResHz=S16Dst->ResH;
-	TrImgResVt=S16Dst->ResV;
-	TrBuffImgSrc=(void*)(S16Src->rlfb);
-	TrBuffImgDst=(void*)(S16Dst->rlfb);
-	Blur16();
+void BlurSurf16(Surf *S16Dst, Surf *S16Src) {
+    if (S16Dst==NULL || S16Src==NULL ||
+            S16Dst->BitsPixel!=16 || S16Src->BitsPixel!=16 ||
+            S16Dst->ResH!=S16Src->ResH ||
+            S16Dst->ResV!=S16Src->ResV) return;
+    Blur16((void*)(S16Dst->rlfb), (void*)(S16Src->rlfb), S16Src->ResH, S16Src->ResV, 0, (S16Src->ResV - 1));
 }
 
 void ConvSurf16ToSurf8(Surf *S8Dst, Surf *S16Src)
@@ -259,38 +255,60 @@ int FindCol(int DebCol,int FinCol,int B,int G,int R,void *PalBGR1024)
 	return c;
 }
 
-int PrFindCol(int DebCol,int FinCol,int B,int G,int R,
-            void *PalBGR1024,float PropBonus)
-{	int i,PropBGR;
-        int ray,ray2;
+int PrFindCol(int DebCol,int FinCol,int SearchB,int SearchG,int SearchR,
+            void *PalBGR1024, float PropBonus)
+{	int i = 0,
+		PropBGR = 0,
+		ray = 0,
+		ray2 = 0,
+		deltaB = 0,
+		deltaG = 0,
+		deltaR = 0,
+		colB = 0,
+		colG = 0,
+		colR = 0,
+		c = DebCol;
 	unsigned char *Pal=PalBGR1024;
-	int bs,gs,rs,bf,gf,rf,c=DebCol;
-	FREE_MMX();
-	ray=17000000;
-	PropBonus*=PropBonus;
-	DebCol&=0xff; FinCol&=0xff; B&=0xff; G&=0xff; R&=0xff;
-	PropBGR=Prop(B,G,R);
-	for (i=DebCol;i<FinCol+1;i++) {
-	  bs=B-(bf=Pal[i*4]); gs=G-(gf=Pal[i*4+1]); rs=R-(rf=Pal[i*4+2]);
-          ray2=bs*bs+gs*gs+rs*rs;
-	  if (PropBGR== Prop(bf,gf,rf)) ray2*=PropBonus;
-     	  if (ray2<ray) { c=i; ray=ray2; }
-	  if (ray==0) break;
+	float bonusPow2 = PropBonus * PropBonus;
+
+	ray=17000000; // ~ 255*255*255 highest possible
+	DebCol&=0xff; FinCol&=0xff; SearchB&=0xff; SearchG&=0xff; SearchR&=0xff;
+	PropBGR=Prop(SearchB,SearchG,SearchR);
+	for (i=DebCol;i<=FinCol;i++) {
+	    colB=(int)Pal[i*4];
+	    colG=(int)Pal[i*4+1];
+	    colR=(int)Pal[i*4+2];
+	    deltaB=SearchB-colB;
+	    deltaG=SearchG-colG;
+	    deltaR=SearchR-colR;
+		ray2=(deltaB*deltaB)+(deltaG*deltaG)+(deltaR*deltaR);
+		if (PropBGR == Prop(colB,colG,colR)) {
+			ray2 = (int)((float)(ray2) * bonusPow2);
+		}
+		if (ray2<ray) {
+			c=i;
+			ray=ray2;
+		}
+		if (ray==0) break;
 	}
 	return c;
 }
 
-int Prop(int B,int G,int R)
-{	int ind=0;
-	if (B>G) ind|=0x1;
-	  else if (B==G) ind|=0x2;
-	    else ind|=0x3;
-	if (B>R) ind|=0x10;
-	  else if (B==R) ind|=0x20;
-	    else ind|=0x30;
-	if (G>R) ind|=0x100;
-	  else if (G==R) ind|=0x200;
-	    else ind|=0x300;
+int Prop(int B,int G,int R) {
+	int ind=0;
+	if (B > G)
+		ind=0x1;
+	else
+		ind = (B == G) ? 0x2 : 0x3;
+	if (B > R)
+		ind |= 0x10;
+	else
+	    ind |= (B == R) ? 0x20 : 0x30;
+	if (G > R)
+		ind |= 0x100;
+	else
+	    ind |= (G == R) ? 0x200 : 0x300;
+
 	return ind;
 }
 
@@ -456,7 +474,7 @@ int  OutTextYMode(int TY,const char *str,int Mode)
 	return OutTextMode(str,Mode);
 }
 
-void RViewClearText(View *V)
+void ViewClearText(View *V)
 {	if (FntSens) FntX=V->MaxX;
 	else FntX=V->MinX;
  	FntY=V->MaxY-FntHighPos;
@@ -773,50 +791,56 @@ void SetVInView(View *V)
 
 
 void SetSurfView(Surf *S, View *V) {
-	int pixelsize;
-	int RMaxX= ((V->MaxX+V->OrgX)<S->ResH) ? V->MaxX+V->OrgX : S->ResH-1;
-	int RMaxY= ((V->MaxY+V->OrgY)<S->ResV) ? V->MaxY+V->OrgY : S->ResV-1;
-	int RMinX= ((V->MinX+V->OrgX)>=0) ? V->MinX+V->OrgX : 0;
-	int RMinY= ((V->MinY+V->OrgY)>=0) ? V->MinY+V->OrgY : 0;
+    int pixelsize = GetPixelSize(S->BitsPixel);
+    // clip if required
+    int RMaxX= ((V->MaxX+V->OrgX)<S->ResH) ? V->MaxX+V->OrgX : S->ResH-1;
+    int RMaxY= ((V->MaxY+V->OrgY)<S->ResV) ? V->MaxY+V->OrgY : S->ResV-1;
+    int RMinX= ((V->MinX+V->OrgX)>=0) ? V->MinX+V->OrgX : 0;
+    int RMinY= ((V->MinY+V->OrgY)>=0) ? V->MinY+V->OrgY : 0;
 
-	pixelsize=GetPixelSize(S->BitsPixel);
- 	S->OrgX= V->OrgX;
- 	S->OrgY= V->OrgY;
-	S->MaxX= RMaxX-S->OrgX;
-	S->MinX= RMinX-S->OrgX;
-	S->MaxY= RMaxY-S->OrgY;
-	S->MinY= RMinY-S->OrgY;
-	if (pixelsize>1)
-	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
+    S->OrgX= V->OrgX;
+    S->OrgY= V->OrgY;
+    S->MaxX= RMaxX-S->OrgX;
+    S->MinX= RMinX-S->OrgX;
+    S->MaxY= RMaxY-S->OrgY;
+    S->MinY= RMinY-S->OrgY;
+    if (pixelsize > 1)
+        S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
     else
-	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
+        S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
 }
 
 // les coordonnees des limite sont relative a l'origine de l'ecran
 void SetSurfInView(Surf *S, View *V) {
-	int pixelsize;
-	pixelsize=GetPixelSize(S->BitsPixel);
+    int pixelsize = GetPixelSize(S->BitsPixel);
+    int RMaxX= S->MaxX+S->OrgX;
+    int RMaxY= S->MaxY+S->OrgY;
+    int RMinX= S->MinX+S->OrgX;
+    int RMinY= S->MinY+S->OrgY;
 
-	int SRMaxX= (S->MaxX+S->OrgX);
-	int SRMaxY= (S->MaxY+S->OrgY);
-	int SRMinX= (S->MinX+S->OrgX);
-	int SRMinY= (S->MinY+S->OrgY);
-
-	int RMaxX= ((V->MaxX+V->OrgX)<=SRMaxX) ? V->MaxX+V->OrgX : SRMaxX;
-	int RMaxY= ((V->MaxY+V->OrgY)<=SRMaxY) ? V->MaxY+V->OrgY : SRMaxY;
-	int RMinX= ((V->MinX+V->OrgX)>=SRMinX) ? V->MinX+V->OrgX : SRMinX;
-	int RMinY= ((V->MinY+V->OrgY)>=SRMinY) ? V->MinY+V->OrgY : SRMinY;
-
-	S->OrgX= V->OrgX;
- 	S->OrgY= V->OrgY;
-	S->MaxX= SRMaxX-S->OrgX;
-	S->MinX= SRMinX-S->OrgX;
-	S->MaxY= SRMaxY-S->OrgY;
-	S->MinY= SRMinY-S->OrgY;
-        if (pixelsize>1)
-	  S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
-        else
-	  S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
+    // clip View if required
+    if ((V->MaxX+V->OrgX)<RMaxX) {
+        RMaxX = V->MaxX+V->OrgX;
+    }
+    if ((V->MaxY+V->OrgY)<RMaxY) {
+        RMaxY= V->MaxY+V->OrgY;
+    }
+    if ((V->MinX+V->OrgX)>RMinX) {
+        RMinX= V->MinX+V->OrgX;
+    }
+    if ((V->MinY+V->OrgY)>RMinY) {
+        RMinY= V->MinY+V->OrgY;
+    }
+    S->OrgX= V->OrgX;
+    S->OrgY= V->OrgY;
+    S->MaxX= RMaxX-S->OrgX;
+    S->MaxY= RMaxY-S->OrgY;
+    S->MinX= RMinX-S->OrgX;
+    S->MinY= RMinY-S->OrgY;
+    if (pixelsize > 1)
+        S->vlfb= S->rlfb+(S->OrgX*pixelsize)-((S->OrgY-(S->ResV-1))*S->ResH*pixelsize);
+    else
+        S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
 }
 
 void GetSurfView(Surf *S, View *V)
@@ -825,8 +849,8 @@ void GetSurfView(Surf *S, View *V)
 	V->MinX=S->MinX;  V->MinY=S->MinY;
 }
 
-void RealViewSurf(int NbSurf)
-{	__dpmi_regs r;
+void RealViewSurf(int NbSurf) {
+	__dpmi_regs r;
 	if (NbSurf>=NbVSurf) return;
 	CurViewVSurf=NbSurf;
    	bzero(&r,sizeof(__dpmi_regs));
@@ -840,8 +864,8 @@ void RealViewSurf(int NbSurf)
    	_go32_dpmi_simulate_int(0x10, &r);
 }
 
-void RealViewSurfSched(int NbSurf)
-{	__dpmi_regs r;
+void RealViewSurfSched(int NbSurf) {
+	__dpmi_regs r;
 	if (NbSurf>=NbVSurf) return;
 	CurViewVSurf=NbSurf;
 	addr= VSurf[NbSurf].OffVMem;
@@ -855,8 +879,8 @@ void RealViewSurfSched(int NbSurf)
 }
 
 
-void RealViewSurfWaitVR(int NbSurf)
-{	__dpmi_regs r;
+void RealViewSurfWaitVR(int NbSurf) {
+	__dpmi_regs r;
 	if (NbSurf>=NbVSurf) return;
 	CurViewVSurf=NbSurf;
    	bzero(&r,sizeof(__dpmi_regs));
@@ -876,34 +900,34 @@ void RealSetPalette(int Dbcol, int Nbcol, void *Tcol) {
 //        if (CurMode.VModeFlag|VMODE_VGA) ShiftPal=1;
 	if (Nbcol<1 || Nbcol>256) return;
 	if (ShiftPal) {
-	   for (i=Dbcol;i<Dbcol+Nbcol;i++) {
-	      j=i-Dbcol;
-	      CurPalette[i*4]=(((unsigned char*)(Tcol))[j*4])>>2; // B
-	      CurPalette[i*4+1]=(((unsigned char*)(Tcol))[j*4+1])>>2; // G
-	      CurPalette[i*4+2]=(((unsigned char*)(Tcol))[j*4+2])>>2; // R
-	     }
+		for (i=Dbcol;i<Dbcol+Nbcol;i++) {
+			j=i-Dbcol;
+			CurPalette[i*4]=(((unsigned char*)(Tcol))[j*4])>>2; // B
+			CurPalette[i*4+1]=(((unsigned char*)(Tcol))[j*4+1])>>2; // G
+			CurPalette[i*4+2]=(((unsigned char*)(Tcol))[j*4+2])>>2; // R
+		}
 	} else memcpy(&CurPalette[Dbcol*4],Tcol,Nbcol*4);
 
-        if (CurMode.VModeFlag|VMODE_VGA)
-        {
-          outb(0x3c8,Dbcol);
-          for (i=Dbcol;i<Dbcol+Nbcol;i++) {
-              outb(0x3c9,CurPalette[i*4+2]);
-              outb(0x3c9,CurPalette[i*4+1]);
-              outb(0x3c9,CurPalette[i*4]);
-          }
-        }
-        else {
-	  dosmemput(&CurPalette[Dbcol*4], 4*Nbcol, __tb);
-	  bzero(&r,sizeof(__dpmi_regs));
-   	  r.d.eax = 0x4f09;
-	  r.d.ebx = 0;
-	  r.d.ecx = Nbcol;
-	  r.d.edx = Dbcol;
-	  r.x.es = (__tb>>4) & 0xffff;
-	  r.d.edi = __tb & 0xf;
-   	  _go32_dpmi_simulate_int(0x10, &r);
-        }
+//        if (CurMode.VModeFlag|VMODE_VGA)
+//        {
+			outb(0x3c8,Dbcol);
+			for (i=Dbcol;i<Dbcol+Nbcol;i++) {
+				outb(0x3c9,CurPalette[i*4+2]);
+				outb(0x3c9,CurPalette[i*4+1]);
+				outb(0x3c9,CurPalette[i*4]);
+			}
+//        }
+//        else {
+			dosmemput(&CurPalette[Dbcol*4], 4*Nbcol, __tb);
+			bzero(&r,sizeof(__dpmi_regs));
+			r.d.eax = 0x4f09;
+			r.d.ebx = 0;
+			r.d.ecx = Nbcol;
+			r.d.edx = Dbcol;
+			r.x.es = (__tb>>4) & 0xffff;
+			r.d.edi = __tb & 0xf;
+			_go32_dpmi_simulate_int(0x10, &r);
+//        }
 }
 
 // standard VESA Mode
@@ -988,7 +1012,6 @@ int InitVesa()
 	    ListMode[NbMode]=curMode; NbMode++; }
 	}
 
-
 	if ((TbMode=(ModeInfo *)malloc(sizeof(ModeInfo)*(NbMode+2)))==NULL)
 	  return 0;
 
@@ -1024,15 +1047,15 @@ int InitVesa()
 	free(ListMode);
 
 	InitVesaPMI();
-	if (VesaPMIOk) {
-	  SetPalette=ProtectSetPalette;
-	  ViewSurf=ProtectViewSurf;
-	  ViewSurfWaitVR=ProtectViewSurfWaitVR;
-	} else {
+//	if (VesaPMIOk) {
+//	  SetPalette=ProtectSetPalette;
+//	  ViewSurf=ProtectViewSurf;
+//	  ViewSurfWaitVR=ProtectViewSurfWaitVR;
+//	} else {
 	  SetPalette=RealSetPalette;
 	  ViewSurf=RealViewSurf;
 	  ViewSurfWaitVR=RealViewSurfWaitVR;
-	}
+//	}
 	//if (VesaHiVers>=3) ViewSurf=RealViewSurfSched;
 	EnableVesaMTRR();
 	return 1;
@@ -1047,57 +1070,54 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 
  	for (i=0;i<NbMode;i++) {
 
-	 if ( TbMode[i].ResHz==ResHz &&
-	      TbMode[i].ResVt==ResVt &&
-	      TbMode[i].BitPixel==BitPixel)
-	    {
-	     pixelsize=GetPixelSize(BitPixel);
-             ScreenSize = ResHz*ResVt*pixelsize;
-             if ((ScreenSize*NbPage)>Sizelfb)
-	       return 0;
+		if ( TbMode[i].ResHz==ResHz &&   TbMode[i].ResVt==ResVt && TbMode[i].BitPixel==BitPixel)  {
+			pixelsize=GetPixelSize(BitPixel);
+			ScreenSize = ResHz*ResVt*pixelsize;
+			if ((ScreenSize*NbPage)>Sizelfb)
+				return 0;
 
-	     if (Video==1 && VSurf!=NULL) { free(VSurf); VSurf=NULL; }
-	     VSurf=(Surf *)malloc(sizeof(Surf)*(NbPage+1));
-	     if (VSurf==NULL)
-	       return 0;
+			if (Video==1 && VSurf!=NULL) { free(VSurf); VSurf=NULL; }
+			VSurf=(Surf *)malloc(sizeof(Surf)*(NbPage+1));
+			if (VSurf==NULL)
+				return 0;
 
-	     Video==1; cvlfb=lfb;
-	     for (j=0;j<NbPage;j++) {
-	        VSurf[j].vlfb=VSurf[j].rlfb= cvlfb;
-	        VSurf[j].OffVMem= cvlfb-lfb;
-	        VSurf[j].ResH= ResHz;
-			VSurf[j].ResV= ResVt;
+			Video==1; cvlfb=lfb;
+			for (j=0;j<NbPage;j++) {
+				VSurf[j].vlfb=VSurf[j].rlfb= cvlfb;
+				VSurf[j].OffVMem= cvlfb-lfb;
+				VSurf[j].ResH= ResHz;
+				VSurf[j].ResV= ResVt;
 
-	        VSurf[j].MaxX= ResHz-1;
-	        VSurf[j].MaxY= VSurf[j].MinX= 0;
-	        VSurf[j].MinY= -ResVt+1; //axe Y montant
-	        VSurf[j].SizeSurf= ScreenSize;
-	        VSurf[j].OrgX= 0;
-	        VSurf[j].OrgY= ResVt-1;
-            VSurf[j].BitsPixel=BitPixel;
-			VSurf[j].ScanLine=ResHz*pixelsize;
+				VSurf[j].MaxX= ResHz-1;
+				VSurf[j].MaxY= VSurf[j].MinX= 0;
+				VSurf[j].MinY= -ResVt+1; //axe Y montant
+				VSurf[j].SizeSurf= ScreenSize;
+				VSurf[j].OrgX= 0;
+				VSurf[j].OrgY= ResVt-1;
+				VSurf[j].BitsPixel=BitPixel;
+				VSurf[j].ScanLine=ResHz*pixelsize;
 
-	        SetOrgSurf(&VSurf[j],0,0);
-	        cvlfb+= ScreenSize;
-	     }
-	     VSurf[j].vlfb= cvlfb;
-	     VSurf[j].ResH= lfb+Sizelfb-cvlfb;
-	     VSurf[j].ResV= 1;
-	     NbVSurf= NbPage;
-	     SetSurf(&VSurf[0]);
-	     CurMode=TbMode[i];
-	     CurModeVtFreq=TbMode[i].VtFreq;
-	     mode=CurMode.Mode|VesaLFB;
-	     bzero(&r,sizeof(__dpmi_regs));
-	     r.x.ax = 0x4f02;
-	     r.x.bx = mode;
-	   	__dpmi_int(0x10, &r);
-	     if ((r.x.ax&0x4f)!=0x4f) return 0;
+				SetOrgSurf(&VSurf[j],0,0);
+				cvlfb+= ScreenSize;
+			}
+			VSurf[j].vlfb= cvlfb;
+			VSurf[j].ResH= lfb+Sizelfb-cvlfb;
+			VSurf[j].ResV= 1;
+			NbVSurf= NbPage;
+			SetSurf(&VSurf[0]);
+			CurMode=TbMode[i];
+			CurModeVtFreq=TbMode[i].VtFreq;
+			mode=CurMode.Mode|VesaLFB;
+			bzero(&r,sizeof(__dpmi_regs));
+			r.x.ax = 0x4f02;
+			r.x.bx = mode;
+			__dpmi_int(0x10, &r);
+			if ((r.x.ax&0x4f)!=0x4f) return 0;
 
-// Get DAC Palette format
-	     if (BitPixel==8) GetPaletteDAC();
-             return 1;
-           }
+			// Get DAC Palette format
+			if (BitPixel==8) GetPaletteDAC();
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -1116,72 +1136,62 @@ void InitVesaPMI() {
 	r.h.bl = 0x0;
 	_go32_dpmi_simulate_int(0x10, &r);
 	EnableMPIO=0;
-        VesaPMIOk=0;
+	VesaPMIOk=0;
 	if (r.h.ah==0) {	  // VESA PMI failed ?
-           if ((VesaPMI=malloc(r.x.cx))==NULL) return;
+        if ((VesaPMI=malloc(r.x.cx))==NULL) return;
            _go32_dpmi_lock_data( VesaPMI, r.x.cx);
-	   dosmemget(((unsigned int)(r.x.es)<<4)+(unsigned int)(r.x.di),
+		dosmemget(((unsigned int)(r.x.es)<<4)+(unsigned int)(r.x.di),
 		  (unsigned int)(r.x.cx), VesaPMI);
-	   WindowControlPMI=VesaPMI+((unsigned short*)(VesaPMI))[0];
-	   ViewAddressPMI=VesaPMI+((unsigned short*)(VesaPMI))[1];
-	   SizeVesaPMI=r.x.cx;
-	   SetPalPMI=VesaPMI+((unsigned short*)(VesaPMI))[2];
-	   // scan for io ports
-	   PortMem=VesaPMI+((unsigned short*)(VesaPMI))[3];
+	    WindowControlPMI=VesaPMI+((unsigned short*)(VesaPMI))[0];
+	    ViewAddressPMI=VesaPMI+((unsigned short*)(VesaPMI))[1];
+	    SizeVesaPMI=r.x.cx;
+	    SetPalPMI=VesaPMI+((unsigned short*)(VesaPMI))[2];
+	    // scan for io ports
+	    PortMem=VesaPMI+((unsigned short*)(VesaPMI))[3];
 
-	   // jump over io ports
-	   for (i=0;;i++) {
-	     if (PortMem[i]==0xffff) {
-	       break;
-	     }
-	   }
-	   if (PortMem[i+1]!=0xffff) {
-	     adressMPIO=(int*)&PortMem[i+1];
-	     sizeMPIO=&PortMem[i+3];
-	     markerMPIO=&PortMem[i+4];
-	     SizeMPIO=(*sizeMPIO)*2;
-	     AddMPIO=*adressMPIO;
-	     // map the MPIO
-	     memMPIO.address=AddMPIO;
-	     memMPIO.size=SizeMPIO;
-	     // mapped
-	     if (__dpmi_physical_address_mapping(&memMPIO)==0) {
-		MAPAddMPIO=memMPIO.address;
-		__dpmi_lock_linear_region(&memMPIO);
-		// create a selector
-		SelMPIO = __dpmi_allocate_ldt_descriptors(1);
-		if (SelMPIO!=-1) {
-		  __dpmi_set_segment_base_address(SelMPIO, MAPAddMPIO);
-		  __dpmi_set_segment_limit(SelMPIO, 0xffff);
-		  EnableMPIO=1;
-		}
-		else
-		  __dpmi_free_physical_address_mapping(&memMPIO);
+	    // jump over io ports
+	    for (i=0;;i++) {
+			if (PortMem[i]==0xffff) {
+			break;
+			}
+	    }
+		if (PortMem[i+1]!=0xffff) {
+			adressMPIO=(int*)&PortMem[i+1];
+			sizeMPIO=&PortMem[i+3];
+			markerMPIO=&PortMem[i+4];
+			SizeMPIO=(*sizeMPIO)*2;
+			AddMPIO=*adressMPIO;
+			// map the MPIO
+			memMPIO.address=AddMPIO;
+			memMPIO.size=SizeMPIO;
+			// mapped
+			if (__dpmi_physical_address_mapping(&memMPIO)==0) {
+				MAPAddMPIO=memMPIO.address;
+				__dpmi_lock_linear_region(&memMPIO);
+				// create a selector
+				SelMPIO = __dpmi_allocate_ldt_descriptors(1);
+				if (SelMPIO!=-1) {
+					__dpmi_set_segment_base_address(SelMPIO, MAPAddMPIO);
+					__dpmi_set_segment_limit(SelMPIO, 0xffff);
+					EnableMPIO=1;
+				}
+				else
+				__dpmi_free_physical_address_mapping(&memMPIO);
 
-	     }
-//unsigned short		SelMPIO;
-
-/*	     printf("adress %x, size %x, EOL marker %x :) !!\n",*adressMPIO,*sizeMPIO, *markerMPIO);
-	     if (EnableMPIO) printf("MAPPED OK\n");
-	     else printf("FAILED TO MAP!!\n");
-	     getch();*/
+			}
 	   }
 	   else {
 	     EnableMPIO=0;
-//	     printf("no memory mapped ports detected\n");
 	   }
-//	   getch();
-
-
-	   VesaPMIOk=1;
-	  }
+		VesaPMIOk=1;
+	}
 }
 
 int EnableVesaMTRR()
 {	if (DetectCPUID())
 	  if (!(_my_cs()&3)) {
 	    return (MTRRa=EnableMTRR()); }
-        return 0;
+	return 0;
 }
 
 /*int EnableMTRR() {

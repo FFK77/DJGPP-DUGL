@@ -87,7 +87,6 @@ extern void *TrBuffImgSrc, *TrBuffImgDst, *TrBuffImgSrcPal;
  void TransfB8ToB16Pal();
  void TransfB8ToB15();
  void TransfB16ToB8();
- void Blur16();
 
 #ifdef __cplusplus
               }

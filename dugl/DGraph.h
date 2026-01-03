@@ -28,8 +28,8 @@ typedef struct
 
 typedef struct
 {	int    	ResHz;
-	int	ResVt;
-	int	rlfb;
+	int	    ResVt;
+	int	    rlfb;
 	short  	Mode;
 	short   VModeFlag;
 	char	BitPixel;
@@ -130,10 +130,11 @@ extern  void (*ViewSurfWaitVR)(int NbSurf);
 void ConvSurf16ToSurf8(Surf *S8Dst, Surf *S16Src);
 void ConvSurf8ToSurf16(Surf *S16Dst, Surf *S8Src);
 void ConvSurf8ToSurf16Pal(Surf *S16Dst, Surf *S8Src,void *PalBGR1024);
+void Blur16(void *BuffImgDst, void *BuffImgSrc, int ImgWidth, int ImgHeight, int StartLine, int EndLine);
+void BlurSurf16(Surf *S16Dst, Surf *S16Src); // use Blur16
 
 // 16 bpp Surf Copy/Filter
 // -----------------------
-void BlurSurf16(Surf *S16Dst, Surf *S16Src);
 void SurfCopyBlnd16(Surf *S16Dst, Surf *S16Src,int colBlnd);
 void SurfMaskCopyBlnd16(Surf *S16Dst, Surf *S16Src,int colBlnd);
 void SurfCopyTrans16(Surf *S16Dst, Surf *S16Src,int trans);
@@ -321,25 +322,25 @@ int  LargText(const char *str); // text width in pixel
 int  LargPosText(const char *str,int Pos);
 int  PosLargText(const char *str,int Larg);
 // Outputting Text without altering the CurSurf View
-void RViewClearText(View *V);
-int  RViewGetFntYMID(View *V);
-int  RViewGetXOutTextMode(View *V,const char *str,int Mode);
+void ViewClearText(View *V);
+int  ViewGetFntYMID(View *V);
+int  ViewGetXOutTextMode(View *V,const char *str,int Mode);
 // 8bpp
 void OutText(const char *str);
 void OutTextXY(int TX,int TY,const char *str);
 int  OutTextMode(const char *str,int Mode);
 int  OutTextYMode(int TY,const char *str,int Mode);
-int  RViewOutTextMode(View *V,const char *str,int Mode);
-int  RViewOutTextYMode(View *V,int TY,const char *str,int Mode);
-int  RViewOutTextXY(View *V,int TX,int TY,const char *str);
+int  ViewOutTextMode(View *V,const char *str,int Mode);
+int  ViewOutTextYMode(View *V,int TY,const char *str,int Mode);
+int  ViewOutTextXY(View *V,int TX,int TY,const char *str);
 // 16bpp
 void OutText16(const char *str);
 void OutText16XY(int TX,int TY,const char *str);
 int  OutText16Mode(const char *str,int Mode);
 int  OutText16YMode(int TY,const char *str,int Mode);
-int  RViewOutText16Mode(View *V,const char *str,int Mode);
-int  RViewOutText16YMode(View *V,int TY,const char *str,int Mode);
-int  RViewOutText16XY(View *V,int TX,int TY,const char *str);
+int  ViewOutText16Mode(View *V,const char *str,int Mode);
+int  ViewOutText16YMode(View *V,int TY,const char *str,int Mode);
+int  ViewOutText16XY(View *V,int TX,int TY,const char *str);
 
 
 #ifdef __cplusplus

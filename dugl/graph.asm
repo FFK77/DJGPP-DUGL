@@ -33,14 +33,14 @@ EXTERN	_TPolyAdDeb, _TPolyAdFin, _TexXDeb, _TexXFin, _TexYDeb, _TexYFin
 EXTERN	_PColDeb, _PColFin, _TbDegCol
 ; --GIF------
 EXTERN	_Prefix, _Suffix, _DStack
-Prec		EQU	12
-MaxResV		EQU	4096
-BlendMask	EQU	0x1f
-SurfUtilSize    EQU     80
+Prec			EQU	12
+MaxResV			EQU	4096
+BlendMask		EQU	0x1f
+SurfUtilSize    EQU 64
 CMaskB_RGB16	EQU	0x1f	 ; blue bits 0->4
 CMaskG_RGB16	EQU	0x3f<<5  ; green bits 5->10
 CMaskR_RGB16	EQU	0x1f<<11 ; red bits 11->15
-MaxDeltaDim	EQU	1<< (31-Prec)
+MaxDeltaDim		EQU	1<< (31-Prec)
 
 
 SECTION .text
@@ -586,30 +586,31 @@ _ProtectViewSurf:
 		MOVD		mm2,ESI
 		PUSH		ES
 
-		MOV		ECX,[EBP+NbSurf]
-		CMP		ECX,[_NbVSurf]
-		JNB		.FInNbSurf
-		MOV		[_CurViewVSurf],ECX
-                IMUL            ECX,BYTE SurfUtilSize ;SHL ECX,6
-		ADD		ECX,_OffVMem - _CurSurf ; OffVMem
-		ADD		ECX,[_VSurf]
-		MOV		EAX,[ECX]   ; EAX = VSurf[NbSurf].OffVMem
-		ROR		EAX,2
-		XOR		ECX,ECX
-		MOV		CX,AX ; CX = OffVMem[2..17]
-		SHR		EAX,16
-		XOR		EDX,EDX
-		MOV		DX,AX ; DX = OffVMem[18..31][0..1]
-		XOR		EBX,EBX ; EBX 0
-		CMP		BYTE [_EnableMPIO],0
-		JE		SHORT .NoMPIOSel
-		MOV		AX,[_SelMPIO]
-		MOV		ES,AX
+		MOV			ECX,[EBP+NbSurf]
+		CMP			ECX,[_NbVSurf]
+		JNB			.FInNbSurf
+		MOV			[_CurViewVSurf],ECX
+		IMUL    	ECX,BYTE SurfUtilSize ;SHL ECX,6
+		ADD			ECX,_OffVMem - _CurSurf ; OffVMem
+		ADD			ECX,[_VSurf]
+		MOV			EAX,[ECX]   ; EAX = VSurf[NbSurf].OffVMem
+		ROR			EAX,2
+		XOR			ECX,ECX
+		MOV			CX,AX ; CX = OffVMem[2..17]
+		SHR			EAX,16
+		XOR			EDX,EDX
+		MOV			DX,AX ; DX = OffVMem[18..31][0..1]
+		XOR			EBX,EBX ; EBX 0
+		CMP			BYTE [_EnableMPIO],0
+		JE			SHORT .NoMPIOSel
+		MOV			AX,[_SelMPIO]
+		MOV			ES,AX
 .NoMPIOSel:
-		MOV		EAX,[_ViewAddressPMI]
+		MOV			EAX,[_ViewAddressPMI]
 		CALL		EAX
 
-.FInNbSurf:	POP		ES
+.FInNbSurf:
+		POP			ES
 		MOVD		EBX,mm0
 		MOVD		ESI,mm2
 		;EMMS
@@ -621,28 +622,28 @@ _ProtectViewSurfWaitVR:
 		MOVD		mm2,ESI
 		PUSH		ES
 
-		MOV		ECX,[EBP+NbVRSurf]
-		CMP		ECX,[_NbVSurf]
-		JNB		.FInNbSurf
-		MOV		[_CurViewVSurf],ECX
-		IMUL            ECX,BYTE SurfUtilSize ;SHL		ECX,6
-		ADD		ECX,_OffVMem - _CurSurf ; OffVMem
-		ADD		ECX,[_VSurf]
-		MOV		EAX,[ECX]   ; EAX = VSurf[NbSurf].OffVMem
-		ROR		EAX,2
-		XOR		ECX,ECX
-		MOV		CX,AX ; CX = OffVMem[2..17]
-		SHR		EAX,16
-		XOR		EDX,EDX
-		MOV		DX,AX ; DX = OffVMem[18..31][0..1]
-                XOR             EBX,EBX
-		MOV		BL,0x80
-		CMP		BYTE [_EnableMPIO],0
-		JE		SHORT .NoMPIOSel
-		MOV		AX,[_SelMPIO]
-		MOV		ES,AX
+		MOV			ECX,[EBP+NbVRSurf]
+		CMP			ECX,[_NbVSurf]
+		JNB			.FInNbSurf
+		MOV			[_CurViewVSurf],ECX
+		IMUL		ECX,BYTE SurfUtilSize ;SHL		ECX,6
+		ADD			ECX,_OffVMem - _CurSurf ; OffVMem
+		ADD			ECX,[_VSurf]
+		MOV			EAX,[ECX]   ; EAX = VSurf[NbSurf].OffVMem
+		ROR			EAX,2
+		XOR			ECX,ECX
+		MOV			CX,AX ; CX = OffVMem[2..17]
+		SHR			EAX,16
+		XOR			EDX,EDX
+		MOV			DX,AX ; DX = OffVMem[18..31][0..1]
+		XOR             EBX,EBX
+		MOV			BL,0x80
+		CMP			BYTE [_EnableMPIO],0
+		JE			SHORT .NoMPIOSel
+		MOV			AX,[_SelMPIO]
+		MOV			ES,AX
 .NoMPIOSel:
-		MOV		EAX,[_ViewAddressPMI]
+		MOV			EAX,[_ViewAddressPMI]
 		CALL		EAX
 
 .FInNbSurf:	POP		ES

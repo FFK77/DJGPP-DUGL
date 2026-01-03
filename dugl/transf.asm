@@ -9,9 +9,6 @@ GLOBAL _TrBuffImgSrc,_TrBuffImgDst,_TrImgResHz,_TrImgResVt,_TrBuffImgSrcPal
 EXTERN _Col8To15bpp,_Col8To16bpp,_Col8To32bpp,_Col15To8bpp
 
 ;** CONSTANT
-Prec            EQU     12  ; precision of fixed calc
-Div9			EQU	(1 << Prec)/9
-Div6			EQU	(1 << Prec)/6
 Blue16_MASK		EQU	0x1f
 Green16_MASK	EQU	0x07e0
 BGreen16_MASK	EQU	0x03e0
@@ -433,31 +430,59 @@ _TransfB16ToB8:
 
 
 _Blur16:
-		PUSH		ESI
-		PUSH		EDI
-		PUSH		EBX
-		PUSH		EBP
+    ARG    PB16BuffImgDst, 4, PB16BuffImgSrc, 4, PB16ImgResHz, 4, PB16ImgResVt, 4, PB16StartLine, 4, PB16EndLine, 4
 
-		; valid params ?
-		MOV         ESI,[_TrBuffImgSrc]
-		MOV         EDI,[_TrBuffImgDst]
-		OR          ESI,ESI
-		MOV         EBP,[_TrImgResVt]
-		JZ          .errorEnd
-		OR          EDI,EDI
-		MOV         EBX,[_TrImgResHz]
-		JZ          .errorEnd
-		OR          EBP,EBP
-		JZ          .errorEnd
-		OR          EBX,EBX
-		JZ          .errorEnd
+        PUSH        ESI
+        PUSH        EDI
+        PUSH        EBX
 
-		MOV         EAX,2
+        ; valid params ?
+        MOV         ECX,[EBP+PB16StartLine]
+        MOV         EDX,[EBP+PB16EndLine]
+        MOV         ESI,[EBP+PB16BuffImgSrc]
+        MOV         EDI,[EBP+PB16BuffImgDst]
+        MOV         EBX,[EBP+PB16ImgResHz]
+        MOV         EBP,[EBP+PB16ImgResVt]
+        ; full Blur Test1
+
+        XOR         EAX,EAX
+        ;CMP         ECX,EDX
+        ;JGE         .errorEnd ; do not handle single line blur or reversed indexes
+        OR          ECX,ECX
+        LEA         EDX,[EDX+1]
+        JZ          .TestFullEnd
+        ;CMP         EDX,EBP
+        ;JG          .errorEnd ; invalid EndLine index
+        SUB         EDX,EBP
+        DEC         ECX
+        SUB         EBP,ECX
+        IMUL        ECX,EBX
+        MOV         AL,1 ; (AL == 1) ==> ignore/jump first line
+        LEA         EDI,[EDI+ECX*2]
+        LEA         ESI,[ESI+ECX*2]
+        LEA         EDI,[EDI+EBX*2]
+        OR          EDX,EDX
+        JZ          .FullBlur
+        LEA         EBP,[EBP+EDX+1]
+        MOV         AH,1
+        JMP         .FullBlur
+.TestFullEnd:
+        CMP         EDX,EBP
+        JE          .FullBlur
+        ;JG          .errorEnd ; invalid EndLine index
+        MOV         AH,1 ; (AH == 1) ==> ignore/jump last line
+        LEA         EBP,[EDX+1]
+.FullBlur:
+        PUSH        EAX
+
 		MOVD        mm3,EDI ; mm3, EDI
-		MOVD        mm4,EAX ; mm4 EDI step +2
+		MOVD        mm4,[QAdd2FirstD] ; mm4 EDI step +2
 
 ; BLUR first Horizontal Line ---------------------------------------------
 ; all params ok :)
+        CMP         AL,1
+        JE          .EndFirstLine
+
 ; first pixel line 1 -------------------------------------
 		AVG_4		0,5 ; red AVG
 		MOVD		mm6,EAX
@@ -472,6 +497,7 @@ _Blur16:
 		MOVD		EDI,mm3
 		MOV			[EDI],AX
 		PADDD		mm3,mm4 ; EDI += 2
+        PUSH        ESI ; save BuffImgSrc
 ; first line loop ----------------------------------
 
 		LEA			ECX,[EBX-2]
@@ -524,13 +550,16 @@ _Blur16:
 		MOVD		EDX,mm6
 		MOVD		EDI,mm3
 		OR			EAX,EDX
-		MOV			ESI,[_TrBuffImgSrc] ; restore source adress
+		POP			ESI ; restore BuffImgSrc : source adress
 		MOV			[EDI],AX
 		PADDD		mm3,mm4 ; EDI += 2 - jump to the next line
 ; END BLUR first Horizontal Line ------------------------------------------
-
+.EndFirstLine:
 
 ; BLUR (ResVt-2) Middle Horizontal Lines -----------------------------------
+
+        CMP         EBP,BYTE 2
+        JLE         .LastLine
 
 		SUB		EBP,2 ; EBP the counter for the middle lines
 .MidLinesLoop:
@@ -552,6 +581,7 @@ _Blur16:
 		LEA			EDI,[EDI+2]
 
 		LEA         ECX,[EBX-2]  ; resHz - 2
+ALIGN 32
 .loopMidLines:
 		MOVQ		mm0,[ESI]		; read top row
 		MOVQ		mm1,[ESI+EBX*2] ; read mid row
@@ -699,9 +729,8 @@ _Blur16:
 		;JMP		.loopMidLines
 .endMidLines:
 
-        MOV         EAX,2
 		MOVD		mm3,EDI
-		MOVD        mm4,EAX ; mm4 EDI step +2
+		MOVD        mm4,[QAdd2FirstD] ; mm4 EDI step +2
 
 ; last pixel middle line
 		AVG_6VLast	0,5 ; red AVG
@@ -724,6 +753,11 @@ _Blur16:
 ; END BLUR (ResVt-2) Middle Horizontal Lines -------------------------------
 
 ; BLUR last line -----------------------------------------------------------
+.LastLine:
+        POP         EAX
+        CMP         AH,1 ; ignore last line ?
+        JE          .errorEnd
+
 ; first pixel last line 1 --------------------------
 		AVG_4		0,5 ; blue AVG
 		MOVD		mm6,EAX
@@ -773,33 +807,33 @@ _Blur16:
 		MOV			[EDI],AX
 		DEC			ECX
 		PADDD		mm3,mm4 ; EDI(dest) += 2
-		JNZ		.looplastLine
+		JNZ			.looplastLine
 .EndlooplastLine:
 
 ; last pixel last line -------------------------------------
 		AVG_4		0,5 ; red AVG
 		MOVD		mm6,EAX
 		AVG_4		5,6 ; green comp
-		SHL		EAX,5
+		SHL			EAX,5
 		MOVD		mm7,EAX
 		AVG_4		11,5 ; blue comp
-		POR		mm6,mm7
-		SHL		EAX,11
+		POR			mm6,mm7
+		SHL			EAX,11
 		MOVD		EDX,mm6
-		OR		EAX,EDX
+		OR			EAX,EDX
 		MOVD		EDI,mm3
-		MOV		[EDI],AX
+		MOV			[EDI],AX
 
 ; END BLUR last Horizontal Line -------------------------------------------
 
 .errorEnd:
-		POP		EBP
-		POP		EBX
-		POP		EDI
-		POP		ESI
-		;EMMS
+        EMMS
+        POP     EBX
+        POP     EDI
+        POP     ESI
 
-		RET
+    RETURN
+
 
 ALIGN 32
 SECTION	.data
@@ -807,9 +841,10 @@ QBlue16Mask			DW	Blue16_MASK,Blue16_MASK,Blue16_MASK,Blue16_MASK,Blue16_MASK,Blu
 QGreen16Mask		DW	Green16_MASK,Green16_MASK,Green16_MASK,Green16_MASK,Green16_MASK,Green16_MASK,Green16_MASK,Green16_MASK
 QRed16Mask			DW	Red16_MASK,Red16_MASK,Red16_MASK,Red16_MASK,Red16_MASK,Red16_MASK,Red16_MASK,Red16_MASK
 LastAddMM_B			DQ	0
-LastAddMM_G			DQ	0
-LastAddMM_R			DQ	0
+;LastAddMM_G			DQ	0
+;LastAddMM_R			DQ	0
 MaskLastDW			DQ	0x0000ffffffffffff
+QAdd2FirstD			DD	2, 0
 QMul8SecondW    	DW  1,8,1,0
 QMul3SecondW    	DW  1,3,1,1
 _TrBuffImgSrc		DD	0
@@ -817,7 +852,6 @@ _TrBuffImgDst		DD	0
 _TrBuffImgSrcPal	DD	0
 _TrImgResHz			DD	0
 _TrImgResVt			DD	0
-
 
 
 

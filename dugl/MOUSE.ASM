@@ -2,7 +2,7 @@
 
 ; GLOBAL Function*************************************************************
 ;*** Mouse
-GLOBAL _InstallMouse,_UninstallMouse,_SetMouseRView,_GetMouseRView
+GLOBAL _InstallMouse,_UninstallMouse,_SetMouseView,_GetMouseFView
 GLOBAL _SetMouseOrg,_SetMousePos,_SetMouseSpeed,_SetMouseAccel,_IsMouseWheelSupported
 GLOBAL _EnableMsEvntsStack,_DisableMsEvntsStack,ClearMsEvntsStack,_GetMsEvent
 
@@ -179,7 +179,7 @@ _IsMouseWheelSupported:
 		MOV		AL,[MsWheelSupp]
 		RET
 
-_SetMouseRView:
+_SetMouseView:
 	ARG	V1, 4
 
 		PUSH		EDI
@@ -218,7 +218,7 @@ _SetMouseRView:
 		POP		EDI
 		RETURN
 
-_GetMouseRView:
+_GetMouseView:
 	ARG	V2, 4
 		PUSH		ESI
 		PUSH		EDI

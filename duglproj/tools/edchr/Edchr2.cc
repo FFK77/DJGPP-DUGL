@@ -43,7 +43,7 @@ Caract InfCar[256];
 unsigned int CopyCar[2][64];
 Caract CopyInfCar;
 unsigned char palette[1024],mpalette[1024];
-Surf SMouse,SImg;
+Surf *SMouse, *SImg;
 FONT F1;
 KbMAP *KM;
 View MsV;
@@ -145,7 +145,7 @@ int main(int argc,char *argv[]) {
   FREE_MMX();
   SetPalette(0,256,&palette);
   SetFONT(&F1);
-  SetOrgSurf(&SMouse,0,SMouse.ResV-1);
+  SetOrgSurf(SMouse,0,SMouse->ResV-1);
   GetSurfView(&VSurf[0],&MsV);
   SetMouseView(&MsV);
   SetMousePos(VSurf[0].ResH/2,VSurf[0].ResV/2);
@@ -217,7 +217,7 @@ int main(int argc,char *argv[]) {
 
     WH->Scan();
     WH->DrawSurf(&CurSurf);
-    PutMaskSurf(&SMouse,MsX,MsY,0);
+    PutMaskSurf(SMouse,MsX,MsY,0);
     if (WH->Key== KB_KEY_QWERTY_X && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR))
        ExitNow=1;
 
@@ -243,7 +243,7 @@ int main(int argc,char *argv[]) {
     if (ExitNow==1) break; // quit the app
   }
 
-  DestroySurf(&SMouse);
+  DestroySurf(SMouse);
   CloseVesa();
 
   UninstallKeyboard();
@@ -543,7 +543,7 @@ void GphBDrawCar(GraphBox *Me) {
          cputpixel(plsx+j,i+128+InfCar[curascii].PlusLgn,Yellow);
 }
 void OpenCHR(String *S,int TypeSel) {
-   int i,j;
+   int i;
    if (!ReadCHR(S->StrPtr)) {
      MessageBox(WH,"Error", "File invalide or not found !",
        "Ok", NULL, NULL, NULL, NULL, NULL);

@@ -246,7 +246,7 @@ KeybButton KbTb[]={
 
 
 FILE *Pal;
-Surf MsPtr;
+Surf *MsPtr;
 View MsV,SaveView;
 FONT F1;
 unsigned char Pal3d[1024],palette[1024];
@@ -348,7 +348,7 @@ int main(int argc,char *argv[])
 
 	if (!LoadGIF(&MsPtr,"mouseimg.gif",&palette))
 	  { printf("mouseimg.gif error\n"); exit(-1); }
-	SetOrgSurf(&MsPtr,0,MsPtr.ResV-1);
+	SetOrgSurf(MsPtr,0,MsPtr->ResV-1);
 	if (!LoadFONT(&F1,"hello.chr"))
 	  { printf("hello.chr error\n"); exit(-1); }
 
@@ -401,7 +401,7 @@ int main(int argc,char *argv[])
 	   FntY=10;
 	   sprintf(s,"LastKey %x, KbFLAG %x",LastKey,KbFLAG);
 	   OutTextMode(s,AJ_MID);
-	   PutMaskSurf(&MsPtr,MsX,MsY,0);
+	   PutMaskSurf(MsPtr,MsX,MsY,0);
 	}
 	CloseVesa();
 

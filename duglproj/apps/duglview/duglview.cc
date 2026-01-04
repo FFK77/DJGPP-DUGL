@@ -45,7 +45,7 @@ int Pt3[] = { 639, 479,   0,   0,   0 };
 int Pt4[] = {   0, 479,   0,   0,   0 };
 int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
 
-Surf MsPtr,MsPtr16,rendSurf16,blurSurf16;
+Surf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 
 unsigned char palette[1024];
 
@@ -78,7 +78,7 @@ MainWin *MWDViewer;
 GraphBox *GphBVideo;
 ImgButton *BtOpen,*BtBack,*BtNext,*BtFirst,*BtLast,*BtAbout,*BtExit;
 ComBox *CmbViewMode;
-Surf ImgOpen,ImgNext,ImgBack,ImgBegin,ImgEnd,ImgExit,ImgAbout,ImgPCont;
+Surf *ImgOpen,*ImgNext,*ImgBack,*ImgBegin,*ImgEnd,*ImgExit,*ImgAbout,*ImgPCont;
 // events
 void OnOpen(), OnNext(), OnBack(), OnFirst(), OnLast(), OnAbout(), OnExit();
 void GphBDrawVideo(GraphBox *Me),GphBScanVideo(GraphBox *Me);
@@ -97,7 +97,7 @@ void BtOkAboutClick(),GphBDrawAbout(GraphBox *Me),OnGphBScanAbout(GraphBox *Me);
 
 // glabal var
 int redrawVid=1;
-Surf MyIMG,MySmthIMG;
+Surf *MyIMG, *MySmthIMG;
 bool validMyIMG = false, redrawIMG = false;
 bool DownSize = false;
 //------
@@ -138,7 +138,7 @@ void LoadConfig();
 void DGWaitRetrace();
 //void ResizeSurf16(Surf *SDstSurf,Surf *SSrcSurf);
 bool IsFileExist(const char *fname);
-bool LoadImg(char *filename, Surf *DstSurf);
+bool LoadImg(char *filename, Surf **DstSurf);
 
 int main (int argc, char ** argv) {
     LoadConfig();
@@ -167,10 +167,10 @@ int main (int argc, char ** argv) {
     }
     if (!LoadGIF(&MsPtr,"gfx/mouseimg.gif",&palette))
       { printf("Error loading mouseimg.gif\n"); exit(-1); }
-    if (CreateSurf(&MsPtr16, MsPtr.ResH, MsPtr.ResV, 16)==0) {
+    if (CreateSurf(&MsPtr16, MsPtr->ResH, MsPtr->ResV, 16)==0) {
       printf("no mem\n"); exit(-1);
     }
-    ConvSurf8ToSurf16Pal(&MsPtr16,&MsPtr,&palette);
+    ConvSurf8ToSurf16Pal(MsPtr16,MsPtr,&palette);
 
     if (LoadBMP16(&ImgOpen,"gfx/open.bmp")==0) {
       printf("Error loading open.bmp\n"); exit(-1);
@@ -225,7 +225,7 @@ int main (int argc, char ** argv) {
     // mouse
     if (MouseSupported) {
        // set mouse pointer Orig to the upper left corner
-       SetOrgSurf(&MsPtr16,0,MsPtr16.ResV-1);
+       SetOrgSurf(MsPtr16,0,MsPtr16->ResV-1);
        // set mouse view
        GetSurfView(&VSurf[0],&MsV);
        SetMouseView(&MsV);
@@ -233,8 +233,8 @@ int main (int argc, char ** argv) {
        SetMousePos(DefMsPosX*VSurf[0].ResH, DefMsPosY*VSurf[0].ResV);
     }
     else {
-       DestroySurf(&MsPtr16);
-       DestroySurf(&MsPtr);
+       DestroySurf(MsPtr16);
+       DestroySurf(MsPtr);
     }
 
     //** GUI ************************************************
@@ -249,15 +249,15 @@ int main (int argc, char ** argv) {
     GphBVideo->ScanGraphBox=GphBScanVideo;
     GphBVideo->Redraw();
     // buttons
-    BtOpen=new ImgButton(1,screenY-50,21,screenY-25,MWDViewer,&ImgOpen);
+    BtOpen=new ImgButton(1,screenY-50,21,screenY-25,MWDViewer,ImgOpen);
     BtOpen->Click=OnOpen;
-    BtFirst=new ImgButton(22,screenY-50,42,screenY-25,MWDViewer,&ImgBegin);
+    BtFirst=new ImgButton(22,screenY-50,42,screenY-25,MWDViewer,ImgBegin);
     BtFirst->Click=OnFirst;
-    BtBack=new ImgButton(43,screenY-50,63,screenY-25,MWDViewer,&ImgBack);
+    BtBack=new ImgButton(43,screenY-50,63,screenY-25,MWDViewer,ImgBack);
     BtBack->Click=OnBack;
-    BtNext=new ImgButton(64,screenY-50,84,screenY-25,MWDViewer,&ImgNext);
+    BtNext=new ImgButton(64,screenY-50,84,screenY-25,MWDViewer,ImgNext);
     BtNext->Click=OnNext;
-    BtLast=new ImgButton(85,screenY-50,105,screenY-25,MWDViewer,&ImgEnd);
+    BtLast=new ImgButton(85,screenY-50,105,screenY-25,MWDViewer,ImgEnd);
     BtLast->Click=OnLast;
     CmbViewMode=new ComBox(107,screenY-50,88,23,MWDViewer);
     CmbViewMode->LStr->Add("Fit Width");
@@ -266,9 +266,9 @@ int main (int argc, char ** argv) {
     CmbViewMode->Changed=ChgdCmbViewMode;
     CmbViewMode->Select=iDisplayMode;
 
-    BtExit=new ImgButton(screenX-35,screenY-50,screenX-10,screenY-25,MWDViewer,&ImgExit);
+    BtExit=new ImgButton(screenX-35,screenY-50,screenX-10,screenY-25,MWDViewer,ImgExit);
     BtExit->Click=OnExit; // set click handler
-    BtAbout=new ImgButton(screenX-63,screenY-50,screenX-37,screenY-25,MWDViewer,&ImgAbout);
+    BtAbout=new ImgButton(screenX-63,screenY-50,screenX-37,screenY-25,MWDViewer,ImgAbout);
     BtAbout->Click=OnAbout;
     //*******************************************************
 
@@ -287,7 +287,7 @@ int main (int argc, char ** argv) {
 
       if (lastFps < 0.1f)
          __dpmi_yield();
-      SetSurf(&rendSurf16);
+      SetSurf(rendSurf16);
 
       // scan the GUI for events
       WH->Scan();
@@ -295,10 +295,10 @@ int main (int argc, char ** argv) {
       WH->DrawSurf(&CurSurf);
       // draw the mouse pointer
       if(MouseSupported)
-         PutMaskSurf16(&MsPtr16,MsX,MsY,0);
+         PutMaskSurf16(MsPtr16,MsX,MsY,0);
       // draw the GUI
       DGWaitRetrace();
-      SurfCopy(&VSurf[0], &rendSurf16);
+      SurfCopy(&VSurf[0], rendSurf16);
 
       // alt+ X : exit
       if ((WH->Key==KB_KEY_QWERTY_X && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR)) || ExitViewer)
@@ -317,7 +317,7 @@ int main (int argc, char ** argv) {
         if(validMyIMG) {
           if(SmoothResize) {
             if(curZoom>=SmoothZoomLimit)
-              DestroySurf(&MySmthIMG);
+              DestroySurf(MySmthIMG);
             SmoothResize = false;
             redrawIMG = true;
           }
@@ -349,21 +349,21 @@ int main (int argc, char ** argv) {
          for (unsigned int ci='R';ci<='Z';ci++) {
             scrFileName[7]=(char)(ci);
             if (!IsFileExist(scrFileName)) {
-               SaveBMP16(&rendSurf16,scrFileName);
+               SaveBMP16(rendSurf16,scrFileName);
                bSucc = true;
                break;
             }
          }
          if(!bSucc)
-            SaveBMP16(&rendSurf16,scrFileName);
+            SaveBMP16(rendSurf16,scrFileName);
         FREE_MMX();
       }
     }
 
     if(validMyIMG) {
-      DestroySurf(&MyIMG);
+      DestroySurf(MyIMG);
       if(SmoothResize)
-        DestroySurf(&MySmthIMG);
+        DestroySurf(MySmthIMG);
     }
     CloseVesa();
     UninstallKeyboard();
@@ -378,17 +378,17 @@ int main (int argc, char ** argv) {
 
 
 void GphBDrawVideo(GraphBox *Me) {
-   if(!validMyIMG || MyIMG.ResV<(Me->VGraphBox.MaxY-Me->VGraphBox.MinY) ||
-      MyIMG.ResH<(Me->VGraphBox.MaxX-Me->VGraphBox.MinX))
+   if(!validMyIMG || MyIMG->ResV<(Me->VGraphBox.MaxY-Me->VGraphBox.MinY) ||
+      MyIMG->ResH<(Me->VGraphBox.MaxX-Me->VGraphBox.MinX))
      ClearSurf16(WH->m_GraphCtxt->WinGrisF);
     // loaded image ?
    if(validMyIMG)
    {
       FREE_MMX();
       if(SmoothResize && curZoom>=SmoothZoomLimit)
-        SetOrgSurf(&MySmthIMG,MyIMG.OrgX,MyIMG.OrgY);
-      PutSurf16((SmoothResize && curZoom>=SmoothZoomLimit)?(&MySmthIMG):(&MyIMG),
-          Me->VGraphBox.MinX, Me->VGraphBox.MaxY - MyIMG.ResV + MyIMGPlus, 0);
+        SetOrgSurf(MySmthIMG,MyIMG->OrgX,MyIMG->OrgY);
+      PutSurf16((SmoothResize && curZoom>=SmoothZoomLimit)?(MySmthIMG):(MyIMG),
+          Me->VGraphBox.MinX, Me->VGraphBox.MaxY - MyIMG->ResV + MyIMGPlus, 0);
    }
 
 }
@@ -412,8 +412,8 @@ void GphBScanVideo(GraphBox *Me) {
      if(slowSpeedImg<10) slowSpeedImg = 10;
 
      if(iDisplayMode==0 || iDisplayMode==1) {
-       IMGdypos = MyIMG.ResV;
-       MyIMGMaxPlus = MyIMG.ResV - (Me->VGraphBox.MaxY-Me->VGraphBox.MinY+1);
+       IMGdypos = MyIMG->ResV;
+       MyIMGMaxPlus = MyIMG->ResV - (Me->VGraphBox.MaxY-Me->VGraphBox.MinY+1);
 
        if((IsKeyDown(0xc8) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn)) { // up
          timeUp = (float)(GetCurrTimeKeyDown(0xc8))/(float)(DgTimerFreq);
@@ -517,19 +517,19 @@ void GphBScanVideo(GraphBox *Me) {
        if((IsKeyDown(0xc8) && Me->Focus) || (wheelDir==-MsWheelScrollDir && Me->MsIn && (!Me->MsDown && !(MsButton&MS_RIGHT_BUTT)))) {
          timeDown = (float)(GetCurrTimeKeyDown(0xc8))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstDownDown) {
-           if(MyIMG.OrgY+speedImg <= mdMaxOrgY)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, MyIMG.OrgY+speedImg);
+           if(MyIMG->OrgY+speedImg <= mdMaxOrgY)
+             SetOrgSurf(MyIMG, MyIMG->OrgX, MyIMG->OrgY+speedImg);
            else
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMaxOrgY);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, mdMaxOrgY);
            firstDownDown = false;
            redrawIMG = true;
-           startOrgY=MyIMG.OrgY;
+           startOrgY=MyIMG->OrgY;
          }
          if(timeDown>KeyBWaitStartScroll) {
            if((newOrg = startOrgY+((slowSpeedImg*(timeDown-KeyBWaitStartScroll)))) <= mdMaxOrgY)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, newOrg);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, newOrg);
            else
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMaxOrgY);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, mdMaxOrgY);
            redrawIMG = true;
          }
        }
@@ -540,21 +540,21 @@ void GphBScanVideo(GraphBox *Me) {
        if((IsKeyDown(0xd0) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn && (!Me->MsDown && !(MsButton&MS_RIGHT_BUTT)))) {
          timeDown = (float)(GetCurrTimeKeyDown(0xd0))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstUpDown) {
-           if(MyIMG.OrgY-speedImg >= mdMinOrgY)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, MyIMG.OrgY-speedImg);
+           if(MyIMG->OrgY-speedImg >= mdMinOrgY)
+             SetOrgSurf(MyIMG, MyIMG->OrgX, MyIMG->OrgY-speedImg);
            else
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMinOrgY);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, mdMinOrgY);
            redrawIMG = true;
            if(!wheelDir)
              firstUpDown = false;
-           startOrgY=MyIMG.OrgY;
+           startOrgY=MyIMG->OrgY;
          }
          if(timeDown>KeyBWaitStartScroll) {
 
            if((newOrg = startOrgY-((slowSpeedImg*(timeDown-KeyBWaitStartScroll)))) >= mdMinOrgY)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, newOrg);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, newOrg);
            else
-             SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMinOrgY);
+             SetOrgSurf(MyIMG, MyIMG->OrgX, mdMinOrgY);
            redrawIMG = true;
          }
        }
@@ -564,20 +564,20 @@ void GphBScanVideo(GraphBox *Me) {
        if((IsKeyDown(0xcd) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn && (Me->MsDown || (MsButton&MS_RIGHT_BUTT)))) {
          timeDown = (float)(GetCurrTimeKeyDown(0xcd))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstRightDown) {
-           if(MyIMG.OrgX+speedXImg <= mdMaxOrgX)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX+speedXImg, MyIMG.OrgY);
+           if(MyIMG->OrgX+speedXImg <= mdMaxOrgX)
+             SetOrgSurf(MyIMG, MyIMG->OrgX+speedXImg, MyIMG->OrgY);
            else
-             SetOrgSurf(&MyIMG, mdMaxOrgX, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, mdMaxOrgX, MyIMG->OrgY);
            redrawIMG = true;
            if(!wheelDir)
              firstRightDown = false;
-           startOrgX=MyIMG.OrgX;
+           startOrgX=MyIMG->OrgX;
          }
          if(timeDown>KeyBWaitStartScroll) {
            if((newOrg = startOrgX+((slowSpeedXImg*(timeDown-KeyBWaitStartScroll)))) <= mdMaxOrgX)
-             SetOrgSurf(&MyIMG, newOrg, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, newOrg, MyIMG->OrgY);
            else
-             SetOrgSurf(&MyIMG, mdMaxOrgX, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, mdMaxOrgX, MyIMG->OrgY);
            redrawIMG = true;
          }
        }
@@ -587,20 +587,20 @@ void GphBScanVideo(GraphBox *Me) {
        if((IsKeyDown(0xcb) && Me->Focus) || (wheelDir==-MsWheelScrollDir && Me->MsIn && (Me->MsDown || (MsButton&MS_RIGHT_BUTT)))) {
          timeDown = (float)(GetCurrTimeKeyDown(0xcb))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstLeftDown) {
-           if(MyIMG.OrgX-speedXImg >= mdMinOrgX)
-             SetOrgSurf(&MyIMG, MyIMG.OrgX-speedXImg, MyIMG.OrgY);
+           if(MyIMG->OrgX-speedXImg >= mdMinOrgX)
+             SetOrgSurf(MyIMG, MyIMG->OrgX-speedXImg, MyIMG->OrgY);
            else
-             SetOrgSurf(&MyIMG, mdMinOrgX, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, mdMinOrgX, MyIMG->OrgY);
            redrawIMG = true;
            if(!wheelDir)
              firstLeftDown = false;
-           startOrgX=MyIMG.OrgX;
+           startOrgX=MyIMG->OrgX;
          }
          if(timeDown>KeyBWaitStartScroll) {
            if((newOrg = startOrgX-((slowSpeedXImg*(timeDown-KeyBWaitStartScroll)))) >= mdMinOrgX)
-             SetOrgSurf(&MyIMG, newOrg, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, newOrg, MyIMG->OrgY);
            else
-             SetOrgSurf(&MyIMG, mdMinOrgX, MyIMG.OrgY);
+             SetOrgSurf(MyIMG, mdMinOrgX, MyIMG->OrgY);
            redrawIMG = true;
          }
        }
@@ -613,32 +613,32 @@ void GphBScanVideo(GraphBox *Me) {
          AppliedMsDownDY =0;
        }
        else {
-         int oldOrgX = MyIMG.OrgX;
-         int oldOrgY = MyIMG.OrgY;
-         SetOrgSurf(&MyIMG,
-           MyIMG.OrgX-((MsX-Me->MsXDown)-AppliedMsDownDX),
-           MyIMG.OrgY-((MsY-Me->MsYDown)-AppliedMsDownDY));
-         if(oldOrgX!=MyIMG.OrgX || oldOrgY!=MyIMG.OrgY) {
-           AppliedMsDownDX -= (MyIMG.OrgX - oldOrgX);
-           AppliedMsDownDY -= (MyIMG.OrgY - oldOrgY);
+         int oldOrgX = MyIMG->OrgX;
+         int oldOrgY = MyIMG->OrgY;
+         SetOrgSurf(MyIMG,
+           MyIMG->OrgX-((MsX-Me->MsXDown)-AppliedMsDownDX),
+           MyIMG->OrgY-((MsY-Me->MsYDown)-AppliedMsDownDY));
+         if(oldOrgX!=MyIMG->OrgX || oldOrgY!=MyIMG->OrgY) {
+           AppliedMsDownDX -= (MyIMG->OrgX - oldOrgX);
+           AppliedMsDownDY -= (MyIMG->OrgY - oldOrgY);
            redrawIMG = true;
          }
        }
 
-       if(MyIMG.OrgX > mdMaxOrgX) {
-         SetOrgSurf(&MyIMG, mdMaxOrgX, MyIMG.OrgY);
+       if(MyIMG->OrgX > mdMaxOrgX) {
+         SetOrgSurf(MyIMG, mdMaxOrgX, MyIMG->OrgY);
          redrawIMG = true;
        }
-       if(MyIMG.OrgX < mdMinOrgX) {
-         SetOrgSurf(&MyIMG, mdMinOrgX, MyIMG.OrgY);
+       if(MyIMG->OrgX < mdMinOrgX) {
+         SetOrgSurf(MyIMG, mdMinOrgX, MyIMG->OrgY);
          redrawIMG = true;
        }
-       if(MyIMG.OrgY > mdMaxOrgY) {
-         SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMaxOrgY);
+       if(MyIMG->OrgY > mdMaxOrgY) {
+         SetOrgSurf(MyIMG, MyIMG->OrgX, mdMaxOrgY);
          redrawIMG = true;
        }
-       if(MyIMG.OrgY < mdMinOrgY) {
-         SetOrgSurf(&MyIMG, MyIMG.OrgX, mdMinOrgY);
+       if(MyIMG->OrgY < mdMinOrgY) {
+         SetOrgSurf(MyIMG, MyIMG->OrgX, mdMinOrgY);
          redrawIMG = true;
        }
      }
@@ -789,8 +789,8 @@ void FBOpenImg(String *S,int TypeSel) {
 void LoadCurImg() {
   String text;
   String *pStrImg;
-  Surf tmpImg;
-  Surf tmpSmthImg;
+  Surf *tmpImg = NULL;
+  Surf *tmpSmthImg = NULL;
   float   rapSize = 1.0;
   int FinalResV = 0;
   int FinalResH = 0;
@@ -802,9 +802,9 @@ void LoadCurImg() {
 
   if(validMyIMG) {
     if(!UseCurImg)
-      DestroySurf(&MyIMG);
+      DestroySurf(MyIMG);
     if(SmoothResize && curZoom>=SmoothZoomLimit)
-      DestroySurf(&MySmthIMG);
+      DestroySurf(MySmthIMG);
   }
   validMyIMG = false;
   redrawIMG = true;
@@ -819,7 +819,7 @@ void LoadCurImg() {
         return;
       }
     }
-    if(tmpImg.ResV==0 || tmpImg.ResH==0)
+    if(tmpImg->ResV==0 || tmpImg->ResH==0)
       return;
   }
   else {
@@ -831,67 +831,67 @@ void LoadCurImg() {
   if (iDisplayMode==2) {
     MyIMG = tmpImg;
     rapSize = 1.0;
-    FinalOrgX = -(gphBoxWidth - MyIMG.ResH) / 2;
-    FinalOrgY = (gphBoxHeight - MyIMG.ResV) / 2;
-    if (gphBoxWidth>MyIMG.ResH)
+    FinalOrgX = -(gphBoxWidth - MyIMG->ResH) / 2;
+    FinalOrgY = (gphBoxHeight - MyIMG->ResV) / 2;
+    if (gphBoxWidth>MyIMG->ResH)
       mdMinOrgX = mdMaxOrgX = FinalOrgX;
     else {
-      mdMinOrgX = FinalOrgX - ((MyIMG.ResH-gphBoxWidth) / 2);
-      mdMaxOrgX = FinalOrgX + ((MyIMG.ResH-gphBoxWidth) / 2);
+      mdMinOrgX = FinalOrgX - ((MyIMG->ResH-gphBoxWidth) / 2);
+      mdMaxOrgX = FinalOrgX + ((MyIMG->ResH-gphBoxWidth) / 2);
     }
-    if (gphBoxHeight>=MyIMG.ResV)
+    if (gphBoxHeight>=MyIMG->ResV)
       mdMinOrgY = mdMaxOrgY = FinalOrgY;
     else {
-      mdMinOrgY = FinalOrgY - ((MyIMG.ResV-gphBoxHeight) / 2);
-      mdMaxOrgY = FinalOrgY + ((MyIMG.ResV-gphBoxHeight) / 2);
+      mdMinOrgY = FinalOrgY - ((MyIMG->ResV-gphBoxHeight) / 2);
+      mdMaxOrgY = FinalOrgY + ((MyIMG->ResV-gphBoxHeight) / 2);
     }
   }
   else {
     FinalResH=gphBoxWidth;
-    rapSize = float(gphBoxWidth) / float(tmpImg.ResH);
-    FinalResV = tmpImg.ResV * rapSize;
+    rapSize = float(gphBoxWidth) / float(tmpImg->ResH);
+    FinalResV = tmpImg->ResV * rapSize;
 
     if (iDisplayMode==1) { // fit
       if (FinalResV>(gphBoxHeight)) {
         rapSize = float(gphBoxHeight) /
-                  float(tmpImg.ResV);
-       FinalResH = tmpImg.ResH * rapSize;
-       FinalResV = tmpImg.ResV * rapSize;
+                  float(tmpImg->ResV);
+       FinalResH = tmpImg->ResH * rapSize;
+       FinalResV = tmpImg->ResV * rapSize;
        FinalOrgX = -(gphBoxWidth - FinalResH) / 2;
      }
      else
        FinalOrgY = (gphBoxHeight - FinalResV) / 2;
     }
     if((CreateSurf(&MyIMG, FinalResH, FinalResV, 16)) == 0) {
-      DestroySurf(&tmpImg);
+      DestroySurf(tmpImg);
       MessageBox(WH,"Error!", "No memory","Ok",NULL,NULL,NULL,NULL,NULL);
       MWDViewer->Label = MainWinName;
       return;
     }
     DownSize = (rapSize <= SmoothDownSizeLevel);
     if(DownSize && EnableSmoothDownSize &&
-      (CreateSurf(&tmpSmthImg, tmpImg.ResH, tmpImg.ResV, 16) != 0)) {
-      BlurSurf16(&tmpSmthImg,&tmpImg);
+      (CreateSurf(&tmpSmthImg, tmpImg->ResH, tmpImg->ResV, 16) != 0)) {
+      BlurSurf16(tmpSmthImg,tmpImg);
       FREE_MMX();
       if(rapSize<=EnhSmoothDownSizeLowLevel)
       {
-        BlurSurf16(&tmpImg,&tmpSmthImg);
-        DestroySurf(&tmpSmthImg);
-        resizeSurf16(&MyIMG,&tmpImg);
-        DestroySurf(&tmpImg);
+        BlurSurf16(tmpImg,tmpSmthImg);
+        DestroySurf(tmpSmthImg);
+        resizeSurf16(MyIMG,tmpImg);
+        DestroySurf(tmpImg);
       }
       else {
-        DestroySurf(&tmpImg);
-        resizeSurf16(&MyIMG,&tmpSmthImg);
-        DestroySurf(&tmpSmthImg);
+        DestroySurf(tmpImg);
+        resizeSurf16(MyIMG,tmpSmthImg);
+        DestroySurf(tmpSmthImg);
       }
     }
     else {
-      resizeSurf16(&MyIMG,&tmpImg);
-      DestroySurf(&tmpImg);
+      resizeSurf16(MyIMG,tmpImg);
+      DestroySurf(tmpImg);
     }
   }
-  SetOrgSurf(&MyIMG,FinalOrgX,FinalOrgY);
+  SetOrgSurf(MyIMG,FinalOrgX,FinalOrgY);
 
   FREE_MMX();
   curZoom = rapSize;
@@ -907,9 +907,9 @@ void LoadCurImg() {
   curZoom = rapSize;
   if(LSFiles.NbElement()>1)
     sprintf(InfImg.StrPtr,"Img %i/%i - %ix%i %i%%",CurImgNum+1,LSFiles.NbElement(),
-       tmpImg.ResH, tmpImg.ResV, (int)(rapSize*100.0));
+       tmpImg->ResH, tmpImg->ResV, (int)(rapSize*100.0));
   else
-    sprintf(InfImg.StrPtr,"%ix%i %i%%",tmpImg.ResH, tmpImg.ResV, (int)(rapSize*100.0));
+    sprintf(InfImg.StrPtr,"%ix%i %i%%",tmpImg->ResH, tmpImg->ResV, (int)(rapSize*100.0));
    // extract only filename without path or drive
   char tdrv[MAXDRIVE], tpath[MAXDIR], tfile[MAXFILE], te[MAXEXT];
   int which = fnsplit(pStrImg->StrPtr, tdrv, tpath, tfile, te);
@@ -923,34 +923,34 @@ void LoadCurImg() {
 void SmoothCurImg()
 {
   String text;
-  Surf EnhSmthImg;
+  Surf *EnhSmthImg;
 
   FREE_MMX();
   if(SmoothResize && curZoom>=SmoothZoomLimit) {
-    if((CreateSurf(&MySmthIMG, MyIMG.ResH, MyIMG.ResV, 16)) == 0) {
+    if((CreateSurf(&MySmthIMG, MyIMG->ResH, MyIMG->ResV, 16)) == 0) {
       sprintf(text.StrPtr,"Not enough memory to smooth!\n");
       MessageBox(WH,"Error!", text.StrPtr,"Ok",NULL,NULL,NULL,NULL,NULL);
       SmoothResize = false;
       return;
     }
     if(curZoom>=EnhSmoothZoomLimit) {
-      if((CreateSurf(&EnhSmthImg, MyIMG.ResH, MyIMG.ResV, 16)) == 0) {
-        BlurSurf16(&MySmthIMG,&MyIMG);
-        SetOrgSurf(&MySmthIMG,MyIMG.OrgX,MyIMG.OrgY);
+      if((CreateSurf(&EnhSmthImg, MyIMG->ResH, MyIMG->ResV, 16)) == 0) {
+        BlurSurf16(MySmthIMG,MyIMG);
+        SetOrgSurf(MySmthIMG,MyIMG->OrgX,MyIMG->OrgY);
       }
       else {
-        BlurSurf16(&EnhSmthImg,&MyIMG);
-        BlurSurf16(&MySmthIMG,&EnhSmthImg);
+        BlurSurf16(EnhSmthImg, MyIMG);
+        BlurSurf16(MySmthIMG, EnhSmthImg);
 
 /*        BlurSurf16(&EnhSmthImg,&MySmthIMG);
         BlurSurf16(&MySmthIMG,&EnhSmthImg);*/
-        SetOrgSurf(&MySmthIMG,MyIMG.OrgX,MyIMG.OrgY);
-        DestroySurf(&EnhSmthImg);
+        SetOrgSurf(MySmthIMG, MyIMG->OrgX, MyIMG->OrgY);
+        DestroySurf(EnhSmthImg);
       }
     }
     else {
-      BlurSurf16(&MySmthIMG,&MyIMG);
-      SetOrgSurf(&MySmthIMG,MyIMG.OrgX,MyIMG.OrgY);
+      BlurSurf16(MySmthIMG, MyIMG);
+      SetOrgSurf(MySmthIMG, MyIMG->OrgX, MyIMG->OrgY);
     }
   }
 }
@@ -1110,9 +1110,9 @@ void DGWaitRetrace() {
   SetSurf(&OldSurf);
 } */
 
-bool LoadImg(char *filename, Surf *DstSurf)
+bool LoadImg(char *filename, Surf **DstSurf)
 {
-   Surf Surf8bpp;
+   Surf *Surf8bpp;
    if(!IsFileExist(filename))
      return false;
    if (LoadBMP16(DstSurf,filename)!=0)
@@ -1123,30 +1123,30 @@ bool LoadImg(char *filename, Surf *DstSurf)
       return true;
 
    if (LoadBMP(&Surf8bpp,filename,palette)!=0) {
-      if (CreateSurf(DstSurf, Surf8bpp.ResH, Surf8bpp.ResV, 16)==0) {
-        DestroySurf(&Surf8bpp);
+      if (CreateSurf(DstSurf, Surf8bpp->ResH, Surf8bpp->ResV, 16)==0) {
+        DestroySurf(Surf8bpp);
         return false;
       }
-      ConvSurf8ToSurf16Pal(DstSurf,&Surf8bpp,&palette);
-      DestroySurf(&Surf8bpp);
+      ConvSurf8ToSurf16Pal(*DstSurf,Surf8bpp,&palette);
+      DestroySurf(Surf8bpp);
       return true;
    }
    if (LoadGIF(&Surf8bpp,filename,palette)!=0) {
-      if (CreateSurf(DstSurf, Surf8bpp.ResH, Surf8bpp.ResV, 16)==0) {
-        DestroySurf(&Surf8bpp);
+      if (CreateSurf(DstSurf, Surf8bpp->ResH, Surf8bpp->ResV, 16)==0) {
+        DestroySurf(Surf8bpp);
         return false;
       }
-      ConvSurf8ToSurf16Pal(DstSurf,&Surf8bpp,&palette);
-      DestroySurf(&Surf8bpp);
+      ConvSurf8ToSurf16Pal(*DstSurf,Surf8bpp,&palette);
+      DestroySurf(Surf8bpp);
       return true;
    }
    if (LoadPCX(&Surf8bpp,filename,palette)!=0) {
-      if (CreateSurf(DstSurf, Surf8bpp.ResH, Surf8bpp.ResV, 16)==0) {
-        DestroySurf(&Surf8bpp);
+      if (CreateSurf(DstSurf, Surf8bpp->ResH, Surf8bpp->ResV, 16)==0) {
+        DestroySurf(Surf8bpp);
         return false;
       }
-      ConvSurf8ToSurf16Pal(DstSurf,&Surf8bpp,&palette);
-      DestroySurf(&Surf8bpp);
+      ConvSurf8ToSurf16Pal(*DstSurf,Surf8bpp,&palette);
+      DestroySurf(Surf8bpp);
       return true;
    }
    return false;
@@ -1182,7 +1182,7 @@ void GphBDrawAbout(GraphBox *Me) {
    SetTextCol(WH->m_GraphCtxt->WinBlanc);
    OutText16Mode("\n", AJ_MID);
    FntCol=0x3F<<5; // green
-   OutText16Mode("DUGL Viewer 0.4 - DOS Image Viewer\n", AJ_MID);
+   OutText16Mode("DUGL Viewer 0.5 - DOS Image Viewer\n", AJ_MID);
    FntCol=0xFFFF; // white
    OutText16Mode("(C) By FFK 21 August 2011\n\n", AJ_MID);
    OutText16Mode("Developped using :\n", AJ_MID);

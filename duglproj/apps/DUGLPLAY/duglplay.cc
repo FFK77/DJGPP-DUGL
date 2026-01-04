@@ -68,8 +68,8 @@
 #include <dir.h>
 #include <dpmi.h>
 
-#include <dugl/dugl.h>
-#include <dugl/duglplus.h>
+#include <dugl.h>
+#include <duglplus.h>
 // bmpeg includes
 #include <bmpeg.h>
 // theora includes
@@ -102,7 +102,7 @@ int Pt3[] = { 639, 479,   0,   0,   0 };
 int Pt4[] = {   0, 479,   0,   0,   0 };
 int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
 
-Surf MsPtr,MsPtr16,rendSurf16,blurSurf16;
+Surf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 
 unsigned char palette[1024];
 String CurVidFile;
@@ -137,7 +137,7 @@ int framenum,
     frameskipped=0;
 int DefTypeOpen=0;
 
-Surf Sframe16; // Surf where the 16bpp video frame will be stored
+Surf *Sframe16; // Surf where the 16bpp video frame will be stored
 
 
 unsigned char *uFinal = NULL;
@@ -228,7 +228,7 @@ ImgButton *BtPlay,*BtPauseCont,*BtExit;
 Label *LbTime;
 HzSlider *HSldAdv;
 CocheBox *CBxLoop;
-Surf ImgPlay,ImgExit,ImgPCont;
+Surf *ImgPlay,*ImgExit,*ImgPCont;
 
 // glabal var
 int redrawVid=1;
@@ -283,7 +283,7 @@ GraphBox *GphBAbout;
 Button *BtOkAbout;
 // events
 void BtOkAboutClick(),GphBDrawAbout(GraphBox *Me),OnGphBScanAbout(GraphBox *Me);
-Surf ImgLicense;
+Surf *ImgLicense;
 // data
 int  RotPosSynch;
 char RotSynchBuff[SIZE_SYNCH_BUFF];
@@ -325,7 +325,7 @@ int main (int argc, char ** argv) {
     }
     if (!LoadGIF(&MsPtr,"gfx/mouseimg.gif",&palette))
       { printf("Error loading mouseimg.gif\n"); exit(-1); }
-    if (CreateSurf(&MsPtr16, MsPtr.ResH, MsPtr.ResV, 16)==0) {
+    if (CreateSurf(&MsPtr16, MsPtr->ResH, MsPtr->ResV, 16)==0) {
       printf("no mem\n"); exit(-1);
     }
 
@@ -363,15 +363,15 @@ int main (int argc, char ** argv) {
 
     // init the lib
 
-    if (!InstallTimer(100)) {
+    if (!DgInstallTimer(100)) {
        CloseVesa(); printf("Timer error\n"); exit(-1);
     }
     if (!InstallKeyboard()) {
-       CloseVesa(); UninstallTimer();
+       CloseVesa(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
     if (!SetKbMAP(KM)) {
-       UninstallTimer(); UninstallKeyboard(); CloseVesa();
+       DgUninstallTimer(); UninstallKeyboard(); CloseVesa();
        printf("Error setting keyborad map\n");  exit(-1);
     }
     MouseSupported = (InstallMouse()!=0);
@@ -385,17 +385,17 @@ int main (int argc, char ** argv) {
     // mouse
     if (MouseSupported) {
        // set mouse pointer Orig to the upper left corner
-       ConvSurf8ToSurf16Pal(&MsPtr16,&MsPtr,&palette);
-       SetOrgSurf(&MsPtr16,0,MsPtr16.ResV-1);
+       ConvSurf8ToSurf16Pal(MsPtr16,MsPtr,&palette);
+       SetOrgSurf(MsPtr16,0,MsPtr16->ResV-1);
        // set mouse view
-       GetSurfRView(&VSurf[0],&MsV);
-       SetMouseRView(&MsV);
+       GetSurfView(&VSurf[0],&MsV);
+       SetMouseView(&MsV);
        FREE_MMX();
        SetMousePos(DefMsPosX*VSurf[0].ResH,DefMsPosY*VSurf[0].ResV);
     }
     else {
-       DestroySurf(&MsPtr16);
-       DestroySurf(&MsPtr);
+       DestroySurf(MsPtr16);
+       DestroySurf(MsPtr);
     }
     FREE_MMX();
 
@@ -411,16 +411,16 @@ int main (int argc, char ** argv) {
     GphBVideo->ScanGraphBox=GphBScanVideo;
     GphBVideo->Redraw();
     // buttons
-    BtPlay=new ImgButton(2,3,29,27,MWDPlayer,&ImgPlay);
+    BtPlay=new ImgButton(2,3,29,27,MWDPlayer,ImgPlay);
     BtPlay->Click=OnBtPlayClick; // set click handler
-    BtPauseCont=new ImgButton(34,3,59,27,MWDPlayer,&ImgPCont);
+    BtPauseCont=new ImgButton(34,3,59,27,MWDPlayer,ImgPCont);
     BtPauseCont->Click=OnMenuPauseCont; // set click handler
     CBxLoop=new CocheBox(63,5,118,25,MWDPlayer,NULL,"loop",0);
     CBxLoop->Changed=OnChBLoopChanged;
     HSldAdv=new HzSlider(120,screenX-123,7,MWDPlayer,0,100);
     LbTime=new Label(screenX-118,5,screenX-43,25,MWDPlayer,"00:00:00",AJ_LEFT);
 
-    BtExit=new ImgButton(screenX-36,3,screenX-10,27,MWDPlayer,&ImgExit);
+    BtExit=new ImgButton(screenX-36,3,screenX-10,27,MWDPlayer,ImgExit);
     BtExit->Click=OnMenuExit; // set click handler
     // menu
     MWMn = new Menu(MWDPlayer,&TNM[0]); // menu
@@ -448,9 +448,9 @@ int main (int argc, char ** argv) {
             lastFps=SynchLastTime(SynchBuff);
       if (lastFps <= 0.1f)
         __dpmi_yield();
-      
 
-      SetSurf(&rendSurf16);
+
+      SetSurf(rendSurf16);
       FREE_MMX();
       // get next frame if it's time
       if (VidOpen) {
@@ -461,7 +461,7 @@ int main (int argc, char ** argv) {
         if (VidPause==0) {
           if (PosSynch!=framenum) {
              if (DropFrames) {
-                if (GetNextFrame(&Sframe16,PosSynch-framenum-1)) {
+                if (GetNextFrame(Sframe16,PosSynch-framenum-1)) {
                    redrawVid=1;
                    if (FrameAvlbl==0) FrameAvlbl=1;
                 }
@@ -473,7 +473,7 @@ int main (int argc, char ** argv) {
                    }
                 }
              } else {
-                if (GetNextFrame(&Sframe16,0)) {
+                if (GetNextFrame(Sframe16,0)) {
                    redrawVid=1;
                    if (FrameAvlbl==0) FrameAvlbl=1;
                    frameskipped+=PosSynch-framenum-1; // we are too slow ? :(
@@ -565,12 +565,12 @@ int main (int argc, char ** argv) {
         {
           if(FitVideo)
           {
-            Poly16(&ListPt1,&Sframe16,POLY16_TEXT,0);
+            Poly16(&ListPt1,Sframe16,POLY16_TEXT,0);
           }
           else {
             Clear16(0); // clear by black
-            PutSurf16(&Sframe16, (CurSurf.MaxX+CurSurf.MinX-Sframe16.ResH)/2,
-                (CurSurf.MaxY+CurSurf.MinY-Sframe16.ResV)/2, 0);
+            PutSurf16(Sframe16, (CurSurf.MaxX+CurSurf.MinX-Sframe16->ResH)/2,
+                (CurSurf.MaxY+CurSurf.MinY-Sframe16->ResV)/2, 0);
           }
           FREE_MMX();
           //PutSurf16(&Sframe16,0,0,0);
@@ -583,24 +583,24 @@ int main (int argc, char ** argv) {
       if (EnableGUI) { // GUI
         keyCode = WH->Key;
         keyFLAG = WH->KeyFLAG;
-        SetSurf(&rendSurf16);
+        SetSurf(rendSurf16);
         FREE_MMX();
         // draw the GUI
         WH->DrawSurf(&CurSurf);
         // draw the mouse pointer
         if(MouseSupported)
-           PutMaskSurf16(&MsPtr16,MsX,MsY,0);
+           PutMaskSurf16(MsPtr16,MsX,MsY,0);
         // draw the GUI
         DGWaitRetrace();
-        SurfCopy(&VSurf[0], &rendSurf16);
+        SurfCopy(&VSurf[0], rendSurf16);
         FREE_MMX();
       } else { // full screen
          if (BlurDisplay) {
-            BlurSurf16(&blurSurf16,&rendSurf16);
-            SetSurf(&blurSurf16);
+            BlurSurf16(blurSurf16,rendSurf16);
+            SetSurf(blurSurf16);
          }
          else
-           SetSurf(&rendSurf16);
+           SetSurf(rendSurf16);
          FREE_MMX();
          // display AVG FPS
 
@@ -629,9 +629,9 @@ int main (int argc, char ** argv) {
          }
          DGWaitRetrace();
          if (BlurDisplay)
-           SurfCopy(&VSurf[0], &blurSurf16);
+           SurfCopy(&VSurf[0], blurSurf16);
          else
-           SurfCopy(&VSurf[0], &rendSurf16);
+           SurfCopy(&VSurf[0], rendSurf16);
          FREE_MMX();
       }
 
@@ -658,7 +658,7 @@ int main (int argc, char ** argv) {
 
     CloseVesa();
     UninstallKeyboard();
-    UninstallTimer();
+    DgUninstallTimer();
     if(MouseSupported)
        UninstallMouse();
     TextMode();
@@ -729,7 +729,7 @@ void OnMenuExit() {
   CloseVid();
   CloseVesa();
   UninstallKeyboard();
-  UninstallTimer();
+  DgUninstallTimer();
   if(MouseSupported)
     UninstallMouse();
   TextMode();
@@ -768,12 +768,12 @@ void GphBDrawVideo(GraphBox *Me) {
         Pt2[0]=GphBVideo->VGraphBox.MaxX;      Pt2[1]=GphBVideo->VGraphBox.MinY;
         Pt3[0]=GphBVideo->VGraphBox.MaxX;      Pt3[1]=GphBVideo->VGraphBox.MaxY;
         Pt4[0]=GphBVideo->VGraphBox.MinX;      Pt4[1]=GphBVideo->VGraphBox.MaxY;
-        Poly16(&ListPt1,&Sframe16,POLY16_TEXT,0);
+        Poly16(&ListPt1,Sframe16,POLY16_TEXT,0);
       }
       else {
-        PutSurf16(&Sframe16,
-                  (GphBVideo->VGraphBox.MaxX+GphBVideo->VGraphBox.MinX-Sframe16.ResH)/2,
-                  (GphBVideo->VGraphBox.MaxY+GphBVideo->VGraphBox.MinY-Sframe16.ResV)/2,
+        PutSurf16(Sframe16,
+                  (GphBVideo->VGraphBox.MaxX+GphBVideo->VGraphBox.MinX-Sframe16->ResH)/2,
+                  (GphBVideo->VGraphBox.MaxY+GphBVideo->VGraphBox.MinY-Sframe16->ResV)/2,
                   0);
       }
       FREE_MMX();
@@ -884,9 +884,9 @@ void GphBDrawAbout(GraphBox *Me) {
    OutText16Mode(text.StrPtr, AJ_MID);
    FREE_MMX();
 
-   xImgLic=((Me->XC2+Me->XC1)-ImgLicense.ResH)/2+5+ftcos[RotPosSynch&255]*5.0;
+   xImgLic=((Me->XC2+Me->XC1)-ImgLicense->ResH)/2+5+ftcos[RotPosSynch&255]*5.0;
    yImgLic=10+ftsin[RotPosSynch&255]*5.0;
-   PutMaskSurf16(&ImgLicense,xImgLic,yImgLic,0);
+   PutMaskSurf16(ImgLicense,xImgLic,yImgLic,0);
    FREE_MMX();
 }
 
@@ -1005,7 +1005,7 @@ int OpenVidMPEG(char *FileName)
     vFinal = (unsigned char*) malloc(curMpegInf.width);
 
     VidOpen=1; // opened video
-    if(GetNextFrameMPEG(&Sframe16,0)!=1)
+    if(GetNextFrameMPEG(Sframe16,0)!=1)
        return 3;  // no frame
 
     framenum=0; // found one frame
@@ -1059,7 +1059,7 @@ void CloseVidMPEG()
 {
    if (VidOpen) {
      CloseMPEG();
-     DestroySurf(&Sframe16);
+     DestroySurf(Sframe16);
      if(uFinal) { free(uFinal); uFinal = NULL; }
      if(vFinal) { free(vFinal); vFinal = NULL; }
 
@@ -1204,7 +1204,7 @@ int OpenVidOGG(char *FileName) {
     vFinal = (unsigned char*) malloc(ti.frame_width);
 
     VidOpen=1; // opened video
-    if(failed==0 && GetNextFrameOGG(&Sframe16,0)!=1)
+    if(failed==0 && GetNextFrameOGG(Sframe16,0)!=1)
         failed=6; // no frame
 
     if (failed>0) {
@@ -1216,7 +1216,7 @@ int OpenVidOGG(char *FileName) {
             theora_p=0;
          }
         ogg_sync_clear(&oy);
-        if (failed==6) DestroySurf(&Sframe16);
+        if (failed==6) DestroySurf(Sframe16);
         VidOpen=0; // opened video
         return failed;
     }
@@ -1306,7 +1306,7 @@ void CloseVidOGG() {
      }
      ogg_sync_clear(&oy);
      //-----------
-     DestroySurf(&Sframe16);
+     DestroySurf(Sframe16);
      if(uFinal) { free(uFinal); uFinal = NULL; }
      if(vFinal) { free(vFinal); vFinal = NULL; }
 
@@ -1381,7 +1381,7 @@ int OpenVidYUV4MPEG(char *FileName)
 {
    ListString *LSParams;
    ListString *LSSubParams;
-   
+
 
    String myFile=FileName;
    CloseVid();
@@ -1532,14 +1532,14 @@ int OpenVidYUV4MPEG(char *FileName)
     {
       if (uFinal!=NULL) { free(uFinal); uFinal = NULL; }
       if (vFinal!=NULL) { free(vFinal); vFinal = NULL; }
-      DestroySurf(&Sframe16);
+      DestroySurf(Sframe16);
       free(BuffReadDATAYUV4MPEG);
       BuffReadDATAYUV4MPEG = BuffY = BuffU = BuffV = NULL;
       fclose(vidfile);
       vidfile = NULL;
       return 2; // no mem
     }
-    
+
     VidOpen= true; // opened video
 
     framenum=0; // found one frame
@@ -1574,7 +1574,7 @@ int GetNextFrameYUV4MPEG(Surf *S16, unsigned int nFramesToDrop)
             VidEnded=true; // we reached the end
             return 0; // failed to read header
         }
-        
+
         readVidFileBytes += strlen(BuffReadHeadYUV4MPEG);
 
         if(readVidFileBytes == 0) {
@@ -1644,7 +1644,7 @@ void CloseVidYUV4MPEG()
      BuffReadDATAYUV4MPEG = BuffY = BuffU = BuffV = NULL;
      fclose(vidfile);
      vidfile = NULL;
-     DestroySurf(&Sframe16);
+     DestroySurf(Sframe16);
      if(uFinal) { free(uFinal); uFinal = NULL; }
      if(vFinal) { free(vFinal); vFinal = NULL; }
 
@@ -1673,7 +1673,7 @@ int OpenVid(char *FileName)
     int    ret    = 0;
     String myFile = FileName;
     String InfImg(256);
-    
+
     int    OpenVidWidth = 0;
     int    OpenVidHeight = 0;
     char   tdrv[MAXDRIVE], tpath[MAXDIR], tfile[MAXFILE], text[MAXEXT];
@@ -1689,7 +1689,7 @@ int OpenVid(char *FileName)
        kindVidOpened = 2;
     if (VidOpen && kindVidOpened > 0) {
       FREE_MMX();
-      sprintf(InfImg.StrPtr,"%ix%i %3.1ffps", Sframe16.ResH, Sframe16.ResV, VideoFps);
+      sprintf(InfImg.StrPtr,"%ix%i %3.1ffps", Sframe16->ResH, Sframe16->ResV, VideoFps);
       fnsplit(CurVidFile.StrPtr, tdrv, tpath, tfile, text);
       sFinalLabel = sFinalLabel + '<' + tfile + text + ">" + InfImg;
     }

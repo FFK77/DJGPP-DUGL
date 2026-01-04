@@ -56,11 +56,11 @@ View GridView = { 0,0,ScrResH-40,ScrResV-30,40,50 },
      AllView = { 0,0,ScrResH-1,ScrResV-1,0,0 };
 
 // *** memory suface of the Sprites ****************************
-Surf MsPtr,  // mouse pointer
-     LightImg; // image to apply lights over
+Surf *MsPtr,  // mouse pointer
+     *LightImg; // image to apply lights over
 
 // *** memory surf rendering
-Surf rendSurf;
+Surf *rendSurf;
 int toggleMemRender = 1;
 
 // synch buffer
@@ -129,7 +129,7 @@ int main(int argc,char *argv[])
         // mouse init
         // change the origin of the surf of the mouse pointer
         View MsView;
-        SetOrgSurf(&MsPtr,0,MsPtr.ResV-1);
+        SetOrgSurf(MsPtr,0,MsPtr->ResV-1);
         GetSurfView(&VSurf[0],&MsView);
         SetMouseView(&MsView);
 
@@ -145,25 +145,24 @@ int main(int argc,char *argv[])
                  lastFps=SynchLastTime(SynchBuff);
            // set the index of the visible video surf
            // wait retrace if fps is greater than the screen refresh /*(1.0/avgFps)>=CurModeVtFreq*/
-	   if (lastFps==0.0 || (1.0/lastFps)>=CurModeVtFreq)
-           {
-              // use VGA registers if available (better compatiblity)
-              if (CurMode.VModeFlag|VMODE_VGA) {
+           if (lastFps==0.0 || (1.0/lastFps)>=CurModeVtFreq)   {
+                // use VGA registers if available (better compatiblity)
+                if (CurMode.VModeFlag|VMODE_VGA) {
+                    ViewSurf(j%3);//ViewSurf(0);
+                    WaitRetrace(); // VGA wait retrace
+                }
+                else
+                    ViewSurfWaitVR(j%3);//ViewSurfWaitVR(0);
+            }
+            else
                 ViewSurf(j%3);//ViewSurf(0);
-	        WaitRetrace(); // VGA wait retrace
-              }
-              else
-                ViewSurfWaitVR(j%3);//ViewSurfWaitVR(0);
-           }
-           else
-             ViewSurf(j%3);//ViewSurf(0);
 
 
            // set the current active surface for drawing
            if (!toggleMemRender)
             SetSurf(&VSurf[(j+1)%3]);//SetSurf(&VSurf[0]);
            else
-             SetSurf(&rendSurf);
+             SetSurf(rendSurf);
 
            // clear all the current Surf, does not care of any view
            Clear(noir); // clear with black
@@ -181,7 +180,7 @@ int main(int argc,char *argv[])
 
            // draw lighted polygones
            for (i=0;i<NbPolys;i++)
-              Poly(&ListPolys[i], &LightImg, POLY_DEG_TEXT, rouge);
+              Poly(&ListPolys[i], LightImg, POLY_DEG_TEXT, rouge);
            // draw the grid
            if (ShowGrid) DrawGrid();
            // display text
@@ -201,13 +200,13 @@ int main(int argc,char *argv[])
            OutTextMode("space show/hide grid|F1 VRAM render|F2 RAM render|NumPad +/- grid size|Esc exit",AJ_RIGHT);
            // set a full view to draw the mouse pointer
            SetSurfView(&CurSurf, &AllView);
-           PutMaskSurf(&MsPtr,MsX,MsY,0);
+           PutMaskSurf(MsPtr,MsX,MsY,0);
 
            // if memory rendering toggled, then copy the mem surf to vmem
            if (toggleMemRender) {
              SetSurf(&VSurf[(j+1)%3]);
              SetSurfView(&CurSurf, &AllView);
-             PutSurf(&rendSurf,0,0,NORM_PUT);
+             PutSurf(rendSurf,0,0,NORM_PUT);
            }
            unsigned char keyCode;
            unsigned int keyFLAG;
@@ -236,7 +235,7 @@ int main(int argc,char *argv[])
            // exit if esc pressed
            if (IsKeyDown(0x1)) break;
         }
-        DestroySurf(&rendSurf);
+        DestroySurf(rendSurf);
         CloseVesa();
 
         UninstallKeyboard();
@@ -256,8 +255,8 @@ void BuildPtsPolys() {
      if (GridNbCols>1 && GridNbRows>1) {
         xstep = (CurSurf.MaxX - CurSurf.MinX)/GridNbCols;
         ystep = (CurSurf.MaxY - CurSurf.MinY)/GridNbRows;
-        xtstep = (LightImg.MaxX - LightImg.MinX)/GridNbCols;
-        ytstep = (LightImg.MaxY - LightImg.MinY)/GridNbRows;
+        xtstep = (LightImg->MaxX - LightImg->MinX)/GridNbCols;
+        ytstep = (LightImg->MaxY - LightImg->MinY)/GridNbRows;
 
         // build points
         //NbPts = 0;
@@ -267,8 +266,8 @@ void BuildPtsPolys() {
               //idx=NbPts;
               ListPts[idx].x = CurSurf.MinX+countcol*xstep;
               ListPts[idx].y = CurSurf.MinY+countrow*ystep;
-              ListPts[idx].xt = LightImg.MinX+countcol*xtstep;
-              ListPts[idx].yt = LightImg.MinY+countrow*ytstep;
+              ListPts[idx].xt = LightImg->MinX+countcol*xtstep;
+              ListPts[idx].yt = LightImg->MinY+countrow*ytstep;
               ListPts[idx].light = 0;
               //NbPts++;
            }

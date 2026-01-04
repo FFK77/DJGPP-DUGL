@@ -93,7 +93,7 @@ FONT F1;
 
 int i,j; // counters
 
-Surf JpegIMG,convSurf16,rendSurf16;
+Surf *JpegIMG,*convSurf16,*rendSurf16;
 
 int main(int argc,char *argv[])
 {
@@ -135,8 +135,8 @@ int main(int argc,char *argv[])
    // set the used FONT
    SetFONT(&F1);
 
-   Surf *pSurfRend=&rendSurf16,
-        *pSurfBlur=&convSurf16,*pSurfTemp;
+   Surf *pSurfRend=rendSurf16,
+        *pSurfBlur=convSurf16,*pSurfTemp;
 
    int PosSynch;
    InitSynch(SynchBuff,&PosSynch,60);
@@ -179,7 +179,7 @@ int main(int argc,char *argv[])
      // set origin to the center
      SetOrgSurf(&CurSurf,CurSurf.ResH/2,CurSurf.ResV/2);
      for (i=0;i<6;i++) {
-        Poly16(&ListObjPolys[i], &JpegIMG, POLY16_TEXT, 0);
+        Poly16(&ListObjPolys[i], JpegIMG, POLY16_TEXT, 0);
      }
      SetOrgSurf(&CurSurf,0,0);
 

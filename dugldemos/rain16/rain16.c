@@ -88,9 +88,9 @@ cloud TCloud[NUMBER_CLOUD];
 
 
 // render Surf
-Surf rendSurf16,blurSurf16;
-Surf BackSurf,tmpBackSurf;
-Surf smallRendSurf16;
+Surf *rendSurf16, *blurSurf16;
+Surf *BackSurf,tmpBackSurf;
+Surf *smallRendSurf16;
 
 //******************
 // FONT
@@ -117,7 +117,7 @@ void RenderScrDrop(scrDrop *pScrDrop);
 // resize a 16bpp Surf into an another Surf
 void ResizeSurf16(Surf *SDstSurf,Surf *SSrcSurf);
 // load a 8bpp gif into a 16bpp Surf
-int LoadGIF16(Surf *S16,char *filename);
+int LoadGIF16(Surf **S16,char *filename);
 // Synch screen Display
 void DGWaitRetrace();
 
@@ -193,7 +193,7 @@ int main (int argc, char ** argv)
             lastFps=SynchLastTime(SynchBuff);
 
       // set the current active surface for drawing
-      SetSurf(&rendSurf16);
+      SetSurf(rendSurf16);
 
       unsigned char keyCode;
       unsigned int keyFLAG;
@@ -201,7 +201,7 @@ int main (int argc, char ** argv)
       //Clear16(0x1e|0x380);
 
       // fit the backgroud Surf on the screen
-      ResizeSurf16(&CurSurf, &BackSurf);
+      ResizeSurf16(&CurSurf, BackSurf);
       // render rain
       SetOrgSurf(&CurSurf,0,0);
 
@@ -248,7 +248,7 @@ int main (int argc, char ** argv)
 
       }
 
-      ResizeSurf16(&smallRendSurf16,&CurSurf);
+      ResizeSurf16(smallRendSurf16,&CurSurf);
 //      SetOrgSurf(&smallRendSurf16,10,10);
       // Init table of Screen Drops
       for (int i=0;i<NUMBER_SCR_DROPS;i++) {
@@ -282,11 +282,11 @@ int main (int argc, char ** argv)
 
 
       if (BlurDisplay) {
-         Blur16((void*)(blurSurf16.rlfb), (void*)(rendSurf16.rlfb), blurSurf16.ResH, blurSurf16.ResV, 0, (blurSurf16.ResV - 1));
-         SetSurf(&blurSurf16);
+         Blur16((void*)(blurSurf16->rlfb), (void*)(rendSurf16->rlfb), blurSurf16->ResH, blurSurf16->ResV, 0, (blurSurf16->ResV - 1));
+         SetSurf(blurSurf16);
       }
       else {
-        SetSurf(&rendSurf16);
+        SetSurf(rendSurf16);
       }
 
 
@@ -307,9 +307,9 @@ int main (int argc, char ** argv)
       // vertical synch ?
       DGWaitRetrace();
       if (BlurDisplay)
-         SurfCopy(&VSurf[0], &blurSurf16);
+         SurfCopy(&VSurf[0], blurSurf16);
       else
-         SurfCopy(&VSurf[0], &rendSurf16);
+         SurfCopy(&VSurf[0], rendSurf16);
       // esc exit
       if (IsKeyDown(KB_KEY_ESC)) break;
       // ctrl + shift + tab  = BMP screenshot
@@ -379,21 +379,22 @@ void RenderCloud(cloud *pCloud) {
 }
 
 void RenderScrDrop(scrDrop *pScrDrop) {
-   SetOrgSurf(&smallRendSurf16,((ScrResH-pScrDrop->x)*WT_XTEX)/ScrResH,((ScrResV-pScrDrop->y)*WT_YTEX)/ScrResV);
+   SetOrgSurf(smallRendSurf16,((ScrResH-pScrDrop->x)*WT_XTEX)/ScrResH,((ScrResV-pScrDrop->y)*WT_YTEX)/ScrResV);
    ModifiListPtCircle(ListPtWt1,pScrDrop->x,pScrDrop->y, pScrDrop->rayx, pScrDrop->rayy);
-   Poly16(ListPtWt1,&smallRendSurf16,POLY16_TEXT/*|POLY16_FLAG_DBL_SIDED*/,0);
+   Poly16(ListPtWt1,smallRendSurf16,POLY16_TEXT/*|POLY16_FLAG_DBL_SIDED*/,0);
 }
 // load a 8bpp gif and convert it to 16 bpp
-int LoadGIF16(Surf *S16,char *filename) {
+int LoadGIF16(Surf **S16,char *filename) {
   char tmpBGRA[1024];
-  Surf SGIF8bpp;
+  Surf *SGIF8bpp = NULL;
   if (LoadGIF(&SGIF8bpp,filename,tmpBGRA)==0) return 0;
-  if (CreateSurf(S16,SGIF8bpp.ResH,SGIF8bpp.ResV,16)==0) {
-    DestroySurf(&SGIF8bpp);
+  if (CreateSurf(S16,SGIF8bpp->ResH,SGIF8bpp->ResV,16)==0) {
+    DestroySurf(SGIF8bpp);
     return 0;
   }
   // use the new DUGL 1.12 + conversion function
-  ConvSurf8ToSurf16Pal(S16,&SGIF8bpp,tmpBGRA);
+  ConvSurf8ToSurf16Pal(*S16,SGIF8bpp,tmpBGRA);
+  DestroySurf(SGIF8bpp);
 
   return 1;
 }

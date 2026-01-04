@@ -2,6 +2,10 @@
 /*  GUI Image Viewer for dos systems */
 /*  History      */
 /*  21/08/2011 Ver 0.4 : First Official release */
+/*  04/01/2026 ver 0.5 :
+        Add [KeyboardMap] section to config file to select keyboard layout(map) defaulted to qwerty eng
+        Add F4 keyboard shortcut to disable/enable smooth downsizing of huge images
+        Updates and fixes to follow last dugl changes/improvement       */
 
 
 #include <stdio.h>
@@ -12,8 +16,8 @@
 #include <dos.h>
 #include <ctype.h>
 #include <dpmi.h>
-#include <dugl/dugl.h>
-#include <dugl/duglplus.h>
+#include <dugl.h>
+#include <duglplus.h>
 
 // config
 unsigned int screenX = 640, screenY = 480;
@@ -114,9 +118,10 @@ float timeDown = 0.0;
 float timeBoundUp = 0.0;
 float timeBoundDown = 0.0;
 float curZoom = 1.0;
+char keybMapFileName[256] = "qwerteng.map";
 bool MultiAutoLoad = false;
 //--
-String MainWinName("DUGL Viewer 0.4");
+String MainWinName("DUGL Viewer 0.5");
 int CurImgNum = 0;
 ListString LSFiles;
 String InfImg;
@@ -142,7 +147,7 @@ int main (int argc, char ** argv) {
        printf("WinNT/2k/XP/Vista/7 not supported!\n"); exit(-1); }
 
     Init3DMath(); // dugl+
-    
+
     if (!InitVesa())
       { printf("DUGL init error\n"); exit(-1); }
 
@@ -153,7 +158,7 @@ int main (int argc, char ** argv) {
           printf("VESA mode error\n"); CloseVesa(); exit(-1);
        }
     }
-      
+
     if (CreateSurf(&rendSurf16, screenX, screenY, 16)==0) {
       printf("no mem\n"); exit(-1);
     }
@@ -189,9 +194,8 @@ int main (int argc, char ** argv) {
       printf("Error loading about.bmp\n"); exit(-1);
     }
 
-
-    if (!LoadKbMAP(&KM,"azertfr.map")) {
-      printf("Error loading azertfr.map\n"); exit(-1); }
+    if (!LoadKbMAP(&KM,keybMapFileName)) {
+      printf("Error loading keyboardmap '%s'\n", keybMapFileName); exit(-1); }
 
     // load font
     if (!LoadFONT(&F1,"hello.chr")) {
@@ -199,15 +203,15 @@ int main (int argc, char ** argv) {
 
     // init the lib
 
-    if (!InstallTimer(200)) {
+    if (!DgInstallTimer(200)) {
        CloseVesa(); printf("Timer error\n"); exit(-1);
     }
     if (!InstallKeyboard()) {
-       CloseVesa(); UninstallTimer();
+       CloseVesa(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
     if (!SetKbMAP(KM)) {
-       UninstallTimer(); UninstallKeyboard(); CloseVesa();
+       DgUninstallTimer(); UninstallKeyboard(); CloseVesa();
        printf("Error setting keyborad map\n");  exit(-1);
     }
     MouseSupported = (InstallMouse()!=0);
@@ -223,8 +227,8 @@ int main (int argc, char ** argv) {
        // set mouse pointer Orig to the upper left corner
        SetOrgSurf(&MsPtr16,0,MsPtr16.ResV-1);
        // set mouse view
-       GetSurfRView(&VSurf[0],&MsV);
-       SetMouseRView(&MsV);
+       GetSurfView(&VSurf[0],&MsV);
+       SetMouseView(&MsV);
        FREE_MMX();
        SetMousePos(DefMsPosX*VSurf[0].ResH, DefMsPosY*VSurf[0].ResV);
     }
@@ -261,7 +265,7 @@ int main (int argc, char ** argv) {
     CmbViewMode->LStr->Add("As Is");
     CmbViewMode->Changed=ChgdCmbViewMode;
     CmbViewMode->Select=iDisplayMode;
-    
+
     BtExit=new ImgButton(screenX-35,screenY-50,screenX-10,screenY-25,MWDViewer,&ImgExit);
     BtExit->Click=OnExit; // set click handler
     BtAbout=new ImgButton(screenX-63,screenY-50,screenX-37,screenY-25,MWDViewer,&ImgAbout);
@@ -284,7 +288,7 @@ int main (int argc, char ** argv) {
       if (lastFps < 0.1f)
          __dpmi_yield();
       SetSurf(&rendSurf16);
-      
+
       // scan the GUI for events
       WH->Scan();
       // draw the GUI
@@ -297,11 +301,19 @@ int main (int argc, char ** argv) {
       SurfCopy(&VSurf[0], &rendSurf16);
 
       // alt+ X : exit
-      if ((WH->Key==45 && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR)) || ExitViewer)
+      if ((WH->Key==KB_KEY_QWERTY_X && /* 'X'|'x' */ (WH->KeyFLAG&KB_ALT_PR)) || ExitViewer)
          break;
-      if (MWDViewer->Key==0x3D) // F3
+      if (MWDViewer->Key==KB_KEY_F3) // F3
          OnOpen();
-      if (MWDViewer->Key==0x3F) { // F5
+      if (MWDViewer->Key==KB_KEY_F4) { // F4
+        UseCurImg = false;
+        EnableSmoothDownSize = !EnableSmoothDownSize;
+        if(validMyIMG && DownSize) {
+          LoadCurImg();
+          redrawIMG = true;
+        }
+      }
+      if (MWDViewer->Key==KB_KEY_F5) { // F5
         if(validMyIMG) {
           if(SmoothResize) {
             if(curZoom>=SmoothZoomLimit)
@@ -317,22 +329,22 @@ int main (int argc, char ** argv) {
         }
         else
           SmoothResize = !SmoothResize;
-        
+
       }
-      if (MWDViewer->Key==0x40) { // F6 - switch view mode
+      if (MWDViewer->Key==KB_KEY_F6) { // F6 - switch view mode
         CmbViewMode->Select++;
         if(CmbViewMode->Select>2) CmbViewMode->Select=0;
       }
-      if (MWDViewer->Key==0xD1) // Page Down
+      if (MWDViewer->Key==KB_KEY_PGDOWN) // Page Down
          OnNext();
-      if (MWDViewer->Key==0xC9) // Page UP
+      if (MWDViewer->Key==KB_KEY_PGUP) // Page UP
          OnBack();
-      if (MWDViewer->Key==0xC7) // begin
+      if (MWDViewer->Key==KB_KEY_HOME) // home
          OnFirst();
-      if (MWDViewer->Key==0xCf) // end
+      if (MWDViewer->Key==KB_KEY_END) // end
          OnLast();
       // Alt + S  = bmp screen shot
-      if (WH->Key==0x1f && (WH->KeyFLAG&KB_ALT_PR)) {
+      if (WH->Key==KB_KEY_QWERTY_S && (WH->KeyFLAG&KB_ALT_PR)) {
          bool bSucc = false;
          for (unsigned int ci='R';ci<='Z';ci++) {
             scrFileName[7]=(char)(ci);
@@ -355,7 +367,7 @@ int main (int argc, char ** argv) {
     }
     CloseVesa();
     UninstallKeyboard();
-    UninstallTimer();
+    DgUninstallTimer();
     if(MouseSupported)
        UninstallMouse();
     TextMode();
@@ -378,7 +390,7 @@ void GphBDrawVideo(GraphBox *Me) {
       PutSurf16((SmoothResize && curZoom>=SmoothZoomLimit)?(&MySmthIMG):(&MyIMG),
           Me->VGraphBox.MinX, Me->VGraphBox.MaxY - MyIMG.ResV + MyIMGPlus, 0);
    }
-   
+
 }
 
 void GphBScanVideo(GraphBox *Me) {
@@ -398,13 +410,13 @@ void GphBScanVideo(GraphBox *Me) {
 
      if(speedImg<1) speedImg = 1;
      if(slowSpeedImg<10) slowSpeedImg = 10;
-     
+
      if(iDisplayMode==0 || iDisplayMode==1) {
        IMGdypos = MyIMG.ResV;
        MyIMGMaxPlus = MyIMG.ResV - (Me->VGraphBox.MaxY-Me->VGraphBox.MinY+1);
 
        if((IsKeyDown(0xc8) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn)) { // up
-         timeUp = (float)(GetCurrTimeKeyDown(0xc8))/(float)(TimerFreq);
+         timeUp = (float)(GetCurrTimeKeyDown(0xc8))/(float)(DgTimerFreq);
          timeUp -= timeBoundUp;
          firstDownBound = true;
          if(timeUp<KeyBWaitStartScroll && firstUpDown) {
@@ -442,7 +454,7 @@ void GphBScanVideo(GraphBox *Me) {
        }
 
        if((IsKeyDown(0xd0) && Me->Focus) || (wheelDir==-MsWheelScrollDir && Me->MsIn)) { // down
-         timeDown = (float)(GetCurrTimeKeyDown(0xd0))/(float)(TimerFreq);
+         timeDown = (float)(GetCurrTimeKeyDown(0xd0))/(float)(DgTimerFreq);
          timeDown -= timeBoundDown;
          firstUpBound = true;
          if(timeDown<KeyBWaitStartScroll && firstDownDown) {
@@ -503,7 +515,7 @@ void GphBScanVideo(GraphBox *Me) {
        if(slowSpeedXImg<10) slowSpeedXImg = 10;
        // up
        if((IsKeyDown(0xc8) && Me->Focus) || (wheelDir==-MsWheelScrollDir && Me->MsIn && (!Me->MsDown && !(MsButton&MS_RIGHT_BUTT)))) {
-         timeDown = (float)(GetCurrTimeKeyDown(0xc8))/(float)(TimerFreq);
+         timeDown = (float)(GetCurrTimeKeyDown(0xc8))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstDownDown) {
            if(MyIMG.OrgY+speedImg <= mdMaxOrgY)
              SetOrgSurf(&MyIMG, MyIMG.OrgX, MyIMG.OrgY+speedImg);
@@ -523,10 +535,10 @@ void GphBScanVideo(GraphBox *Me) {
        }
        else
          firstDownDown = true;
-        
+
        // down
        if((IsKeyDown(0xd0) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn && (!Me->MsDown && !(MsButton&MS_RIGHT_BUTT)))) {
-         timeDown = (float)(GetCurrTimeKeyDown(0xd0))/(float)(TimerFreq);
+         timeDown = (float)(GetCurrTimeKeyDown(0xd0))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstUpDown) {
            if(MyIMG.OrgY-speedImg >= mdMinOrgY)
              SetOrgSurf(&MyIMG, MyIMG.OrgX, MyIMG.OrgY-speedImg);
@@ -550,7 +562,7 @@ void GphBScanVideo(GraphBox *Me) {
          firstUpDown = true;
        // Right
        if((IsKeyDown(0xcd) && Me->Focus) || (wheelDir==MsWheelScrollDir && Me->MsIn && (Me->MsDown || (MsButton&MS_RIGHT_BUTT)))) {
-         timeDown = (float)(GetCurrTimeKeyDown(0xcd))/(float)(TimerFreq);
+         timeDown = (float)(GetCurrTimeKeyDown(0xcd))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstRightDown) {
            if(MyIMG.OrgX+speedXImg <= mdMaxOrgX)
              SetOrgSurf(&MyIMG, MyIMG.OrgX+speedXImg, MyIMG.OrgY);
@@ -573,7 +585,7 @@ void GphBScanVideo(GraphBox *Me) {
          firstRightDown = true;
        // Left
        if((IsKeyDown(0xcb) && Me->Focus) || (wheelDir==-MsWheelScrollDir && Me->MsIn && (Me->MsDown || (MsButton&MS_RIGHT_BUTT)))) {
-         timeDown = (float)(GetCurrTimeKeyDown(0xcb))/(float)(TimerFreq);
+         timeDown = (float)(GetCurrTimeKeyDown(0xcb))/(float)(DgTimerFreq);
          if(timeDown<KeyBWaitStartScroll && firstLeftDown) {
            if(MyIMG.OrgX-speedXImg >= mdMinOrgX)
              SetOrgSurf(&MyIMG, MyIMG.OrgX-speedXImg, MyIMG.OrgY);
@@ -612,7 +624,7 @@ void GphBScanVideo(GraphBox *Me) {
            redrawIMG = true;
          }
        }
-         
+
        if(MyIMG.OrgX > mdMaxOrgX) {
          SetOrgSurf(&MyIMG, mdMaxOrgX, MyIMG.OrgY);
          redrawIMG = true;
@@ -630,7 +642,7 @@ void GphBScanVideo(GraphBox *Me) {
          redrawIMG = true;
        }
      }
-     
+
      if(redrawIMG) {
        if(MyIMGPlus>MyIMGMaxPlus) MyIMGPlus=MyIMGMaxPlus;
        if(MyIMGPlus<0) MyIMGPlus=0;
@@ -644,7 +656,7 @@ void GphBScanVideo(GraphBox *Me) {
 void ChgdCmbViewMode(String *S,int Sel)
 {
   int oldDisplayMode=iDisplayMode;
-  
+
   iDisplayMode = Sel;
   if(validMyIMG) {
     if(oldDisplayMode==2)
@@ -721,7 +733,7 @@ void FileNumMakeFilter(String *fname, String *filter)
    int lngth = fname->Length();
    bool lastNum = false;
    int debScan = lngth-1;
-   
+
    for(;debScan>=0;debScan--) {
      if(fname->StrPtr[debScan] == '\\' || fname->StrPtr[debScan] == '/') {
        debScan++;
@@ -747,7 +759,7 @@ void FillListImg(String *SFilter) {
    struct ffblk f;
    int done;
    LSFiles.ClearListStr();
-   
+
    done= findfirst(SFilter->StrPtr, &f, FA_HIDDEN| FA_SYSTEM);
    while (!done) {
       if (!(f.ff_attrib&FA_DIREC))
@@ -769,7 +781,7 @@ void FBOpenImg(String *S,int TypeSel) {
     LSFiles.Add(S->StrPtr);
     CurImgNum = 0;
   }
-  
+
   iDefTypeOpen = TypeSel;
   LoadCurImg();
 }
@@ -813,7 +825,7 @@ void LoadCurImg() {
   else {
     tmpImg = MyIMG;
   }
-  
+
 
   FREE_MMX();
   if (iDisplayMode==2) {
@@ -901,7 +913,7 @@ void LoadCurImg() {
    // extract only filename without path or drive
   char tdrv[MAXDRIVE], tpath[MAXDIR], tfile[MAXFILE], te[MAXEXT];
   int which = fnsplit(pStrImg->StrPtr, tdrv, tpath, tfile, te);
-  
+
   MWDViewer->Label = MainWinName + '<' + tfile + te + '>'+ InfImg;
   MWDViewer->Redraw();
   GphBVideo->SetFocus();
@@ -912,7 +924,7 @@ void SmoothCurImg()
 {
   String text;
   Surf EnhSmthImg;
-  
+
   FREE_MMX();
   if(SmoothResize && curZoom>=SmoothZoomLimit) {
     if((CreateSurf(&MySmthIMG, MyIMG.ResH, MyIMG.ResV, 16)) == 0) {
@@ -929,7 +941,7 @@ void SmoothCurImg()
       else {
         BlurSurf16(&EnhSmthImg,&MyIMG);
         BlurSurf16(&MySmthIMG,&EnhSmthImg);
-        
+
 /*        BlurSurf16(&EnhSmthImg,&MySmthIMG);
         BlurSurf16(&MySmthIMG,&EnhSmthImg);*/
         SetOrgSurf(&MySmthIMG,MyIMG.OrgX,MyIMG.OrgY);
@@ -952,7 +964,7 @@ void LoadConfig()
   ListString *LSParams;
   ListString *LSTmp;
   int i;
-  
+
   if(fConfig == NULL)
     return;
   for(;;) {
@@ -977,7 +989,7 @@ void LoadConfig()
     // extract config
     sInfoName = lineID.SubString(0, '[', ']');
     LSParams = lineInfo.Split(',');
-    
+
     if(*sInfoName == "VideoMode" && LSParams->NbElement() >= 2) {
       screenX = (*LSParams)[0]->GetInt();
       screenY = (*LSParams)[1]->GetInt();
@@ -987,6 +999,12 @@ void LoadConfig()
       if(DefMsPosX<0.0 || DefMsPosX>1.0) DefMsPosX = 0.5;
       DefMsPosY = (float)((*LSParams)[1]->GetDouble());
       if(DefMsPosY<0.0 || DefMsPosY>1.0) DefMsPosY = 0.5;
+    }
+    else if(*sInfoName == "KeyboardMap" && LSParams->NbElement() >= 1) {
+      // keep default keyboard map if filename oversized
+      if ((*LSParams)[0]->Length() <= 255 && IsFileExist((*LSParams)[0]->StrPtr)) {
+        strcpy(keybMapFileName, (*LSParams)[0]->StrPtr);
+      }
     }
     else if(*sInfoName == "KeyBWaitPageUP" && LSParams->NbElement() >= 2) {
       EnableKeyUpPrevPage = (bool)((*LSParams)[0]->GetInt());
@@ -1078,13 +1096,13 @@ void DGWaitRetrace() {
      SrcSurf=*SSrcSurf;
      SSrc=&SrcSurf;
   }
-  
+
   // Get Current Surf
   GetSurf(&OldSurf);
 
   // set dest Surf as destination
   SetSurf(SDstSurf);
-  
+
   // draw the resize polygone inside the dest Surf
   Poly16(ListPt1, SSrc, POLY16_TEXT, 0);
 
@@ -1103,7 +1121,7 @@ bool LoadImg(char *filename, Surf *DstSurf)
       return true;
    if (LoadJPG16(DstSurf,filename)!=0)
       return true;
-      
+
    if (LoadBMP(&Surf8bpp,filename,palette)!=0) {
       if (CreateSurf(DstSurf, Surf8bpp.ResH, Surf8bpp.ResV, 16)==0) {
         DestroySurf(&Surf8bpp);

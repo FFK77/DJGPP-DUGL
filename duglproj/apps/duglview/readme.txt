@@ -5,13 +5,12 @@ About
 DUGL Viewer is a GUI image viewer for DOS systems.
 
 Developped by using :
-- DUGL 1.16 and DUGL Plus 0.31 <http://dugl.50webs.com>
+- DJGPP-DUGL 2.0WIP
 - The excellent C/C++ compiler DJGPP <http://www.delorie.com/djgpp/>
 - Libjpeg, Zlib and Libpng to provide support for both jpeg and png image format
 
-Visit <http://dugl.50webs.com/appgame.html#DViewer> to check for any update or the
-sub forum <http://dugl.1114869.n2.nabble.com/DUGL-softwares-f1122399.html> to ask 
-for support.
+Visit <https://github.com/FFK77/DJGPP-DUGL> to check for any update or to ask for a support.
+
 ___________
 1 - History
 -----------
@@ -53,6 +52,14 @@ ___________
   - Removed displaying Focus when image view get it.
   - Added multiple image mask, to filter all images formats supported.
   - Bug fixes ..
+  
+*  04/01/2026 ver 0.5 :
+
+   - Add [KeyboardMap] section to config file to select keyboard layout(map) defaulted to qwerty eng
+   - Add F4 keyboard shortcut to disable/enable smooth downsizing of huge images
+   - Updates and fixes to follow last dugl changes/improvements. 
+   - Increased smooth quality thanks to new dugl smooth algorithm that do lose much less brightness and don't get greener.
+
 
 __________________________
 2 - Keyboard/Mouse control
@@ -61,6 +68,7 @@ __________________________
 - Alt+X  : Exit
 - F3     : (*1) Open a single image file 
 - Alt+F3 : (*1) Autoload multi-image file (if you choose img001.jpg he will pick all img*.jpg files)
+- F4     : Enable/Disable current image down zoom smoothing
 - F5     : Enable/Disable current image up zoom smoothing
 - F6     : Switch between viewing modes
 - Down   : Scroll current image down or keep pushed for <default 0.25> sec to go to next pic

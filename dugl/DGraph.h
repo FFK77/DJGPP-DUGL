@@ -114,10 +114,9 @@ void GetSurfView(Surf *S, View *V);
 void SetOrgVSurf(int OrgX,int OrgY);
 void SetVView(View *V);
 void SetVInView(View *V);
-int  CreateSurf(Surf *S, int ResHz, int ResVt, char BitPixel);
+int  CreateSurf(Surf **S, int ResHz, int ResVt, char BitPixel);
 void DestroySurf(Surf *S);
-int  CreateSurfBuff(Surf *S, int ResHz, int ResVt, char BitPixel,void *Buff);
-void DestroySurfBuff(Surf *S);
+int  CreateSurfBuff(Surf **S, int ResHz, int ResVt, char BitPixel,void *Buff);
 void SurfCopy(Surf *Sdst,Surf *Ssrc);
 // ** WARNING ** should be called only after a successfull InitVESA call
 // set current visible Surf Index
@@ -260,8 +259,8 @@ void PutMaskSurfTrans16(Surf *S,int X,int Y,int PType,int trans);
 // --------------------
 
 // PCX
-int  LoadMemPCX(Surf *S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadPCX(Surf *S,const char *Fname,void *PalBGR1024);
+int  LoadMemPCX(Surf **S,void *In,void *PalBGR1024,int SizeIn);
+int  LoadPCX(Surf **S,const char *Fname,void *PalBGR1024);
 int  SaveMemPCX(Surf *S,void *Out,void *PalBGR1024);
 int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024);
 int  SizeSavePCX(Surf *S);
@@ -270,8 +269,8 @@ void OutRLE(void *OutBuffRLE,void *In,int LenIn,int ResHz);
 int  SizeOutRLE(void *In,int LenIn,int ResHz);
 
 // GIF
-int  LoadMemGIF(Surf *S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadGIF(Surf *S,const char *Fname,void *PalBGR1024);
+int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn);
+int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024);
 int  SaveMemGIF(Surf *S,void *Out,void *PalBGR1024); // NI (not implemented)
 int  SaveGIF(Surf *S,const char *Fname,void *PalBGR1024); // NI
 int  SizeSaveGIF(Surf *S); // NI
@@ -280,13 +279,13 @@ void OutLZW(void *OutBuffLZW,void *In,int LenIn); // NI
 int  SizeOutLZW(void *In,int LenIn,int ResHz); // NI
 
 // BMP
-int  LoadMemBMP(Surf *S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
-int  LoadBMP(Surf *S,const char *Fname,void *PalBGR1024);
+int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
+int  LoadBMP(Surf **S,const char *Fname,void *PalBGR1024);
 int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024);
 int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024); // save a 8bpp Surf into a 8bpp uncompressed BMP
 int  SizeSaveBMP(Surf *S); // total size in bytes of a 8bpp bmp saved Surf
-int  LoadMemBMP16(Surf *S,void *In,int SizeIn); // load a 24bpp uncompressed BMP into a 16bpp Surf
-int  LoadBMP16(Surf *S,const char *Fname);
+int  LoadMemBMP16(Surf **S,void *In,int SizeIn); // load a 24bpp uncompressed BMP into a 16bpp Surf
+int  LoadBMP16(Surf **S,const char *Fname);
 int  SaveMemBMP16(Surf *S,void *Out); // save  a 16bpp surf into a 24bpp uncompressed BMP
 int  SaveBMP16(Surf *S,const char *Fname);
 int  SizeSaveBMP16(Surf *S);

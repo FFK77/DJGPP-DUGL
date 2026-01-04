@@ -106,7 +106,7 @@
 		OR		EAX,EAX
 		SETL		BL
 		MOV		EBP,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
-		
+
 %%BcStBAv:	TEST		EDI,7
 		JZ		SHORT %%FPasStBAv ; +S
 		@AjAdNormB
@@ -483,7 +483,7 @@
 		MOV		CH,[ESI+EBX] ; read byte 6
 		@AjAdNormQ
 		MOV		CL,[ESI+EBX] ; read byte 7
-		
+
 		MOVD		EDI,mm1  ; restore EDI
                 BSWAP           ECX   ; ECX in the right order
                 MOVD            mm1,ECX ; second 4 byte to write
@@ -1077,7 +1077,7 @@
 		SHR		EDX,Prec
 		ADD		EBX,EBP
 %endmacro
-		
+
 %macro	@ClipDEGHLine	0
 		SUB		EAX,EBP    ; Col2-Col1
 		SHL		EAX,Prec
@@ -1190,7 +1190,7 @@
 		MOV		ESI,[YT1]      ; - 1
 		SHL 		EAX,Prec
 		IMUL		ESI,[SResH]    ; - 2
-		
+
 		OR		ECX,ECX
 		JZ		%%PDivPntPX
 		CDQ
@@ -1280,13 +1280,13 @@
                 MOVD		EDI,mm1  ; restore EDI
                 MOVD            mm2,ECX  ; second 4 bytes to write
 		PUNPCKLDQ	mm0,mm2
-                
+
 		MOVD		ECX,mm4 ; restore ECX
 		MOVQ		[EDI],mm0
 		DEC		ECX
 		LEA		EDI,[EDI+8]
 		JNZ		%%StoMMX
-		
+
 		MOVD		ECX,mm5
 		AND		ECX,BYTE 7
 		JZ		%%FinSHLine
@@ -1412,7 +1412,7 @@
 		IMUL		ESI,[SResH] ; - 2
 		SHL 		EAX,Prec
 		NEG		ESI	    ; - 3
-		
+
 		OR		ECX,ECX
 		JZ		%%PDivPntPX
 		CDQ
@@ -1534,7 +1534,7 @@
 %macro	@ClipFDegTextHLineNorm 0
 		SHL 		EAX,Prec
 		MOV		ESI,[YT1]      ; - 1'
-		
+
 		CMP		DWORD [Plus2],BYTE 0
 		JZ		%%PDivPPlusY
 		CDQ
@@ -1550,7 +1550,7 @@
 		NEG		ESI	       ; - 3'
 		SHL		EAX,Prec
 		ADD		ESI,[XT1]      ; - 4'
-		
+
 		CMP		DWORD [Plus2],BYTE 0
 		JZ		%%PDivPPlusX
 		CDQ
@@ -1628,13 +1628,13 @@
                 MOVD		EDI,mm1  ; restore EDI
                 MOVD            mm2,ECX  ; second 4 bytes to write
 		PUNPCKLDQ	mm0,mm2
-                
+
 		MOVD		ECX,mm4 ; restore ECX
 		MOVQ		[EDI],mm0
 		DEC		ECX
 		LEA		EDI,[EDI+8]
 		JNZ		%%StoMMX
-		
+
 		MOVD		ECX,mm5
 		AND		ECX,BYTE 7
 		JZ		%%FinSHLine
@@ -1654,7 +1654,7 @@
 		MOV		ESI,[YT1]   ; - 1
 		SHL		EAX,Prec
 		IMUL		ESI,[SResH] ; - 2
-		
+
 		CMP		DWORD [Plus2],BYTE 0
 		JZ		%%PDivPPlusY
 		CDQ
@@ -2177,7 +2177,7 @@
 %%ClcPntX:
 		XOR		EBP,EBP        ; Cpt Dbr Y
 		MOV		[PntPlusX],EAX
-		
+
 		MOV		EAX,[Col2]
 		SUB		EAX,[Col1]
 		SHL		EAX,Prec
@@ -2465,7 +2465,7 @@
 		ADD		EDX,EBP ;+[PntPlusX]
 		@DegB
 		MOV		CL,[EAX+EBX+_TbDegCol]  ; byte 3
-                
+
 		@AjAdDYZ
                 BSWAP           ECX  ; restore ECX bytes order
 		ADD		EDX,EBP ;+[PntPlusX]
@@ -2489,12 +2489,12 @@
                 BSWAP           ECX  ; restore ECX bytes order
                 MOVD            mm3,ECX  ; second 4 bytes to write
                 PUNPCKLDQ	mm0,mm3  ; 8 bytes to write
-		
+
                 MOVD		ECX,mm1  ; restore ECX
 		MOVQ		[EDI],mm0
 		DEC		ECX
 		LEA		EDI,[EDI+8]
-                
+
                 JNZ		%%StoMMX
 
 		MOVD		ECX,mm4
@@ -2651,7 +2651,7 @@
 		DEC		ECX
 		LEA		EDI,[EDI+8]
 		JNZ		%%StoMMX
-		
+
 		MOVD		ECX,mm4
 		AND		ECX,BYTE 7
 		JZ		%%FinSHLine
@@ -2856,7 +2856,7 @@
 		ADD		EDX,EBP ;+[PntPlusX]
 		@DegB
 		MOV		CL,[EAX+EBX+_TbDegCol]  ; byte 3
-                
+
 		@AjAdDYZ
                 BSWAP           ECX  ; restore ECX bytes order
 		ADD		EDX,EBP ;+[PntPlusX]
@@ -2880,7 +2880,7 @@
                 BSWAP           ECX  ; restore ECX bytes order
                 MOVD            mm3,ECX  ; second 4 bytes to write
                 PUNPCKLDQ	mm0,mm3  ; 8 bytes to write
-		
+
                 MOVD		ECX,mm1  ; restore ECX
 		MOVQ		[EDI],mm0
 		DEC		ECX
@@ -2991,7 +2991,7 @@
 %%ClcPntX:
 		XOR		EBP,EBP        ; Cpt Dbr Y
 		MOV		[PntPlusX],EAX
-		
+
 		MOV		EAX,[Col2]
 		SUB		EAX,[Col1]
 		SHL		EAX,Prec
@@ -3310,7 +3310,7 @@
 		IMUL		EBX,EBP ;[PntPlusX] axe Y montant
 		MOVD		mm5,EAX
 		MOV		EDX,EBX
-		
+
 		ADD		ESI,[XT1]
 		ADD		ESI,[Svlfb]
 		OR		EBP,EBP			; SAR
@@ -3412,14 +3412,16 @@
 		CDQ
 		IDIV		ECX
 		JMP		SHORT %%ClcPntD
-%%PClcPntD:	XOR		EAX,EAX
+%%PClcPntD:
+		XOR		EAX,EAX
 %%ClcPntD:
 		MOVD		mm2,EAX
 		INC		ECX
 		MOV		EAX,EBP
 		SHL		EAX,Prec
 		MOVD		mm5,EAX
-%%BcStBAv:	TEST		EDI,7
+%%BcStBAv:
+		TEST		EDI,7
 		JZ		%%FPasStBAv
 		@EFF_DEG_B
 		DEC		ECX
@@ -3447,16 +3449,17 @@
 		MOVD		mm0,EAX
 		PUNPCKLDQ	mm1,mm0
 		MOVQ		[EDI],mm1
-		
+
 		DEC		ECX
 		LEA		EDI,[EDI+8]
 		JNZ		%%StoMMX
-		
+
 		POP		ECX
 		AND		ECX,BYTE 7
 		JZ		%%FinSHLine
 %%StBAp:
-%%BcStBAp:	@EFF_DEG_B
+%%BcStBAp:
+		@EFF_DEG_B
 		DEC		ECX
 		STOSB
 		JNZ		%%BcStBAp
@@ -3490,7 +3493,7 @@
 		PADDD		mm5,mm2
 		MOV		%1,[EBX+ESI+_TbDegCol]
 %endmacro
-		
+
 
 %macro	@ClipEFF_DEGHLine 0
 		SUB		EAX,EBP
@@ -3498,19 +3501,21 @@
 		CMP		DWORD [Plus2],BYTE 0
 		JZ		%%PDivPPlusC
 		CDQ
-		IDIV		DWORD [Plus2]
+		IDIV	DWORD [Plus2]
 		JMP		SHORT %%DivPPlusC
-%%PDivPPlusC:	XOR		EAX,EAX
+%%PDivPPlusC:
+		XOR		EAX,EAX
 %%DivPPlusC:
 		MOV		EBX,[Plus]
-		MOVD		mm2,EAX
-		IMUL		EBX,EAX
+		MOVD	mm2,EAX
+		IMUL	EBX,EAX
 
 		MOV		EAX,EBP
 		SHL		EAX,Prec
 		ADD		EAX,EBX
-		MOVD		mm5,EAX
-%%BcStBAv:	TEST		EDI,7
+		MOVD	mm5,EAX
+%%BcStBAv:
+		TEST	EDI,7
 		JZ		%%FPasStBAv
 		@EFF_DEG_B
 		DEC		ECX
@@ -3538,11 +3543,11 @@
 		MOVD		mm0,EAX
 		PUNPCKLDQ	mm1,mm0
 		MOVQ		[EDI],mm1
-		
+
 		DEC		ECX
 		LEA		EDI,[EDI+8]
 		JNZ		%%StoMMX
-		
+
 		POP		ECX
 		AND		ECX,BYTE 7
 		JZ		%%FinSHLine
@@ -3562,7 +3567,8 @@
 %macro	@EFF_COLCONVHLine 0
 		MOVD		EBX,mm5
 		XOR		EDX,EDX
-%%BcStBAv:	TEST		EDI,7
+%%BcStBAv:
+		TEST		EDI,7
 		JZ		%%FPasStBAv
 		MOV		DL,[EDI]
 		MOV		AL,[EDX+EBX]
@@ -3612,13 +3618,13 @@
 %macro @EFF_COLCONVD 0	; AL AH DL DH
 		MOVZX		ESI,AL
 		MOVZX		EBP,DL
-		MOV		AL,[EBX+ESI]
-		MOV		DL,[EBX+EBP]
+		MOV			AL,[EBX+ESI]
+		MOV			DL,[EBX+EBP]
 		MOVZX		ESI,AH
 		MOVZX		EBP,DH
-		MOV		AH,[EBX+ESI]
-		MOV		DH,[EBX+EBP]
-		SHL		EAX,16
+		MOV			AH,[EBX+ESI]
+		MOV			DH,[EBX+EBP]
+		SHL			EAX,16
 		SHRD		EAX,EDX,16
 %endmacro
 

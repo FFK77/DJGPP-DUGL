@@ -1263,22 +1263,24 @@ _SensPoly:
 		RETURN
 
 ;****************************************************************************
-;structure de PtrlistPt
-;0‚		  DWORD : n nombre de point
-;1‚.. n‚  DWORD : PtrP1(X1,Y1,Z1,XT1,YT1,DEG1)...PtrPn(Xn,Yn,Zn,XTn,YTn,DEGn)
-; TypePoly POLY_SOLID		= 0	CHAMPS UTILISER (X,Y)
-; TypePoly POLY_TEXT		= 1	CHAMPS UTILISER (X,Y,XT,YT)
-; TypePoly POLY_MASK_TEXT	= 2	CHAMPS UTILISER (X,Y,XT,YT)
-; TypePoly POLY_FLAT_DEG	= 3	CHAMPS UTILISER (X,Y,DEG)
-; TypePoly POLY_DEG		= 4	CHAMPS UTILISER (X,Y,DEG)
-; TypePoly POLY_FLAT_DEG_TEXT	= 5	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_MASK_FLAT_DEG_TEXT = 6	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_DEG_TEXT	= 7	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_MASK_DEG_TEXT	= 8	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_FDEG	= 9	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_DEG		= 10	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_COLCONV	= 11	CHAMPS UTILISER (X,Y)
-; FLAG :
+; struct of PtrlistPt
+; 0‚		  DWORD : n count of PtrPoint
+; 1‚.. n‚  DWORD : PtrP1(X1,Y1,Z1,XT1,YT1)...PtrPn(Xn,Yn,Zn,XTn,YTn)
+;****************************************************************************
+; TypePoly POLY_SOLID				= 0	 FIELDS USED (X,Y)
+; TypePoly POLY_TEXT				= 1	 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY_MASK_TEXT			= 2	 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY_FLAT_DEG			= 3	 FIELDS USED (X,Y,DEG)
+; TypePoly POLY_DEG		    		= 4	 FIELDS USED (X,Y,DEG)
+; TypePoly POLY_FLAT_DEG_TEXT		= 5	 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_MASK_FLAT_DEG_TEXT 	= 6	 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_DEG_TEXT			= 7	 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_MASK_DEG_TEXT		= 8	 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_EFF_FDEG			= 9	 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_EFF_DEG				= 10 FIELDS USED (X,Y,XT,YT,DEG)
+; TypePoly POLY_EFF_COLCONV			= 11 FIELDS USED (X,Y)
+;****************************************************************************
+; FLAGS :
 POLY_FLAG_DBL_SIDED	EQU	0x80000000
 DEL_POLY_FLAG_DBL_SIDED	EQU	0x7FFFFFFF
 
@@ -1848,26 +1850,18 @@ _Clear16:
 
 
 ;****************************************************************************
-;structure de PtrlistPt
-;0‚		  DWORD : n nombre de point
-;1‚.. n‚  DWORD : PtrP1(X1,Y1,Z1,XT1,YT1,DEG1)...PtrPn(Xn,Yn,Zn,XTn,YTn,DEGn)
-; TypePoly POLY16_SOLID		= 0	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_TEXT		= 1	CHAMPS UTILISER (X,Y,XT,YT)
-; TypePoly POLY16_MASK_TEXT	= 2	CHAMPS UTILISER (X,Y,XT,YT)
-; TypePoly POLY_FLAT_DEG	= 3	CHAMPS UTILISER (X,Y,DEG)
-; TypePoly POLY_DEG		= 4	CHAMPS UTILISER (X,Y,DEG)
-; TypePoly POLY_FLAT_DEG_TEXT	= 5	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_MASK_FLAT_DEG_TEXT = 6	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_DEG_TEXT	= 7	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_MASK_DEG_TEXT	= 8	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_FDEG	= 9	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_DEG		= 10	CHAMPS UTILISER (X,Y,XT,YT,DEG)
-; TypePoly POLY_EFF_COLCONV	= 11	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_RGB		= 12	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_SOLID_BLND	= 13	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_TEXT_BLND	= 14	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_MASK_TEXT_BLND= 15	CHAMPS UTILISER (X,Y)
-; FLAG :
+;struct of PtrlistPt
+;0‚		  DWORD : n count of PtrPoint
+;1‚.. n‚  DWORD : PtrP1(X1,Y1,Z1,XT1,YT1)...PtrPn(Xn,Yn,Zn,XTn,YTn)
+;****************************************************************************
+; TypePoly POLY16_SOLID				= 0	FIELDS USED (X,Y)
+; TypePoly POLY16_TEXT				= 1	FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_MASK_TEXT			= 2	FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_SOLID_BLND		= 13	CHAMPS UTILISER (X,Y)
+; TypePoly POLY16_TEXT_BLND			= 14	CHAMPS UTILISER (X,Y)
+; TypePoly POLY16_MASK_TEXT_BLND	= 15	CHAMPS UTILISER (X,Y)
+;****************************************************************************
+; FLAGS :
 POLY_FLAG_DBL_SIDED16		EQU	0x80000000
 DEL_POLY_FLAG_DBL_SIDED16	EQU	0x7FFFFFFF
 
@@ -2111,106 +2105,106 @@ _Poly16:
 SECTION	.data
 ALIGN 32
 _CurSurf:
-_vlfb		DD	0
-_ResH 		DD	0
-_ResV 		DD	0
-_MaxX 		DD	0
-_MaxY 		DD	0
-_MinX 		DD	0
-_MinY 		DD	0
-_OrgY		DD	0;-----------------------
-_OrgX		DD	0
-_SizeSurf	DD	0
-_OffVMem	DD	0
-_rlfb		DD	0
-_BitsPixel  DD  0
-_ScanLine   DD	0
-_Mask  		DD	0
-_Resv2  	DD	0 ;-----------------------
+_vlfb			DD	0
+_ResH 			DD	0
+_ResV 			DD	0
+_MaxX 			DD	0
+_MaxY 			DD	0
+_MinX 			DD	0
+_MinY 			DD	0
+_OrgY			DD	0;-----------------------
+_OrgX			DD	0
+_SizeSurf		DD	0
+_OffVMem		DD	0
+_rlfb			DD	0
+_BitsPixel  	DD  0
+_ScanLine   	DD	0
+_Mask  			DD	0
+_Resv2  		DD	0 ;-----------------------
 ; source texture
 _SrcSurf:
-Svlfb		DD	0
-SResH		DD	0
-SResV		DD	0
-SMaxX		DD	0
-SMaxY		DD	0
-SMinX		DD	0
-SMinY		DD	0
-SOrgY		DD	0;-----------------------
-SOrgX		DD	0
-SSizeSurf	DD	0
-SOffVMem	DD	0
-Srlfb		DD	0
-SBitsPixel  DD  0
-SScanLine   DD	0
-SMask		DD	0
-SResv2  	DD	0;-----------------------
+Svlfb			DD	0
+SResH			DD	0
+SResV			DD	0
+SMaxX			DD	0
+SMaxY			DD	0
+SMinX			DD	0
+SMinY			DD	0
+SOrgY			DD	0;-----------------------
+SOrgX			DD	0
+SSizeSurf		DD	0
+SOffVMem		DD	0
+Srlfb			DD	0
+SBitsPixel  	DD  0
+SScanLine   	DD	0
+SMask			DD	0
+SResv2  		DD	0;-----------------------
 
-XP1		DD	0
-YP1		DD	0
-XP2		DD	0
-YP2		DD	0
-XP3		DD	0
-YP3		DD	0
-Plus		DD	0
-clr		DD	0;-----------------------
-XT1		DD	0
-YT1		DD	0
-XT2		DD	0
-YT2		DD	0
-Col1		DD	0
-Col2		DD	0
-revCol		DD	0
+XP1				DD	0
+YP1				DD	0
+XP2				DD	0
+YP2				DD	0
+XP3				DD	0
+YP3				DD	0
+Plus			DD	0
+clr				DD	0;-----------------------
+XT1				DD	0
+YT1				DD	0
+XT2				DD	0
+YT2				DD	0
+Col1			DD	0
+Col2			DD	0
+revCol			DD	0
 _CurViewVSurf	DD	0;-----------------------
-PMaxX		DD	0
-PMaxY		DD	0
-PMinX		DD	0
-PMinY		DD	0
-NbPPoly		DD	0
-DebYPoly	DD	0
-FinYPoly	DD	0
-PType		DD	0;-----------------------
-PType2		DD	0
-PPtrListPt	DD	0
-SSSurf		DD	0
-PntPlusX	DD	0
-PntPlusY	DD	0
-PlusX		DD	0
-PlusY		DD	0
-Plus2		DD	0;-----------------------
+PMaxX			DD	0
+PMaxY			DD	0
+PMinX			DD	0
+PMinY			DD	0
+NbPPoly			DD	0
+DebYPoly		DD	0
+FinYPoly		DD	0
+PType			DD	0;-----------------------
+PType2			DD	0
+PPtrListPt		DD	0
+SSSurf			DD	0
+PntPlusX		DD	0
+PntPlusY		DD	0
+PlusX			DD	0
+PlusY			DD	0
+Plus2			DD	0;-----------------------
 _CurFONT:
-_FntPtr		DD	0
-_FntHaut	DB	0
-_FntDistLgn	DB	0
-_FntLowPos	DB	0
-_FntHighPos	DB	0
-_FntSens	DB	0
-_FntTab		DB	0,0,0 ; 2 DB reserv
-_FntX		DD	0
-_FntY		DD	0
-_FntCol		DD	0
-FntResv		DD	0,0;---------------------
-ChHaut		DD	0
-ChLarg		DD	0
-ChPlus		DD	0
-ChPlusX		DD	0
-ChPlusLgn	DD	0
-ChAvPlus	DD	0
-ChApPlus	DD	0
-ChAvDecal	DB	0
-ChNbBitDat	DB	0
-ChResvW		DW	0;-----------------------
-Temp		DD	0,0
+_FntPtr			DD	0
+_FntHaut		DB	0
+_FntDistLgn		DB	0
+_FntLowPos		DB	0
+_FntHighPos		DB	0
+_FntSens		DB	0
+_FntTab			DB	0,0,0 ; 2 DB reserv
+_FntX			DD	0
+_FntY			DD	0
+_FntCol			DD	0
+FntResv			DD	0,0;---------------------
+ChHaut			DD	0
+ChLarg			DD	0
+ChPlus			DD	0
+ChPlusX			DD	0
+ChPlusLgn		DD	0
+ChAvPlus		DD	0
+ChApPlus		DD	0
+ChAvDecal		DB	0
+ChNbBitDat		DB	0
+ChResvW			DW	0;-----------------------
+Temp			DD	0,0
 QMulSrcBlend	DD	0,0
 QMulDstBlend	DD	0,0
-PlusCol		DD	0
-PtrTbDegCol	DD	0;-----------------------
+PlusCol			DD	0
+PtrTbDegCol		DD	0;-----------------------
 _PtrTbColConv	DD	0
 PntInitCPTDbrd	DD	0,((1<<Prec)-1)
-Temp2		DD	0
-MaskB_RGB16	DD	0x1f	 ; blue bits 0->4
-MaskG_RGB16	DD	0x3f<<5  ; green bits 5->10
-MaskR_RGB16	DD	0x1f<<11 ; red bits 11->15
+Temp2			DD	0
+MaskB_RGB16		DD	0x1f	 ; blue bits 0->4
+MaskG_RGB16		DD	0x3f<<5  ; green bits 5->10
+MaskR_RGB16		DD	0x1f<<11 ; red bits 11->15
 RGB16_PntNeg	DD	((1<<Prec)-1) ;----------
 Mask2B_RGB16	DD	0x1f,0x1f ; blue bits 0->4
 Mask2G_RGB16	DD	0x3f<<5,0x3f<<5  ; green bits 5->10 ;----------
@@ -2234,34 +2228,34 @@ RGBFinMask_GII	DD	((1<<Prec)-1),0,0,0
 RGBFinMask_III	DD	0,0,0,0
 ; BLENDING 16BPP ----------
 QBlue16Mask		DW	CMaskB_RGB16,CMaskB_RGB16,CMaskB_RGB16,CMaskB_RGB16
-QGreen16Mask		DW	CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16
+QGreen16Mask	DW	CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16
 QRed16Mask		DW	CMaskR_RGB16,CMaskR_RGB16,CMaskR_RGB16,CMaskR_RGB16
-QBlue16Blend		DD	0,0
-QGreen16Blend		DD	0,0
+QBlue16Blend	DD	0,0
+QGreen16Blend	DD	0,0
 QRed16Blend		DD	0,0
 
 ;* 8bpp poly proc****
 InFillPolyProc:	DD	InFillSOLID,InFillTEXT,InFillMASK_TEXT,InFillFLAT_DEG,InFillDEG
-		DD	InFillFLAT_DEG_TEXT,InFillMASK_FLAT_DEG_TEXT
-		DD	InFillDEG_TEXT,InFillMASK_DEG_TEXT,InFillEFF_FDEG
-		DD	InFillEFF_DEG,InFillEFF_COLCONV
+				DD	InFillFLAT_DEG_TEXT,InFillMASK_FLAT_DEG_TEXT
+				DD	InFillDEG_TEXT,InFillMASK_DEG_TEXT,InFillEFF_FDEG
+				DD	InFillEFF_DEG,InFillEFF_COLCONV
 ClFillPolyProc:	DD	ClipFillSOLID,ClipFillTEXT,ClipFillMASK_TEXT,ClipFillFLAT_DEG,ClipFillDEG
-		DD	ClipFillFLAT_DEG_TEXT,ClipFillMASK_FLAT_DEG_TEXT
-		DD	ClipFillDEG_TEXT,ClipFillMASK_DEG_TEXT
-		DD	ClipFillEFF_FDEG,ClipFillEFF_DEG,ClipFillEFF_COLCONV
+				DD	ClipFillFLAT_DEG_TEXT,ClipFillMASK_FLAT_DEG_TEXT
+				DD	ClipFillDEG_TEXT,ClipFillMASK_DEG_TEXT
+				DD	ClipFillEFF_FDEG,ClipFillEFF_DEG,ClipFillEFF_COLCONV
 
 ;* 16bpp poly proc****
 InFillPolyProc16:
-		DD	InFillSOLID16,InFillTEXT16,InFillMASK_TEXT16,InFillFLAT_DEG,InFillDEG
-		DD	InFillFLAT_DEG_TEXT,InFillMASK_FLAT_DEG_TEXT
-		DD	InFillDEG_TEXT,InFillMASK_DEG_TEXT,InFillEFF_FDEG
-		DD	InFillEFF_DEG,InFillEFF_COLCONV
-		DD	InFillRGB16,InFillSOLID_BLND16,InFillTEXT_BLND16,InFillMASK_TEXT_BLND16
+				DD	InFillSOLID16,InFillTEXT16,InFillMASK_TEXT16,InFillFLAT_DEG,InFillDEG
+				DD	InFillFLAT_DEG_TEXT,InFillMASK_FLAT_DEG_TEXT
+				DD	InFillDEG_TEXT,InFillMASK_DEG_TEXT,InFillEFF_FDEG
+				DD	InFillEFF_DEG,InFillEFF_COLCONV
+				DD	InFillRGB16,InFillSOLID_BLND16,InFillTEXT_BLND16,InFillMASK_TEXT_BLND16
 
 ClFillPolyProc16:
-		DD	ClipFillSOLID16,ClipFillTEXT16,ClipFillMASK_TEXT16,ClipFillFLAT_DEG,ClipFillDEG
-		DD	ClipFillFLAT_DEG_TEXT,ClipFillMASK_FLAT_DEG_TEXT
-		DD	ClipFillDEG_TEXT,ClipFillMASK_DEG_TEXT
-		DD	ClipFillEFF_FDEG,ClipFillEFF_DEG,ClipFillEFF_COLCONV
-		DD	ClipFillRGB16,ClipFillSOLID_BLND16,ClipFillTEXT_BLND16,ClipFillMASK_TEXT_BLND16
+				DD	ClipFillSOLID16,ClipFillTEXT16,ClipFillMASK_TEXT16,ClipFillFLAT_DEG,ClipFillDEG
+				DD	ClipFillFLAT_DEG_TEXT,ClipFillMASK_FLAT_DEG_TEXT
+				DD	ClipFillDEG_TEXT,ClipFillMASK_DEG_TEXT
+				DD	ClipFillEFF_FDEG,ClipFillEFF_DEG,ClipFillEFF_COLCONV
+				DD	ClipFillRGB16,ClipFillSOLID_BLND16,ClipFillTEXT_BLND16,ClipFillMASK_TEXT_BLND16
 

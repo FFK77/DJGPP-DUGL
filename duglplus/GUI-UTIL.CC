@@ -42,7 +42,7 @@ void MessageBox(WinHandler *MsgBoxWH,char *NmWin, char *Msg,
    if (CptMsgBx>=MaxMsgBx) return;
    int MaxLargButt=LargText(NmOk),largText,HautMsgBox=FntHaut*8;
    int NbButt=1,LargButtons;
-   int YPosMsgBox=MsgBoxWH->S.ResV/2-FntHaut*4,XPosMsgBox;
+   int YPosMsgBox=MsgBoxWH->S->ResV/2-FntHaut*4,XPosMsgBox;
    int XPosButton;
    int LargMsg=LargText(Msg)+30,LargMsgBox;
    View V1;
@@ -57,7 +57,7 @@ void MessageBox(WinHandler *MsgBoxWH,char *NmWin, char *Msg,
    LargMsgBox=(LargMsgBox>=LargMsg)?LargMsgBox:LargMsg;
 
    if (LargMsgBox<150) LargMsgBox=150;
-   XPosMsgBox=MsgBoxWH->S.ResH/2-(LargMsgBox/2);
+   XPosMsgBox=MsgBoxWH->S->ResH/2-(LargMsgBox/2);
    XPosButton=(LargMsgBox-6)/2-(LargButtons/2);
 
    TbMsgBox[CptMsgBx].ClickOk=clickOk;
@@ -152,7 +152,7 @@ void FilesBox(WinHandler *FilesBoxWH,char *NmWin,
    char *nmOk,*nmCancel,Drv[4]="a:/";
    View V1;
    bzero(&FileBox,sizeof(FilesBoxInfo));
-   GetSurfView(&FilesBoxWH->S,&V1);
+   GetSurfView(FilesBoxWH->S,&V1);
 
    FileBox.bSortFilesDirs = SortFilesDirs;
    FileBox.bSortAsc = sortAsc;

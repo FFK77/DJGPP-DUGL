@@ -37,7 +37,7 @@ my_error_exit (j_common_ptr cinfo)
 }
 
 
-int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
+int GetJpegImg(Surf **S,j_decompress_ptr cinfo) {
    JSAMPROW row_pointer[1];
    int irow,iscan;
    short *outScan;
@@ -72,7 +72,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
      for (iscan=0;cinfo->output_scanline<cinfo->image_height;iscan++) {
 
        jpeg_read_scanlines(cinfo,row_pointer, 1);
-       outScan=(short*)(S->rlfb+(S->ScanLine*iscan));
+       outScan=(short*)((*S)->rlfb+((*S)->ScanLine*iscan));
        BfPos=0;
        // RGB 24 -> BGR 16 (565)
        for (irow=0;irow<cinfo->image_width;irow++) {
@@ -88,7 +88,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
      for (iscan=0;cinfo->output_scanline<cinfo->image_height;iscan++) {
 
        jpeg_read_scanlines(cinfo,row_pointer, 1);
-       outScan=(short*)(S->rlfb+(S->ScanLine*iscan));
+       outScan=(short*)((*S)->rlfb+((*S)->ScanLine*iscan));
        // gray 8bpp -> BGR 16 (565)
        for (irow=0;irow<cinfo->image_width;irow++) {
          cgray=ScanPtr[irow];
@@ -106,7 +106,7 @@ int GetJpegImg(Surf *S,j_decompress_ptr cinfo) {
 
 }
 
-int LoadJPG16(Surf *S,char *filename) {
+int LoadJPG16(Surf **S,char *filename) {
    FILE *jpgFile; // source
    int retGet;
    // init jpeg
@@ -194,7 +194,7 @@ void jpeg_memory_src(j_decompress_ptr cinfo, unsigned char const *buffer, size_t
         src->pub.bytes_in_buffer = bufsize;
 }
 
-int LoadMemJPG16(Surf *S,void *buffJpeg,int sizeBuff) {
+int LoadMemJPG16(Surf **S,void *buffJpeg,int sizeBuff) {
    // init jpeg
    struct jpeg_decompress_struct cinfo;
 //   struct jpeg_error_mgr jerr;
@@ -304,6 +304,7 @@ int SaveJPG16(Surf *S,char *filename,int quality) {
    jpeg_destroy_compress(&cinfo);
    free(row_pointer[0]);
    fclose(jpgFile);
+   return 1;
 }
 
 

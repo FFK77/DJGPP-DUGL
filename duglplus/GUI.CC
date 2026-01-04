@@ -24,7 +24,7 @@ WinHandler::WinHandler(int resh,int resv,char BitsPixel,int backCol,void *PalBGR
 WinHandler::~WinHandler() {
    if (WinList!=NULL) delete WinList;
    if (FlyList!=NULL) delete FlyList;
-   if (S.OffVMem==-1) DestroySurf(&S);
+   DestroySurf(S);
    if (m_GraphCtxt!=NULL) delete m_GraphCtxt;
 }
 
@@ -97,7 +97,7 @@ void WinHandler::Scan() {
 void WinHandler::Draw() {
    Surf SaveSurf;
    GetSurf(&SaveSurf);
-   SetSurf(&S);
+   SetSurf(S);
    m_GraphCtxt->Clear(BackCol);
    SetSurf(&SaveSurf);
    FREE_MMX();
@@ -109,10 +109,10 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
    NodeFly *FlyParcNode;
    View V1;
 
-   if (x1>S.MaxX || x2<S.MinX || y1>S.MaxY || y2<S.MinY) return;
+   if (x1>S->MaxX || x2<S->MinX || y1>S->MaxY || y2<S->MinY) return;
    GetSurf(&SaveSurf);
-   SetSurf(&S);
-   GetSurfView(&S,&V1);
+   SetSurf(S);
+   GetSurfView(S,&V1);
    V1.MinX=x1; V1.MinY=y1;
    V1.MaxX=x2; V1.MaxY=y2;
    SetSurfInView(&CurSurf,&V1);
@@ -127,7 +127,7 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
 	         ParcNode->Item->Y2<y1 || ParcNode->Item->Y>y2 ))
 	    if (ParcNode->Item->Visible) {
 	      SetSurfView(&CurSurf,&V1);
-	      m_GraphCtxt->PutSurf(&ParcNode->Item->S,ParcNode->Item->X,
+	      m_GraphCtxt->PutSurf(ParcNode->Item->S,ParcNode->Item->X,
 	      	      ParcNode->Item->Y,NORM_PUT);
 	    }
         ParcNode=ParcNode->Next;
@@ -138,7 +138,7 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
             ParcNode->Item->Y2<y1 || ParcNode->Item->Y>y2 ))
        if (ParcNode->Item->Visible) {
          SetSurfView(&CurSurf,&V1);
-         m_GraphCtxt->PutSurf(&ParcNode->Item->S,ParcNode->Item->X,
+         m_GraphCtxt->PutSurf(ParcNode->Item->S,ParcNode->Item->X,
 	          ParcNode->Item->Y,NORM_PUT);
        }
    }
@@ -162,7 +162,7 @@ void WinHandler::DrawSurf(Surf *DestSurf) {
    Surf SaveSurf;
    GetSurf(&SaveSurf);
    SetSurf(DestSurf);
-   m_GraphCtxt->PutSurf(&S,0,0,NORM_PUT);
+   m_GraphCtxt->PutSurf(S,0,0,NORM_PUT);
    if (CurWinNode) CurWinNode->Item->DrawSurf(DestSurf);
    SetSurf(&SaveSurf);
    FREE_MMX();
@@ -186,7 +186,7 @@ void WinHandler::DelAllFly() {
 MainWin::MainWin(int XWin,int YWin,int Larg,int Haut,char *label,
          WinHandler *WH) {
    if (Haut>GetMaxResVSetSurf()) return;
-   if (!CreateSurf(&S,Larg,Haut,WH->S.BitsPixel)) return;
+   if (!CreateSurf(&S,Larg,Haut,WH->S->BitsPixel)) return;
    ChList = new List;
    if (label) Label=label;
    else Label="";
@@ -204,8 +204,8 @@ MainWin::MainWin(int XWin,int YWin,int Larg,int Haut,char *label,
    EchapNode=DefNode=CurFocusNode=NULL;
    VActiv.OrgX=VActiv.OrgY=3;
    VActiv.MinX=VActiv.MinY=0;
-   VActiv.MaxX=S.ResH-7;
-   VActiv.MaxY=S.ResV-11-FntHaut;
+   VActiv.MaxX=S->ResH-7;
+   VActiv.MaxY=S->ResV-11-FntHaut;
    MainWin::Draw();
    if (Focus) MWWinHand->Redraw(X,Y,X2,Y2);
 }
@@ -215,7 +215,7 @@ MainWin::~MainWin() {
    MWWinHand->WinList->Delete(MWNode);
    if (MWNode==MWWinHand->CurWinNode) {
      MWWinHand->CurWinNode=NULL; m_GraphCtxt->WinStopScan=1; }
-   if (S.OffVMem==-1) DestroySurf(&S);
+   DestroySurf(S);
    MWWinHand->Redraw(X,Y,X2,Y2);
 }
 
@@ -286,7 +286,7 @@ void MainWin::Draw() {
 
    GetSurf(&SaveSurf);
 
-   SetSurf(&S);
+   SetSurf(S);
    m_GraphCtxt->Clear(m_GraphCtxt->WinGris);
    m_GraphCtxt->CadWin(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY);
 
@@ -338,7 +338,7 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
    if (x1>VActiv.MaxX || x2<VActiv.MinX || y1>VActiv.MaxY || y2<VActiv.MinY)
      return;
    GetSurf(&SaveSurf);
-   SetSurf(&S);
+   SetSurf(S);
    SetSurfView(&CurSurf,&VActiv);
    V1=VActiv;
    V1.MinX=x1; V1.MinY=y1;
@@ -680,7 +680,7 @@ void ContBox::Draw() {
    int lgTxt=LargText(Label.StrPtr);
 
    GetSurf(&SaveSurf);
-   SetSurf(&Main->S);
+   SetSurf(Main->S);
    SetSurfView(&CurSurf,&Main->VActiv);
 
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinGris);
@@ -963,7 +963,7 @@ ImgButton::ImgButton(int x1,int y1,int x2,int y2,MainWin *Father,Surf *img,
    CanDefault=1;
    Click=NULL;
    // img should be with the same bpp as the winHandler
-   if (img!=NULL && img->BitsPixel==Main->MWWinHand->S.BitsPixel) {
+   if (img!=NULL && img->BitsPixel==Main->MWWinHand->S->BitsPixel) {
      ImgBlit=btype;
      m_Img=img;
      SetOrgSurf(m_Img,0,0); // force origin to left, bottom
@@ -1454,7 +1454,7 @@ void GraphBox::UnsetFocus() {
 }
 
 void GraphBox::SetView() {
-   SetSurf(&Main->S);
+   SetSurf(Main->S);
    SetSurfView(&CurSurf,MyVActiv);
    SetSurfInView(&CurSurf,&VGraphBox);
    FREE_MMX();

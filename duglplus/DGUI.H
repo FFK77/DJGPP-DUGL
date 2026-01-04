@@ -246,7 +246,7 @@ public:
 class WinHandler {
    friend class MainWin;
 public:
-   Surf S;
+   Surf *S;
    CGraphContext *m_GraphCtxt;
    ListWin *WinList;
    ListFly *FlyList;
@@ -284,7 +284,7 @@ public:
    Node *CurFocusNode,*DefNode,*EchapNode;
    int  X,Y,X2,Y2;
    int LargHz,HautVt;
-   Surf S;
+   Surf *S;
    View VActiv;
    unsigned int AsciiFLAG,KeyFLAG;
    unsigned char Ascii,Key;

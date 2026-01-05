@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="duglview" />
+		<Option title="duglplay" />
 		<Option pch_mode="2" />
 		<Option compiler="djgpp_gnu_gcc_compiler" />
 		<Build>
 			<Target title="Debug">
-				<Option output="duglview" prefix_auto="1" extension_auto="1" />
+				<Option output="duglplay" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="djgpp_gnu_gcc_compiler" />
@@ -22,7 +22,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="duglview" prefix_auto="1" extension_auto="1" />
+				<Option output="duglplay" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="djgpp_gnu_gcc_compiler" />
@@ -48,12 +48,17 @@
 		<Linker>
 			<Add library="dugl" />
 			<Add library="duglplus" />
-			<Add library="jpeg" />
-			<Add library="png" />
 			<Add library="z" />
+			<Add library="bmpeg" />
+			<Add library="theora" />
+			<Add library="theoradec" />
+			<Add library="vorbis" />
+			<Add library="ogg" />
 		</Linker>
-		<Unit filename="duglview.cc" />
-		<Unit filename="duglview.cfg" />
+		<Unit filename="PARAM.MAC" />
+		<Unit filename="duglplay.cc" />
+		<Unit filename="duglplay.cfg" />
+		<Unit filename="yuv2rgb.asm" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

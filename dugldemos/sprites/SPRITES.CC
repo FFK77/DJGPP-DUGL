@@ -13,7 +13,7 @@
 #include <string.h>
 #include <sys/movedata.h>
 #include <sys/segments.h>
-#include <dugl/dugl.h>
+#include <dugl.h>
 
 typedef struct {
   int x,  // pos x
@@ -39,13 +39,13 @@ int i,j; // counters
 View SpritesView = { 0,0,ScrResH-1,ScrResV-1,0,40 },
      TextView = { 0,0,ScrResH-1,39,0,0 },
      AllView = { 0,0,ScrResH-1,ScrResV-1,0,0 };
-     
+
 // *** memory suface of the Sprites ****************************
-Surf ana1,  // sprites of the man
-     chat1, // cat
-     balleChat1;  // ball of the cat
+Surf *ana1,  // sprites of the man
+     *chat1, // cat
+     *balleChat1;  // ball of the cat
 // *** memory surf rendering
-Surf rendSurf;
+Surf *rendSurf;
 int toggleMemRender = 1;
 // synch buffer - to compute fps
 char SynchBuff[SIZE_SYNCH_BUFF];
@@ -77,134 +77,134 @@ int main(int argc,char *argv[])
 	if (!LoadFONT(&F1,"hello.chr")) {
 	  printf("hello.chr introuvable\n"); exit(-1); }
 
-	if (!InstallTimer(300))
+	if (!DgInstallTimer(300))
 	  { CloseVesa(); printf("Timer error\n"); exit(-1); }
-	if (!InstallKeyboard())
-	  { CloseVesa(); UninstallTimer(); UninstallMouse();
+	if (!InstallKeyboard()) {
+        CloseVesa(); DgUninstallTimer(); UninstallMouse();
 	    printf("Keyboard error\n");  exit(-1); }
 
-        // create mem Surf
-        if (!CreateSurf(&rendSurf, ScrResH,ScrResV,8)) {
-           CloseVesa(); UninstallTimer(); UninstallKeyboard();
+    // create mem Surf
+    if (!CreateSurf(&rendSurf, ScrResH,ScrResV,8)) {
+       CloseVesa(); DgUninstallTimer(); UninstallKeyboard();
 	   printf("no mem\n"); exit(-1);
-        }
+    }
         // init the video mode with 3 video pages
-	if (!InitVesaMode(ScrResH,ScrResV,8,3))
-	  { UninstallTimer(); UninstallKeyboard();
-	    printf("VESA mode error\n"); exit(-1); }
-            
+	if (!InitVesaMode(ScrResH,ScrResV,8,3)) {
+        DgUninstallTimer(); UninstallKeyboard();
+	    printf("VESA mode error\n"); exit(-1);
+    }
+
 
 	SetPalette(0,256,&Pal3d);
 
-        InitSynch(SynchBuff,NULL,60);
-	
+    InitSynch(SynchBuff,NULL,60);
+
 	SetFONT(&F1);
-        unsigned int OldTime = Time;
+        unsigned int OldTime = DgTime;
         NbSprites = 0;
         int PosSynch;
         InitSynch(SynchBuff,&PosSynch,CurModeVtFreq);
         // start the main loop
-        for (j=0;;j++) {
-           FREE_MMX();
-           // synchronise
-           Synch(SynchBuff,NULL);
-           // average time
-           float avgFps=SynchAverageTime(SynchBuff),
-                 lastFps=SynchLastTime(SynchBuff);
-           // set the index of the visible video surf
-           // wait retrace if fps is greater than the screen refresh /*(1.0/avgFps)>=CurModeVtFreq*/
-	   if (lastFps==0.0 || (1.0/lastFps)>=CurModeVtFreq)
-           {
-              // use VGA registers if available (better compatiblity)
+    for (j=0;;j++) {
+       FREE_MMX();
+        // synchronise
+       Synch(SynchBuff,NULL);
+       // average time
+       float avgFps=SynchAverageTime(SynchBuff),
+             lastFps=SynchLastTime(SynchBuff);
+       // set the index of the visible video surf
+       // wait retrace if fps is greater than the screen refresh /*(1.0/avgFps)>=CurModeVtFreq*/
+	   if (lastFps==0.0 || (1.0/lastFps)>=CurModeVtFreq) {
+            // use VGA registers if available (better compatiblity)
               if (CurMode.VModeFlag|VMODE_VGA) {
                 ViewSurf(j%3);//ViewSurf(0);
-	        WaitRetrace(); // VGA wait retrace
+                WaitRetrace(); // VGA wait retrace
               }
               else
                 ViewSurfWaitVR(j%3);//ViewSurfWaitVR(0);
-           }
-           else
+        }
+        else
              ViewSurf(j%3);//ViewSurf(0);
 
 
            // set the current active surface for drawing
-           if (!toggleMemRender)
-	     SetSurf(&VSurf[(j+1)%3]);
-           else
-             SetSurf(&rendSurf);
+        if (!toggleMemRender)
+            SetSurf(&VSurf[(j+1)%3]);
+        else
+             SetSurf(rendSurf);
 
-           // clear all the current Surf, does not care of any view
-           Clear(noir); // clear with black
-           // create a screenshot
-           // tab + ctrl + shift
-           if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
-              SavePCX(&VSurf[j%3],"sprites.pcx",&Pal3d);
-           // set the view of the sprites for the current drawing surf
-           SetSurfRView(&CurSurf, &SpritesView);
-           // add a new sprite if we have not reached the max
-           if (NbSprites < MAX_SPRITES) {
-              Sprites[NbSprites].x = 0;
-              Sprites[NbSprites].y = random()%300+20;
-              Sprites[NbSprites].xspeed = random()%10;
-              Sprites[NbSprites].type = random()%3;
-              NbSprites++; // increase the number of sprites
-           }
-           // draw all the available sprites
-           for (i=0;i< NbSprites;i++) {
+        // clear all the current Surf, does not care of any view
+        Clear(noir); // clear with black
+       // create a screenshot
+       // tab + ctrl + shift
+       if (IsKeyDown(0xf) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
+          SavePCX(&VSurf[j%3],"sprites.pcx",&Pal3d);
+       // set the view of the sprites for the current drawing surf
+       SetSurfView(&CurSurf, &SpritesView);
+       // add a new sprite if we have not reached the max
+       if (NbSprites < MAX_SPRITES) {
+          Sprites[NbSprites].x = 0;
+          Sprites[NbSprites].y = random()%300+20;
+          Sprites[NbSprites].xspeed = random()%10;
+          Sprites[NbSprites].type = random()%3;
+          NbSprites++; // increase the number of sprites
+       }
+       // draw all the available sprites
+       for (i=0;i< NbSprites;i++) {
              Surf *mySprite = NULL;
              int SpriteDType = INV_HZ_PUT;
              // who is our sprite ?
              switch  (Sprites[i].type) {
-               case 0 : mySprite = &ana1; break;
-               case 1 : mySprite = &chat1; break;
-               case 2 : mySprite = &balleChat1;
+               case 0 : mySprite = ana1; break;
+               case 1 : mySprite = chat1; break;
+               case 2 : mySprite = balleChat1;
              };
              // the sprite will be draw inversed horizontally if going back
              if (Sprites[i].xspeed<0) SpriteDType = NORM_PUT;
              if (mySprite!=NULL)
                PutMaskSurf(mySprite,Sprites[i].x,Sprites[i].y,SpriteDType);
-           }
-           // increase pos of the sprites
-           for (i=0;i< NbSprites;i++) {
-             Sprites[i].x+=Sprites[i].xspeed;
-             if (Sprites[i].x>=CurSurf.MaxX || Sprites[i].x<=CurSurf.MinX)
-               Sprites[i].xspeed = -Sprites[i].xspeed;
-           }
-           // display text
-           SetSurfRView(&CurSurf, &TextView);
-           ClearText(); // clear test position to upper left
-           SetTextCol(blanc);
-           char text[100];
-           
-           FREE_MMX();
-           sprintf(text,"Sprites %04i, fps %03i, screen refresh %03iHz",NbSprites,
+        }
+       // increase pos of the sprites
+       for (i=0;i< NbSprites;i++) {
+         Sprites[i].x+=Sprites[i].xspeed;
+         if (Sprites[i].x>=CurSurf.MaxX || Sprites[i].x<=CurSurf.MinX)
+           Sprites[i].xspeed = -Sprites[i].xspeed;
+       }
+        // display text
+        SetSurfView(&CurSurf, &TextView);
+        ClearText(); // clear test position to upper left
+        SetTextCol(blanc);
+        char text[100];
+
+        FREE_MMX();
+        sprintf(text,"Sprites %04i, fps %03i, screen refresh %03iHz",NbSprites,
               (int)((avgFps>0.0)?(1.0/(avgFps)):-1),CurModeVtFreq);
-           OutTextMode(text,AJ_MID);
-           if (toggleMemRender)
-              OutTextMode("RAM rendering\n",AJ_RIGHT);
-           else
-              OutTextMode("VRAM rendering\n",AJ_RIGHT);
-           OutTextMode("(F1 VRAM render)(F2 RAM render)(Esc to exit)",AJ_RIGHT);
+        OutTextMode(text,AJ_MID);
+        if (toggleMemRender)
+            OutTextMode("RAM rendering\n",AJ_RIGHT);
+        else
+            OutTextMode("VRAM rendering\n",AJ_RIGHT);
+        OutTextMode("(F1 VRAM render)(F2 RAM render)(Esc to exit)",AJ_RIGHT);
 
            // if memory rendering toggled, then copy the mem surf to vmem
-           if (toggleMemRender) {
-	     SetSurf(&VSurf[(j+1)%3]);
-             SetSurfRView(&CurSurf, &AllView);
-             PutSurf(&rendSurf,0,0,NORM_PUT);
-           }
+        if (toggleMemRender) {
+            SetSurf(&VSurf[(j+1)%3]);
+            SetSurfView(&CurSurf, &AllView);
+            PutSurf(rendSurf,0,0,NORM_PUT);
+        }
            // if F1 pressed 0x3b toggle VRAM rendering
-           if (IsKeyDown(0x3b)) toggleMemRender=0;
+           if (IsKeyDown(KB_KEY_F1)) toggleMemRender=0;
            // if F2 pressed 0x3c toggle memory rendering
-           if (IsKeyDown(0x3c)) toggleMemRender=1;
+           if (IsKeyDown(KB_KEY_F1)) toggleMemRender=1;
            // exit if esc pressed
-           if (IsKeyDown(0x1)) break;
+           if (IsKeyDown(KB_KEY_ESC)) break;
         }
 
 	CloseVesa();
 	UninstallKeyboard();
-	UninstallTimer();
-        TextMode();
-        return 0;
+	DgUninstallTimer();
+    TextMode();
+    return 0;
 }
 
 

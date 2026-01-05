@@ -1,3 +1,11 @@
+%macro  @FILLRET16   0
+    JMP _Poly16.PasDrawPoly
+%endmacro
+
+; ****** DUMMY
+dummyFill16:
+      @FILLRET16
+
 
 ;******* POLYTYPE = SOLID
 ALIGN 32
@@ -23,7 +31,7 @@ InFillSOLID16:
 		DEC		EBX
 		JNS		.BcFillSolid16
 
-		RET
+	@FILLRET16
 
 
 ALIGN 32
@@ -74,7 +82,8 @@ ClipFillSOLID16:
 		PADDD		mm3,[_ScanLine]
 		JNS		.BcFillSolid
 .FinClipSOLID:
-		RET
+
+	@FILLRET16
 
 ;******* POLYTYPE = TEXT
 ALIGN 32
@@ -114,7 +123,7 @@ InFillTEXT16:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET16
 
 ALIGN 32
 ClipFillTEXT16:
@@ -185,7 +194,8 @@ ClipFillTEXT16:
 		PADDD		mm3,mm4
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET16
 
 
 		;******* POLYTYPE = MASK_TEXT
@@ -226,7 +236,7 @@ InFillMASK_TEXT16:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET16
 
 ALIGN 32
 ClipFillMASK_TEXT16:
@@ -297,7 +307,8 @@ ClipFillMASK_TEXT16:
 		PADDD		mm3,mm4
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET16
 
 
 ; POLY TYPE : RGB16
@@ -331,8 +342,7 @@ InFillRGB16:
 		DEC		EBX
 		JNS		.BcFillRGB16
 
-
-		RET
+	@FILLRET16
 
 
 ALIGN 32
@@ -401,7 +411,7 @@ ClipFillRGB16:
 		JNS		.BcFillRGB16
 .FinClipDEG:
 
-		RET
+	@FILLRET16
 
 
 
@@ -536,7 +546,8 @@ ClipFillSOLID_BLND16:
 		PADDD		mm6,[_ScanLine]
 		JNS		.BcFillSolid
 .FinClipSOLID:
-		RET
+
+	@FILLRET16
 
 ;******* POLYTYPE = TEXT_BLND
 ALIGN 32
@@ -617,7 +628,7 @@ InFillTEXT_BLND16:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET16
 
 ALIGN 32
 ClipFillTEXT_BLND16:
@@ -725,7 +736,8 @@ ClipFillTEXT_BLND16:
 		PADDD		mm6,mm7
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET16
 
 
 		;******* POLYTYPE = MASK_TEXT_BLND
@@ -808,7 +820,8 @@ InFillMASK_TEXT_BLND16:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET16
+
 
 ALIGN 32
 ClipFillMASK_TEXT_BLND16:
@@ -917,5 +930,6 @@ ClipFillMASK_TEXT_BLND16:
 		PADDD		mm6,mm7
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET16
 

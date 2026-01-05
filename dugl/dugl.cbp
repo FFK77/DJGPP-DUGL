@@ -117,6 +117,9 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="timerc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="transf.asm" />
 		<Extensions>
 			<lib_finder disable_auto="1" />

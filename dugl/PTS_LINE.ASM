@@ -8,366 +8,394 @@ _PutMaskSurf:
 		PUSH		EDI
 		PUSH		ESI
 
-		MOV		EAX,[_MinX]
-		MOV		EBX,[_MinY]
-		CMP		EAX,[_MaxX]
-		MOV		ESI,[EBP+MSSN]
-		JG		NEAR .PasPutSurf
-		CMP		EBX,[_MaxY]
-		MOV		EDI,Svlfb
-		JG		NEAR .PasPutSurf
+		MOV			ESI,[EBP+MSSN]
+		MOV			EDI,Svlfb
+		MOV			EAX,[EBP+MXPSN]
+		MOV			EBX,[EBP+MYPSN]
 
 		CopySurf	; copy sprite Surf
 		;MOV		ECX,16
 		;REP		MOVSD
 
-		MOV		EAX,[EBP+MXPSN]
-		MOV		EBX,[EBP+MYPSN]
-		MOV		ECX,EAX
-		MOV		EDX,EBX
+		MOV			ECX,EAX
+		MOV			EDX,EBX
 
-		MOV		ESI,[EBP+MPSType]
+		MOV			ESI,[EBP+MPSType]
 		TEST		ESI,1
-		JZ		.NormHzPut
-		SUB		EAX,[SMinX]
-		SUB		ECX,[SMaxX]
-		JMP		NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
+		JZ			.NormHzPut
+		SUB			EAX,[SMinX]
+		SUB			ECX,[SMaxX]
+		JMP			NEAR .InvHzPut
+.NormHzPut:
+		ADD			EAX,[SMaxX]
+		ADD			ECX,[SMinX]
 .InvHzPut:
 		TEST		ESI,2
-		JZ		.NormVtPut
-		SUB		EBX,[SMinY]
-		SUB		EDX,[SMaxY]
-		JMP		NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
+		JZ			.NormVtPut
+		SUB			EBX,[SMinY]
+		SUB			EDX,[SMaxY]
+		JMP			NEAR .InvVtPut
+.NormVtPut:
+		ADD			EBX,[SMaxY]
+		ADD			EDX,[SMinY]
 .InvVtPut:
-		CMP		EAX,[_MaxX]
-		JG		NEAR .PutSurfClip
-		CMP		EBX,[_MaxY]
-		JG		NEAR .PutSurfClip
-		CMP		ECX,[_MinX]
-		JL		NEAR .PutSurfClip
-		CMP		EDX,[_MinY]
-		JL		NEAR .PutSurfClip
+		CMP			EAX,[_MaxX]
+		JG			NEAR .PutSurfClip
+		CMP			EBX,[_MaxY]
+		JG			NEAR .PutSurfClip
+		CMP			ECX,[_MinX]
+		JL			NEAR .PutSurfClip
+		CMP			EDX,[_MinY]
+		JL			NEAR .PutSurfClip
 ; PutSurf non Clipper *****************************
-		MOV		[PType],ESI
-		MOV		EBP,[SResV]
+		MOV			[PType],ESI
+		MOV			EBP,[SResV]
 		TEST		ESI,2
-		JZ		.NormAdSPut
-		MOV		ESI,[Srlfb]
-		MOV		EAX,[SResH]
-		ADD		ESI,[SSizeSurf]
-		SUB		ESI,EAX
-		ADD		EAX,EAX
-		NEG		EAX
+		JZ			.NormAdSPut
+		MOV			ESI,[Srlfb]
+		MOV			EAX,[SResH]
+		ADD			ESI,[SSizeSurf]
+		SUB			ESI,EAX
+		ADD			EAX,EAX
+		NEG			EAX
 		MOVD		mm7,EAX
-		JMP		NEAR .InvAdSPut
+		JMP			NEAR .InvAdSPut
 .NormAdSPut:
-		XOR		EAX,EAX
-		MOV		ESI,[Srlfb]
+		XOR			EAX,EAX
+		MOV			ESI,[Srlfb]
 		MOVD		mm7,EAX
 .InvAdSPut:
-		MOV		EDI,EBX
+		MOV			EDI,EBX
 		IMUL		EDI,[_ResH]
-		NEG		EDI
-		ADD		EDI,ECX
-		ADD		EDI,[_vlfb]
+		NEG			EDI
+		ADD			EDI,ECX
+		ADD			EDI,[_vlfb]
 
-		MOV		EDX,[_ResH]
-		SUB		EDX,[SResH]
+		MOV			EDX,[_ResH]
+		SUB			EDX,[SResH]
 
 		TEST		BYTE [PType],1
-                JNZ             .InvHzPSurf
+		JNZ        .InvHzPSurf
 
-.BcPutSurf:	MOV		EBX,[SResH]
+.BcPutSurf:
+		MOV			EBX,[SResH]
 ;**********************
 		TEST		EBX,0xfffffffc
-		JZ		.BcStB
-.BcStB4:	LODSD
+		JZ			.BcStB
+.BcStB4:
+		LODSD
 		SHLD		ECX,EAX,16
-		OR		AL,AL	 ;*******
-		JZ		.PasDrB1
-		MOV		[EDI],AL
-.PasDrB1:	OR		AH,AH	 ;*******
-		JZ		.PasDrB2
-		MOV		[EDI+1],AH
-.PasDrB2:	OR		CL,CL	 ;*******
-		JZ		.PasDrB3
-		MOV		[EDI+2],CL
-.PasDrB3:	OR		CH,CH	 ;*******
-		JZ		.PasDrB4
-		MOV		[EDI+3],CH
+		OR			AL,AL	 ;*******
+		JZ			.PasDrB1
+		MOV			[EDI],AL
+.PasDrB1:
+		OR			AH,AH	 ;*******
+		JZ			.PasDrB2
+		MOV			[EDI+1],AH
+.PasDrB2:
+		OR			CL,CL	 ;*******
+		JZ			.PasDrB3
+		MOV			[EDI+2],CL
+.PasDrB3:
+		OR			CH,CH	 ;*******
+		JZ			.PasDrB4
+		MOV			[EDI+3],CH
 .PasDrB4:
-		SUB		EBX,BYTE 4
-		LEA		EDI,[EDI+4]
+		SUB			EBX,BYTE 4
+		LEA			EDI,[EDI+4]
 		TEST		EBX,0xfffffffc
-		JNZ		.BcStB4
-		OR		BL,BL
-		JZ		.FinSHLine
+		JNZ			.BcStB4
+		OR			BL,BL
+		JZ			.FinSHLine
 ALIGN 4
-.BcStB:		LODSB
-		OR		AL,AL
-		JZ		.PasDrB
-		MOV		[EDI],AL
+.BcStB:
+		LODSB
+		OR			AL,AL
+		JZ			.PasDrB
+		MOV			[EDI],AL
 .PasDrB:
-		DEC		EBX
-		LEA		EDI,[EDI+1]
-		JNZ		.BcStB
+		DEC			EBX
+		LEA			EDI,[EDI+1]
+		JNZ			.BcStB
 .FinSHLine:
 ;*************************************
 		MOVD		EAX,mm7
-		ADD		EDI,EDX
-                ADD		ESI,EAX
-		DEC		EBP
-		JNZ		.BcPutSurf
+		ADD			EDI,EDX
+		ADD			ESI,EAX
+		DEC			EBP
+		JNZ			.BcPutSurf
 
-		JMP		.PasPutSurf
+		JMP			.PasPutSurf
 
 .InvHzPSurf:    ; inverser horizontal
-                ADD		ESI,[SResH]
-.IBcPutSurf:	MOV		EBX,[SResH]
+
+		ADD			ESI,[SResH]
+.IBcPutSurf:
+		MOV			EBX,[SResH]
 ;****************************
 		TEST		EBX,0xfffffffc
-		JZ		.IBcStB
-.IBcStB4:	SUB		ESI,BYTE 4
-		MOV		EAX,[ESI]
+		JZ			.IBcStB
+.IBcStB4:
+		SUB			ESI,BYTE 4
+		MOV			EAX,[ESI]
 		SHLD		ECX,EAX,16
 
-		OR		CH,CH	 ;*******
-		JZ		.IPasDrB4
-		MOV		[EDI],CH
-.IPasDrB4:	OR		CL,CL	 ;*******
-		JZ		.IPasDrB3
-		MOV		[EDI+1],CL
-.IPasDrB3:	OR		AH,AH	 ;*******
-		JZ		.IPasDrB2
-		MOV		[EDI+2],AH
-.IPasDrB2:	OR		AL,AL	 ;*******
-		JZ		.IPasDrB1
-		MOV		[EDI+3],AL
+		OR			CH,CH	 ;*******
+		JZ			.IPasDrB4
+		MOV			[EDI],CH
+.IPasDrB4:
+		OR			CL,CL	 ;*******
+		JZ			.IPasDrB3
+		MOV			[EDI+1],CL
+.IPasDrB3:
+		OR			AH,AH	 ;*******
+		JZ			.IPasDrB2
+		MOV			[EDI+2],AH
+.IPasDrB2:
+		OR			AL,AL	 ;*******
+		JZ			.IPasDrB1
+		MOV			[EDI+3],AL
 .IPasDrB1:
-		SUB		EBX,BYTE 4
-		LEA		EDI,[EDI+4]
+		SUB			EBX,BYTE 4
+		LEA			EDI,[EDI+4]
 		TEST		EBX,0xfffffffc
-		JNZ		.IBcStB4
-		OR		BL,BL
-		JZ		.IFinSHLine
+		JNZ			.IBcStB4
+		OR			BL,BL
+		JZ			.IFinSHLine
 ALIGN 4
-.IBcStB:        DEC		ESI
-		MOV		AL,[ESI]
-		OR		AL,AL
-		JZ		.IPasDrB
-		MOV		[EDI],AL
+.IBcStB:
+		DEC			ESI
+		MOV			AL,[ESI]
+		OR			AL,AL
+		JZ			.IPasDrB
+		MOV			[EDI],AL
 .IPasDrB:
-		DEC		EBX
-		LEA		EDI,[EDI+1]
-		JNZ		.IBcStB
+		DEC			EBX
+		LEA			EDI,[EDI+1]
+		JNZ			.IBcStB
 .IFinSHLine:
 ;******************************
 		MOVD		EAX,mm7
-		ADD		EDI,EDX
-                ADD		ESI,EAX
-                ADD		ESI,[SResH]
-                ADD		ESI,[SResH]
-		DEC		EBP
-		JNZ		NEAR .IBcPutSurf
+		ADD			EDI,EDX
+		ADD			ESI,EAX
+        ADD			ESI,[SResH]
+        ADD			ESI,[SResH]
+		DEC			EBP
+		JNZ			NEAR .IBcPutSurf
 
-		JMP		.PasPutSurf
+		JMP			.PasPutSurf
 
-.PutSurfClip:	CMP		EAX,[_MinX]
-		JL		NEAR .PasPutSurf
-		CMP		EBX,[_MinY]
-		JL		NEAR .PasPutSurf
-		CMP		ECX,[_MaxX]
-		JG		NEAR .PasPutSurf
-		CMP		EDX,[_MaxY]
-		JG		NEAR .PasPutSurf
+.PutSurfClip:
+		CMP			EAX,[_MinX]
+		JL			NEAR .PasPutSurf
+		CMP			EBX,[_MinY]
+		JL			NEAR .PasPutSurf
+		CMP			ECX,[_MaxX]
+		JG			NEAR .PasPutSurf
+		CMP			EDX,[_MaxY]
+		JG			NEAR .PasPutSurf
 ; PutSurf Clipper **********************************************
-		MOV		[PType],ESI ; sauvegarde le type
-		XOR		ESI,ESI   ; X deb Source
-		XOR		EDI,EDI   ; Y Fin Source
+		MOV			[PType],ESI ; sauvegarde le type
+		XOR			ESI,ESI   ; X deb Source
+		XOR			EDI,EDI   ; Y Fin Source
 
-		MOV		EBP,[_MinX]
-		CMP		ECX,EBP
-		JGE		.PsInfMinX   ; XP1<_MinX
-                TEST		BYTE [PType],1
-                JNZ		.InvHzCalcDX
-		MOV		ESI,EBP
+		MOV			EBP,[_MinX]
+		CMP			ECX,EBP
+		JGE			.PsInfMinX   ; XP1<_MinX
+		TEST		BYTE [PType],1
+        JNZ			.InvHzCalcDX
+		MOV			ESI,EBP
 		;MOV		[XP1],ESI    ; XP1 = _MinX
-		SUB		ESI,ECX	; ESI = _MinX - XP2
+		SUB			ESI,ECX	; ESI = _MinX - XP2
 .InvHzCalcDX:
-		MOV		ECX,EBP
-.PsInfMinX:	MOV		EBP,[_MaxY]
-		CMP		EBX,EBP
-		JLE		.PsSupMaxY   ; YP2>_MaxY
-		MOV		EDI,EBP
-		NEG		EDI
+		MOV			ECX,EBP
+.PsInfMinX:
+		MOV			EBP,[_MaxY]
+		CMP			EBX,EBP
+		JLE			.PsSupMaxY   ; YP2>_MaxY
+		MOV			EDI,EBP
+		NEG			EDI
 		;MOV		[YP2],EBP
-		ADD		EDI,EBX
-		MOV		EBX,EBP
-.PsSupMaxY:	MOV		EBP,[_MinY]
-		CMP		EDX,EBP      ; YP1<_MinY
-		JGE		.PsInfMinY
-		MOV		EDX,EBP
-.PsInfMinY:   	MOV		EBP,[_MaxX]
-		CMP		EAX,EBP      ; XP2>_MaxX
-		JLE		.PsSupMaxX
-                TEST		BYTE [PType],1
-                JZ		.PsInvHzCalcDX
-		MOV		ESI,EAX
-		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+		ADD			EDI,EBX
+		MOV			EBX,EBP
+.PsSupMaxY:
+		MOV			EBP,[_MinY]
+		CMP			EDX,EBP      ; YP1<_MinY
+		JGE			.PsInfMinY
+		MOV			EDX,EBP
+.PsInfMinY:
+		MOV			EBP,[_MaxX]
+		CMP			EAX,EBP      ; XP2>_MaxX
+		JLE			.PsSupMaxX
+		TEST		BYTE [PType],1
+        JZ			.PsInvHzCalcDX
+		MOV			ESI,EAX
+		SUB			ESI,EBP	; ESI = XP2 - _MaxX
 .PsInvHzCalcDX:
-		MOV		EAX,EBP
+		MOV			EAX,EBP
 .PsSupMaxX:
-		MOV		EBP,EAX
-		SUB		EBP,ECX      ; XP2 - XP1
-		INC		EBP
+		MOV			EBP,EAX
+		SUB			EBP,ECX      ; XP2 - XP1
+		INC			EBP
 		MOVD		mm4,EBP  ; mm4 = DeltaX
 		MOVD		mm3,[SResH]
 		PSUBD		mm3,mm4  ; mm3 = SResH-DeltaX, PlusSSurf
 
-		MOV		EBP,EBX
-		SUB		EBP,EDX      ; YP2 - YP1
-		INC		EBP
+		MOV			EBP,EBX
+		SUB			EBP,EDX      ; YP2 - YP1
+		INC			EBP
 		MOVD		mm2,EBP  ; mm2 = DeltaY
 		MOVD		mm1,[_ResH]
 		PSUBD		mm1,mm4  ; mm1 = _ResH-DeltaX, PlusDSurf
 
 		TEST		BYTE [PType],2
-		JZ		.CNormAdSPut
-		MOV		EAX,[Srlfb] ; Si inverse vertical
-		ADD		EAX,[SSizeSurf]
-		SUB		EAX,[SResH]
-		ADD		EAX,ESI
+		JZ			.CNormAdSPut
+		MOV			EAX,[Srlfb] ; Si inverse vertical
+		ADD			EAX,[SSizeSurf]
+		SUB			EAX,[SResH]
+		ADD			EAX,ESI
 		IMUL		EDI,[SResH]
-                SUB		EAX,EDI
-		MOV		ESI,EAX
+		SUB			EAX,EDI
+		MOV			ESI,EAX
 
-		MOV		EAX,[SResH]
-		ADD		EAX,EAX
-		NEG		EAX
+		MOV			EAX,[SResH]
+		ADD			EAX,EAX
+		NEG			EAX
 		MOVD		mm7,EAX
-		JMP		NEAR .CInvAdSPut
+		JMP			NEAR .CInvAdSPut
 .CNormAdSPut:
 		IMUL		EDI,[SResH]
-		XOR		EAX,EAX
-		ADD		EDI,ESI
-		ADD		EDI,[Srlfb]
-		MOV		ESI,EDI
+		XOR			EAX,EAX
+		ADD			EDI,ESI
+		ADD			EDI,[Srlfb]
+		MOV			ESI,EDI
 		MOVD		mm7,EAX
 .CInvAdSPut:
-		MOV		EDI,EBX
+		MOV			EDI,EBX
 		IMUL		EDI,[_ResH]
-		NEG		EDI
-		ADD		EDI,ECX
-		ADD		EDI,[_vlfb]
+		NEG			EDI
+		ADD			EDI,ECX
+		ADD			EDI,[_vlfb]
 
 		MOVD		EDX,mm4  ; DeltaX
 		TEST		BYTE [PType],1
-                JNZ             .CInvHzPSurf
-.CBcPutSurf:	MOV		EBX,EDX
+		JNZ         .CInvHzPSurf
+.CBcPutSurf:
+		MOV			EBX,EDX
 ;******************************
 		TEST		EBX,0xfffffffc
-		JZ		.CBcStB
-.CBcStB4:	LODSD
+		JZ			.CBcStB
+.CBcStB4:
+		LODSD
 		SHLD		ECX,EAX,16
-		OR		AL,AL	 ;*******
-		JZ		.CPasDrB1
-		MOV		[EDI],AL
-.CPasDrB1:	OR		AH,AH	 ;*******
-		JZ		.CPasDrB2
-		MOV		[EDI+1],AH
-.CPasDrB2:	OR		CL,CL	 ;*******
-		JZ		.CPasDrB3
-		MOV		[EDI+2],CL
-.CPasDrB3:	OR		CH,CH	 ;*******
-		JZ		.CPasDrB4
-		MOV		[EDI+3],CH
+		OR			AL,AL	 ;*******
+		JZ			.CPasDrB1
+		MOV			[EDI],AL
+.CPasDrB1:
+		OR			AH,AH	 ;*******
+		JZ			.CPasDrB2
+		MOV			[EDI+1],AH
+.CPasDrB2:
+		OR			CL,CL	 ;*******
+		JZ			.CPasDrB3
+		MOV			[EDI+2],CL
+.CPasDrB3:
+		OR			CH,CH	 ;*******
+		JZ			.CPasDrB4
+		MOV			[EDI+3],CH
 .CPasDrB4:
-		SUB		EBX,BYTE 4
-		LEA		EDI,[EDI+4]
+		SUB			EBX,BYTE 4
+		LEA			EDI,[EDI+4]
 		TEST		EBX,0xfffffffc
-		JNZ		.CBcStB4
-		OR		BL,BL
-		JZ		.CFinSHLine
+		JNZ			.CBcStB4
+		OR			BL,BL
+		JZ			.CFinSHLine
 ALIGN 4
-.CBcStB:        LODSB
-		OR		AL,AL
-		JZ		.CPasDrB
-		MOV		[EDI],AL
+.CBcStB:
+		LODSB
+		OR			AL,AL
+		JZ			.CPasDrB
+		MOV			[EDI],AL
 .CPasDrB:
-		DEC		EBX
-		LEA		EDI,[EDI+1]
-		JNZ		.CBcStB
+		DEC			EBX
+		LEA			EDI,[EDI+1]
+		JNZ			.CBcStB
 .CFinSHLine:
 ;******************************
 		MOVD		EAX,mm3 ; EAX = PlusSSurf
 		MOVD		ECX,mm1 ; ECX = PlusDSurf
 		MOVD		EBX,mm7
-		ADD		ESI,EAX
-		ADD		EDI,ECX
-		ADD		ESI,EBX
-		DEC		EBP
-		JNZ		.CBcPutSurf
-		JMP		.PasPutSurf
+		ADD			ESI,EAX
+		ADD			EDI,ECX
+		ADD			ESI,EBX
+		DEC			EBP
+		JNZ			.CBcPutSurf
+		JMP			.PasPutSurf
 .CInvHzPSurf:   ; clipper et inverser horizontalement
-                ADD		ESI,EDX
-.CIBcPutSurf:	MOV		EBX,EDX
+
+		ADD			ESI,EDX
+.CIBcPutSurf:
+		MOV			EBX,EDX
 ;******************************
 		TEST		EBX,0xfffffffc
-		JZ		.CIBcStB
-.CIBcStB4:	SUB		ESI,BYTE 4
-		MOV		EAX,[ESI]
+		JZ			.CIBcStB
+.CIBcStB4:
+		SUB			ESI,BYTE 4
+		MOV			EAX,[ESI]
 		SHLD		ECX,EAX,16
 
-		OR		CH,CH	 ;*******
-		JZ		.CIPasDrB4
-		MOV		[EDI],CH
-.CIPasDrB4:	OR		CL,CL	 ;*******
-		JZ		.CIPasDrB3
-		MOV		[EDI+1],CL
-.CIPasDrB3:	OR		AH,AH	 ;*******
-		JZ		.CIPasDrB2
-		MOV		[EDI+2],AH
-.CIPasDrB2:	OR		AL,AL	 ;*******
-		JZ		.CIPasDrB1
-		MOV		[EDI+3],AL
+		OR			CH,CH	 ;*******
+		JZ			.CIPasDrB4
+		MOV			[EDI],CH
+.CIPasDrB4:
+		OR			CL,CL	 ;*******
+		JZ			.CIPasDrB3
+		MOV			[EDI+1],CL
+.CIPasDrB3:
+		OR			AH,AH	 ;*******
+		JZ			.CIPasDrB2
+		MOV			[EDI+2],AH
+.CIPasDrB2:
+		OR			AL,AL	 ;*******
+		JZ			.CIPasDrB1
+		MOV			[EDI+3],AL
 .CIPasDrB1:
-		SUB		EBX,BYTE 4
-		LEA		EDI,[EDI+4]
+		SUB			EBX,BYTE 4
+		LEA			EDI,[EDI+4]
 		TEST		EBX,0xfffffffc
-		JNZ		.CIBcStB4
-		OR		BL,BL
-		JZ		.CIFinSHLine
+		JNZ			.CIBcStB4
+		OR			BL,BL
+		JZ			.CIFinSHLine
 ALIGN 4
-.CIBcStB:	DEC		ESI
-		MOV		AL,[ESI]
-		OR		AL,AL
-		JZ		.CIPasDrB
-		MOV		[EDI],AL
+.CIBcStB:
+		DEC			ESI
+		MOV			AL,[ESI]
+		OR			AL,AL
+		JZ			.CIPasDrB
+		MOV			[EDI],AL
 .CIPasDrB:
-		DEC		EBX
-		LEA		EDI,[EDI+1]
-		JNZ		.CIBcStB
+		DEC			EBX
+		LEA			EDI,[EDI+1]
+		JNZ			.CIBcStB
 .CIFinSHLine:
 ;******************************
 		MOVD		EAX,mm3
 		MOVD		ECX,mm1
-                ADD		ESI,[SResH]
-                ADD		ESI,EDX
-                MOVD		EBX,mm7
-		ADD		EDI,ECX
-                ADD		ESI,EBX
-		DEC		EBP
-		JNZ		NEAR .CIBcPutSurf
+		ADD			ESI,[SResH]
+        ADD			ESI,EDX
+        MOVD		EBX,mm7
+		ADD			EDI,ECX
+        ADD			ESI,EBX
+		DEC			EBP
+		JNZ			NEAR .CIBcPutSurf
+.PasPutSurf:
 
-.PasPutSurf:	POP		ESI
-		POP		EDI
-		POP		EBX
+		POP			ESI
+		POP			EDI
+		POP			EBX
 		;EMMS
-		RETURN
+	RETURN
+
 ALIGN 32
 _PutSurf:
 	ARG	SSN, 4, XPSN, 4, YPSN, 4, PSType, 4
@@ -375,399 +403,432 @@ _PutSurf:
 		PUSH		EDI
 		PUSH		ESI
 
-		MOV		EAX,[_MinX]
-		MOV		EBX,[_MinY]
-		CMP		EAX,[_MaxX]
-		MOV		ESI,[EBP+SSN]
-		JG		NEAR .PasPutSurf
-		CMP		EBX,[_MaxY]
-		MOV		EDI,Svlfb
-		JG		NEAR .PasPutSurf
+		MOV			ESI,[EBP+SSN]
+		MOV			EDI,Svlfb
+		MOV			EAX,[EBP+XPSN]
+		MOV			EBX,[EBP+YPSN]
 
 		CopySurf	; copy surf
 		;MOV		ECX,16
 		;REP		MOVSD
 
-		MOV		EAX,[EBP+XPSN]
-		MOV		EBX,[EBP+YPSN]
-		MOV		ECX,EAX
-		MOV		EDX,EBX
+		MOV			ECX,EAX
+		MOV			EDX,EBX
 
-		MOV             ESI,[EBP+PSType]
-		TEST            ESI,1
-		JZ              .NormHzPut
-		SUB             EAX,[SMinX]
-		SUB             ECX,[SMaxX]
-		JMP             NEAR .InvHzPut
-.NormHzPut:	ADD		EAX,[SMaxX]
-		ADD		ECX,[SMinX]
+		MOV         ESI,[EBP+PSType]
+		TEST        ESI,1
+		JZ          .NormHzPut
+		SUB         EAX,[SMinX]
+		SUB         ECX,[SMaxX]
+		JMP         NEAR .InvHzPut
+.NormHzPut:
+		ADD			EAX,[SMaxX]
+		ADD			ECX,[SMinX]
 .InvHzPut:
-		TEST            ESI,2
-		JZ              .NormVtPut
-		SUB             EBX,[SMinY]
-		SUB             EDX,[SMaxY]
-		JMP             NEAR .InvVtPut
-.NormVtPut:	ADD		EBX,[SMaxY]
-		ADD		EDX,[SMinY]
+		TEST        ESI,2
+		JZ          .NormVtPut
+		SUB         EBX,[SMinY]
+		SUB         EDX,[SMaxY]
+		JMP         NEAR .InvVtPut
+.NormVtPut:
+		ADD			EBX,[SMaxY]
+		ADD			EDX,[SMinY]
 .InvVtPut:
-		CMP		EAX,[_MaxX]
-		JG		NEAR .PutSurfClip
-		CMP		EBX,[_MaxY]
-		JG		NEAR .PutSurfClip
-		CMP		ECX,[_MinX]
-		JL		NEAR .PutSurfClip
-		CMP		EDX,[_MinY]
-		JL		NEAR .PutSurfClip
+		CMP			EAX,[_MaxX]
+		JG			NEAR .PutSurfClip
+		CMP			EBX,[_MaxY]
+		JG			NEAR .PutSurfClip
+		CMP			ECX,[_MinX]
+		JL			NEAR .PutSurfClip
+		CMP			EDX,[_MinY]
+		JL			NEAR .PutSurfClip
 ; PutSurf non Clipper *****************************
-		MOV		[PType],ESI
-		MOV		EBP,[SResV]
+		MOV			[PType],ESI
+		MOV			EBP,[SResV]
 		TEST		ESI,2
-		JZ		.NormAdSPut
-		MOV		ESI,[Srlfb]
-		MOV		EAX,[SResH]
-		ADD		ESI,[SSizeSurf]
-		SUB		ESI,EAX
-		ADD		EAX,EAX
-		NEG		EAX
+		JZ			.NormAdSPut
+		MOV			ESI,[Srlfb]
+		MOV			EAX,[SResH]
+		ADD			ESI,[SSizeSurf]
+		SUB			ESI,EAX
+		ADD			EAX,EAX
+		NEG			EAX
 		MOVD		mm7,EAX
-		JMP		NEAR .InvAdSPut
+		JMP			NEAR .InvAdSPut
 .NormAdSPut:
-		XOR		EAX,EAX
-		MOV		ESI,[Srlfb]
+		XOR			EAX,EAX
+		MOV			ESI,[Srlfb]
 		MOVD		mm7,EAX
 .InvAdSPut:
-		MOV		EDI,EBX
+		MOV			EDI,EBX
 		IMUL		EDI,[_ResH]
-		NEG		EDI
-		ADD		EDI,ECX
-		ADD		EDI,[_vlfb]
+		NEG			EDI
+		ADD			EDI,ECX
+		ADD			EDI,[_vlfb]
 
-		MOV		EDX,[_ResH]
-		SUB		EDX,[SResH]
+		MOV			EDX,[_ResH]
+		SUB			EDX,[SResH]
 
 		TEST		BYTE [PType],1
-                JNZ             .InvHzPSurf
+        JNZ         .InvHzPSurf
 
-.BcPutSurf:	MOV		EBX,[SResH]
-.BcStBAv:	TEST		EDI,3
-		JZ		.FPasStBAv
-		DEC		EBX
+.BcPutSurf:
+		MOV			EBX,[SResH]
+.BcStBAv:
+		TEST		EDI,3
+		JZ			.FPasStBAv
+		DEC			EBX
 		MOVSB
-		JZ		.FinSHLine
-		JMP		SHORT .BcStBAv
-.FPasStBAv:	TEST		EDI,4
-		JZ		.PasStDAv
+		JZ			.FinSHLine
+		JMP			SHORT .BcStBAv
+.FPasStBAv:
+		TEST		EDI,4
+		JZ			.PasStDAv
 		TEST		EBX,0xfffffffc
-		JZ		.StBAp
+		JZ			.StBAp
 		MOVSD
-		SUB		EBX,BYTE 4
-.PasStDAv:	MOV		ECX,EBX
-		SHR		ECX,3
-		OR		ECX,ECX
-		JZ		.StDAp
+		SUB			EBX,BYTE 4
+.PasStDAv:
+		MOV			ECX,EBX
+		SHR			ECX,3
+		OR			ECX,ECX
+		JZ			.StDAp
 ALIGN 4
-.StoMMX:	MOVQ		mm4,[ESI]
-		DEC		ECX
+.StoMMX:
+		MOVQ		mm4,[ESI]
+		DEC			ECX
 		MOVQ		[EDI],mm4
-		LEA		ESI,[ESI+8]
-		LEA		EDI,[EDI+8]
-		JNZ		.StoMMX
-		AND		EBX,BYTE 7
-		JZ		.FinSHLine
-.StDAp: 	TEST		EBX,4
-		JZ		.StBAp
+		LEA			ESI,[ESI+8]
+		LEA			EDI,[EDI+8]
+		JNZ			.StoMMX
+		AND			EBX,BYTE 7
+		JZ			.FinSHLine
+.StDAp:
+		TEST		EBX,4
+		JZ			.StBAp
 		MOVSD
-		SUB		EBX,BYTE 4
-.StBAp:		OR		EBX,EBX
-		JZ		.PasStBAp
-		MOV		ECX,EBX
-		REP		MOVSB
+		SUB			EBX,BYTE 4
+.StBAp:
+		OR			EBX,EBX
+		JZ			.PasStBAp
+		MOV			ECX,EBX
+		REP			MOVSB
 .PasStBAp:
-.FinSHLine:     MOVD		EAX,mm7
-		ADD		EDI,EDX
-		ADD		ESI,EAX
-		DEC		EBP
-		JNZ		.BcPutSurf
+.FinSHLine:
+		MOVD		EAX,mm7
+		ADD			EDI,EDX
+		ADD			ESI,EAX
+		DEC			EBP
+		JNZ			.BcPutSurf
 
-		JMP		.PasPutSurf
+		JMP			.PasPutSurf
 
 .InvHzPSurf:    ; inverser horizontal
-                ADD		ESI,[SResH]
-.IBcPutSurf:	MOV		EBX,[SResH]
-.IBcStBAv:	TEST		EDI,3
-		JZ		.IFPasStBAv
-		DEC		ESI
-		MOV		AL,[ESI]
+
+		ADD			ESI,[SResH]
+.IBcPutSurf:
+		MOV			EBX,[SResH]
+.IBcStBAv:
+		TEST		EDI,3
+		JZ			.IFPasStBAv
+		DEC			ESI
+		MOV			AL,[ESI]
 		STOSB
-		DEC		EBX
-		JZ		.IFinSHLine
-		JMP		SHORT .IBcStBAv
-.IFPasStBAv:	TEST		EDI,4
-		JZ		.IPasStDAv
+		DEC			EBX
+		JZ			.IFinSHLine
+		JMP			SHORT .IBcStBAv
+.IFPasStBAv:
+		TEST		EDI,4
+		JZ			.IPasStDAv
 		TEST		EBX,0xfffffffc
-		JZ		.IStBAp
-                SUB		ESI,BYTE 4
-                MOV		EAX,[ESI]
-		SUB		EBX,BYTE 4
-                BSWAP		EAX
+		JZ			.IStBAp
+		SUB			ESI,BYTE 4
+		MOV			EAX,[ESI]
+		SUB			EBX,BYTE 4
+		BSWAP		EAX
 		STOSD
-.IPasStDAv:	MOV		ECX,EBX
-		SHR		ECX,3
-		OR		ECX,ECX
-		JZ		.IStDAp
+.IPasStDAv:
+		MOV			ECX,EBX
+		SHR			ECX,3
+		OR			ECX,ECX
+		JZ			.IStDAp
 ALIGN 4
 .IStoMMX:
-		SUB		ESI,BYTE 8
-		MOV		EAX,[ESI]
+		SUB			ESI,BYTE 8
+		MOV			EAX,[ESI]
 		BSWAP		EAX
-		DEC		ECX
+		DEC			ECX
 		MOVD		mm6,EAX
-		MOV		EAX,[ESI+4]
+		MOV			EAX,[ESI+4]
 		BSWAP		EAX
 		MOVD		mm4,EAX
 		PUNPCKLDQ	mm4,mm6
 		MOVQ		[EDI],mm4
-		LEA		EDI,[EDI+8]
+		LEA			EDI,[EDI+8]
 
-		JNZ		.IStoMMX
+		JNZ			.IStoMMX
 
-		AND		EBX,BYTE 7
-		JZ		.IFinSHLine
-.IStDAp:	TEST		EBX,4
-		JZ		.IStBAp
-		SUB		ESI,4
-		MOV		EAX,[ESI]
+		AND			EBX,BYTE 7
+		JZ			.IFinSHLine
+.IStDAp:
+		TEST		EBX,4
+		JZ			.IStBAp
+		SUB			ESI,4
+		MOV			EAX,[ESI]
 		BSWAP		EAX
 		STOSD
-		SUB		EBX,BYTE 4
+		SUB			EBX,BYTE 4
 
-.IStBAp:	OR		EBX,EBX
-		JZ		.IPasStBAp
-.IBcStBAp:	DEC		ESI
-		MOV		AL,[ESI]
+.IStBAp:
+		OR			EBX,EBX
+		JZ			.IPasStBAp
+.IBcStBAp:
+		DEC			ESI
+		MOV			AL,[ESI]
 		STOSB
-		DEC		EBX
-		JNZ		.IBcStBAp
+		DEC			EBX
+		JNZ			.IBcStBAp
 .IPasStBAp:
-.IFinSHLine:    MOVD		EAX,mm7
-		ADD		EDI,EDX
-		ADD		ESI,EAX
-		ADD		ESI,[SResH]
-		ADD		ESI,[SResH]
-		DEC		EBP
-		JNZ		NEAR .IBcPutSurf
+.IFinSHLine:
+		MOVD		EAX,mm7
+		ADD			EDI,EDX
+		ADD			ESI,EAX
+		ADD			ESI,[SResH]
+		ADD			ESI,[SResH]
+		DEC			EBP
+		JNZ			NEAR .IBcPutSurf
 
-		JMP		.PasPutSurf
+		JMP			.PasPutSurf
 
-.PutSurfClip:	CMP		EAX,[_MinX]
-		JL		NEAR .PasPutSurf
-		CMP		EBX,[_MinY]
-		JL		NEAR .PasPutSurf
-		CMP		ECX,[_MaxX]
-		JG		NEAR .PasPutSurf
-		CMP		EDX,[_MaxY]
-		JG		NEAR .PasPutSurf
+.PutSurfClip:
+		CMP			EAX,[_MinX]
+		JL			NEAR .PasPutSurf
+		CMP			EBX,[_MinY]
+		JL			NEAR .PasPutSurf
+		CMP			ECX,[_MaxX]
+		JG			NEAR .PasPutSurf
+		CMP			EDX,[_MaxY]
+		JG			NEAR .PasPutSurf
 ; PutSurf Clipper **********************************************
-		MOV		[PType],ESI ; sauvegarde le type
-		XOR		EDI,EDI   ; Y Fin Source
-		XOR		ESI,ESI   ; X deb Source
+		MOV			[PType],ESI ; sauvegarde le type
+		XOR			EDI,EDI   ; Y Fin Source
+		XOR			ESI,ESI   ; X deb Source
 
-		MOV		EBP,[_MinX]
-		CMP		ECX,EBP
-		JGE		.PsInfMinX   ; XP1<_MinX
+		MOV			EBP,[_MinX]
+		CMP			ECX,EBP
+		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
-		JNZ		.InvHzCalcDX
-		MOV		ESI,EBP
+		JNZ			.InvHzCalcDX
+		MOV			ESI,EBP
 		;MOV		[XP1],ESI    ; XP1 = _MinX
-		SUB		ESI,ECX	; ESI = _MinX - XP2
+		SUB			ESI,ECX	; ESI = _MinX - XP2
 .InvHzCalcDX:
-		MOV		ECX,EBP
-.PsInfMinX:	MOV		EBP,[_MaxY]
-		CMP		EBX,EBP
-		JLE		.PsSupMaxY   ; YP2>_MaxY
-		MOV		EDI,EBP
-		NEG		EDI
+		MOV			ECX,EBP
+.PsInfMinX:
+		MOV			EBP,[_MaxY]
+		CMP			EBX,EBP
+		JLE			.PsSupMaxY   ; YP2>_MaxY
+		MOV			EDI,EBP
+		NEG			EDI
 		;MOV		[YP2],EBP
-		ADD		EDI,EBX
-		MOV		EBX,EBP
-.PsSupMaxY:	MOV		EBP,[_MinY]
-		CMP		EDX,EBP      ; YP1<_MinY
-		JGE		.PsInfMinY
-		MOV		EDX,EBP
-.PsInfMinY:   	MOV		EBP,[_MaxX]
-		CMP		EAX,EBP      ; XP2>_MaxX
-		JLE		.PsSupMaxX
-                TEST		BYTE [PType],1
-                JZ		.PsInvHzCalcDX
-		MOV		ESI,EAX
-		SUB		ESI,EBP	; ESI = XP2 - _MaxX
+		ADD			EDI,EBX
+		MOV			EBX,EBP
+.PsSupMaxY:
+		MOV			EBP,[_MinY]
+		CMP			EDX,EBP      ; YP1<_MinY
+		JGE			.PsInfMinY
+		MOV			EDX,EBP
+.PsInfMinY:
+		MOV			EBP,[_MaxX]
+		CMP			EAX,EBP      ; XP2>_MaxX
+		JLE			.PsSupMaxX
+		TEST		BYTE [PType],1
+        JZ			.PsInvHzCalcDX
+		MOV			ESI,EAX
+		SUB			ESI,EBP	; ESI = XP2 - _MaxX
 .PsInvHzCalcDX:
-		MOV		EAX,EBP
+		MOV			EAX,EBP
 .PsSupMaxX:
-		MOV		EBP,EAX
-		SUB		EBP,ECX      ; XP2 - XP1
-		INC		EBP
+		MOV			EBP,EAX
+		SUB			EBP,ECX      ; XP2 - XP1
+		INC			EBP
 		MOVD		mm4,EBP  ; mm4 = DeltaX
 		MOVD		mm3,[SResH]
 		PSUBD		mm3,mm4  ; mm3 = SResH-DeltaX, PlusSSurf
 
-		MOV		EBP,EBX
-		SUB		EBP,EDX      ; YP2 - YP1
-		INC		EBP
+		MOV			EBP,EBX
+		SUB			EBP,EDX      ; YP2 - YP1
+		INC			EBP
 		MOVD		mm2,EBP  ; mm2 = DeltaY
 		MOVD		mm1,[_ResH]
 		PSUBD		mm1,mm4  ; mm1 = _ResH-DeltaX, PlusDSurf
 
 		TEST		BYTE [PType],2
-		JZ		.CNormAdSPut
-		MOV		EAX,[Srlfb] ; Si inverse vertical
-		ADD		EAX,[SSizeSurf]
-		SUB		EAX,[SResH]
-		ADD		EAX,ESI
+		JZ			.CNormAdSPut
+		MOV			EAX,[Srlfb] ; Si inverse vertical
+		ADD			EAX,[SSizeSurf]
+		SUB			EAX,[SResH]
+		ADD			EAX,ESI
 		IMUL		EDI,[SResH]
-                SUB		EAX,EDI
-		MOV		ESI,EAX
+		SUB			EAX,EDI
+		MOV			ESI,EAX
 
-		MOV		EAX,[SResH]
-		ADD		EAX,EAX
-		NEG		EAX
+		MOV			EAX,[SResH]
+		ADD			EAX,EAX
+		NEG			EAX
 		MOVD		mm7,EAX
-		JMP		NEAR .CInvAdSPut
+		JMP			NEAR .CInvAdSPut
 .CNormAdSPut:
 		IMUL		EDI,[SResH]
-		XOR		EAX,EAX
-		ADD		EDI,ESI
-		ADD		EDI,[Srlfb]
-		MOV		ESI,EDI
+		XOR			EAX,EAX
+		ADD			EDI,ESI
+		ADD			EDI,[Srlfb]
+		MOV			ESI,EDI
 		MOVD		mm7,EAX
 .CInvAdSPut:
-		MOV		EDI,EBX
+		MOV			EDI,EBX
 		IMUL		EDI,[_ResH]
-		NEG		EDI
-		ADD		EDI,ECX
-		ADD		EDI,[_vlfb]
+		NEG			EDI
+		ADD			EDI,ECX
+		ADD			EDI,[_vlfb]
 
 		MOVD		EDX,mm4  ; DeltaX
 		TEST		BYTE [PType],1
-                JNZ             .CInvHzPSurf
-.CBcPutSurf:	MOV		EBX,EDX
-.CBcStBAv:	TEST		EDI,3
-		JZ		.CFPasStBAv
-		DEC		EBX
+		JNZ        .CInvHzPSurf
+.CBcPutSurf:
+		MOV			EBX,EDX
+.CBcStBAv:
+		TEST		EDI,3
+		JZ			.CFPasStBAv
+		DEC			EBX
 		MOVSB
-		JZ		.CFinSHLine
-		JMP		SHORT .CBcStBAv
-.CFPasStBAv:	TEST		EDI,4
-		JZ		.CPasStDAv
+		JZ			.CFinSHLine
+		JMP			SHORT .CBcStBAv
+.CFPasStBAv:
+		TEST		EDI,4
+		JZ			.CPasStDAv
 		TEST		EBX,0xfffffffc
-		JZ		.CStBAp
+		JZ			.CStBAp
 		MOVSD
-		SUB		EBX,BYTE 4
-.CPasStDAv:	MOV		ECX,EBX
-		SHR		ECX,3
-		OR		ECX,ECX
-		JZ		.CStDAp
+		SUB			EBX,BYTE 4
+.CPasStDAv:
+		MOV			ECX,EBX
+		SHR			ECX,3
+		OR			ECX,ECX
+		JZ			.CStDAp
 ALIGN 4
-.CStoMMX:	MOVQ		mm0,[ESI]
-		DEC		ECX
+.CStoMMX:
+		MOVQ		mm0,[ESI]
+		DEC			ECX
 		MOVQ		[EDI],mm0
-		LEA		ESI,[ESI+8]
-		LEA		EDI,[EDI+8]
-		JNZ		.CStoMMX
+		LEA			ESI,[ESI+8]
+		LEA			EDI,[EDI+8]
+		JNZ			.CStoMMX
 
-		AND		EBX,BYTE 7
-		JZ		.CFinSHLine
-.CStDAp: 	TEST		EBX,4
-		JZ		.CStBAp
+		AND			EBX,BYTE 7
+		JZ			.CFinSHLine
+.CStDAp:
+		TEST		EBX,4
+		JZ			.CStBAp
 		MOVSD
-		SUB		EBX,BYTE 4
-.CStBAp:	OR		EBX,EBX
-		JZ		.CPasStBAp
-		MOV		ECX,EBX
-		REP		MOVSB
+		SUB			EBX,BYTE 4
+.CStBAp:
+		OR			EBX,EBX
+		JZ			.CPasStBAp
+		MOV			ECX,EBX
+		REP			MOVSB
 .CPasStBAp:
 .CFinSHLine:
 		MOVD		EAX,mm3 ; EAX = PlusSSurf
 		MOVD		ECX,mm1 ; ECX = PlusDSurf
 		MOVD		EBX,mm7
-		ADD		ESI,EAX
-		ADD		EDI,ECX
-		ADD		ESI,EBX
-		DEC		EBP
-		JNZ		.CBcPutSurf
-		JMP		.PasPutSurf
+		ADD			ESI,EAX
+		ADD			EDI,ECX
+		ADD			ESI,EBX
+		DEC			EBP
+		JNZ			.CBcPutSurf
+		JMP			.PasPutSurf
 
 .CInvHzPSurf:   ; clipper et inverser horizontalement
-                ADD		ESI,EDX
-.CIBcPutSurf:	MOV		EBX,EDX
-.CIBcStBAv:	TEST		EDI,3
-		JZ		.CIFPasStBAv
-		DEC		ESI
-		MOV		AL,[ESI]
+		ADD			ESI,EDX
+.CIBcPutSurf:
+		MOV			EBX,EDX
+.CIBcStBAv:
+		TEST		EDI,3
+		JZ			.CIFPasStBAv
+		DEC			ESI
+		MOV			AL,[ESI]
 		STOSB
-		DEC		EBX
-		JZ		.CIFinSHLine
-		JMP		SHORT .CIBcStBAv
-.CIFPasStBAv:	TEST		EDI,4
-		JZ		.CIPasStDAv
+		DEC			EBX
+		JZ			.CIFinSHLine
+		JMP			SHORT .CIBcStBAv
+.CIFPasStBAv:
+		TEST		EDI,4
+		JZ			.CIPasStDAv
 		TEST		EBX,0xfffffffc
-		JZ		.CIStBAp
-		SUB		ESI,BYTE 4
-		MOV		EAX,[ESI]
+		JZ			.CIStBAp
+		SUB			ESI,BYTE 4
+		MOV			EAX,[ESI]
 		BSWAP		EAX
 		STOSD
-		SUB		EBX,BYTE 4
-.CIPasStDAv:	MOV		ECX,EBX
-		SHR		ECX,3
-		OR		ECX,ECX
-		JZ		.CIStDAp
+		SUB			EBX,BYTE 4
+.CIPasStDAv:
+		MOV			ECX,EBX
+		SHR			ECX,3
+		OR			ECX,ECX
+		JZ			.CIStDAp
 ALIGN 4
-.CIStoMMX:	SUB		ESI,BYTE 8
-		MOV		EAX,[ESI]
+.CIStoMMX:
+		SUB			ESI,BYTE 8
+		MOV			EAX,[ESI]
 		BSWAP		EAX
-		DEC		ECX
+		DEC			ECX
 		MOVD		mm6,EAX
-		MOV		EAX,[ESI+4]
+		MOV			EAX,[ESI+4]
 		BSWAP		EAX
 		MOVD		mm0,EAX
 		PUNPCKLDQ	mm0,mm6
 		MOVQ		[EDI],mm0
-		LEA		EDI,[EDI+8]
-		JNZ		.CIStoMMX
+		LEA			EDI,[EDI+8]
+		JNZ			.CIStoMMX
 
-		AND		EBX,BYTE 7
-		JZ		.CIFinSHLine
-.CIStDAp: 	TEST		EBX,4
-		JZ		.CIStBAp
-		SUB		ESI,BYTE 4
-		MOV		EAX,[ESI]
+		AND			EBX,BYTE 7
+		JZ			.CIFinSHLine
+.CIStDAp:
+		TEST		EBX,4
+		JZ			.CIStBAp
+		SUB			ESI,BYTE 4
+		MOV			EAX,[ESI]
 		BSWAP		EAX
 		STOSD
-		SUB		EBX,BYTE 4
-.CIStBAp:	OR		EBX,EBX
-		JZ		.CIPasStBAp
-.CIBcStBAp:	DEC		ESI
-		MOV		AL,[ESI]
+		SUB			EBX,BYTE 4
+.CIStBAp:
+		OR			EBX,EBX
+		JZ			.CIPasStBAp
+.CIBcStBAp:
+		DEC			ESI
+		MOV			AL,[ESI]
 		STOSB
-		DEC		EBX
-		JNZ		.CIBcStBAp
+		DEC			EBX
+		JNZ			.CIBcStBAp
 .CIPasStBAp:
 .CIFinSHLine:
 		MOVD		EAX,mm3
 		MOVD		ECX,mm1
-		ADD		ESI,[SResH]
-		ADD		ESI,EDX
+		ADD			ESI,[SResH]
+		ADD			ESI,EDX
 		MOVD		EBX,mm7
-		ADD		EDI,ECX
-		ADD		ESI,EBX
-		DEC		EBP
-		JNZ		NEAR .CIBcPutSurf
+		ADD			EDI,ECX
+		ADD			ESI,EBX
+		DEC			EBP
+		JNZ			NEAR .CIBcPutSurf
 
-.PasPutSurf:	POP		ESI
-		POP		EDI
-		POP		EBX
+.PasPutSurf:
+		POP			ESI
+		POP			EDI
+		POP			EBX
 		;EMMS
-		RETURN
+	RETURN
 
 ALIGN 32
 _line:

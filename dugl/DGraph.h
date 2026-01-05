@@ -161,20 +161,20 @@ int  GetPixel(void *Point); // unclipped GetPixel
 void Line(void *Point1,void *Point2,int col); // Clipped Line
 void LineMap(void *Point1,void *Point2,int col,unsigned int Map); // Mapped line
 // TypePoly
-#define POLY_SOLID		0
-#define POLY_TEXT		1
-#define POLY_MASK_TEXT		2
-#define POLY_FLAT_DEG		3
-#define POLY_DEG		4
-#define POLY_FLAT_DEG_TEXT	5
+#define POLY_SOLID				0
+#define POLY_TEXT				1
+#define POLY_MASK_TEXT			2
+#define POLY_FLAT_DEG			3
+#define POLY_DEG				4
+#define POLY_FLAT_DEG_TEXT		5
 #define POLY_MASK_FLAT_DEG_TEXT	6
-#define POLY_DEG_TEXT		7
-#define POLY_MASK_DEG_TEXT	8
-#define POLY_EFF_FLAT_DEG	9
-#define POLY_EFF_DEG		10
-#define POLY_EFF_COLCONV	11
-#define POLY_MAX_TYPE		11
-#define POLY_FLAG_DBL_SIDED	0x80000000
+#define POLY_DEG_TEXT			7
+#define POLY_MASK_DEG_TEXT		8
+#define POLY_EFF_FLAT_DEG		9
+#define POLY_EFF_DEG			10
+#define POLY_EFF_COLCONV		11
+#define POLY_MAX_TYPE			11
+#define POLY_FLAG_DBL_SIDED		0x80000000
 void Poly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
 int  ValidSPoly(void *ListPt);
 int  SensPoly(void *ListPt);
@@ -212,14 +212,14 @@ void LineMap16(void *Point1,void *Point2,int col,unsigned int Map);
 void LineBlnd16(void *Point1,void *Point2,int col);
 void LineMapBlnd16(void *Point1,void *Point2,int col,unsigned int Map);
 
-#define POLY16_SOLID		0
-#define POLY16_TEXT		1
-#define POLY16_MASK_TEXT	2
-#define POLY16_RGB		12
-#define POLY16_SOLID_BLND	13
-#define POLY16_TEXT_BLND	14
+#define POLY16_SOLID			0
+#define POLY16_TEXT				1
+#define POLY16_MASK_TEXT		2
+#define POLY16_RGB				12
+#define POLY16_SOLID_BLND		13
+#define POLY16_TEXT_BLND		14
 #define POLY16_MASK_TEXT_BLND	15
-#define POLY16_MAX_TYPE		15
+#define POLY16_MAX_TYPE			15
 #define POLY16_FLAG_DBL_SIDED	0x80000000
 void Poly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
 

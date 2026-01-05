@@ -1289,16 +1289,16 @@ ALIGN 32
 _Poly:
 	ARG	PtrListPt, 4, SSurf, 4, TypePoly, 4, ColPoly, 4
 
-		PUSH            ESI
-		PUSH            EBX
-		MOV		ESI,[EBP+PtrListPt]
-		PUSH            EDI
+		PUSH        ESI
+		PUSH        EBX
+		MOV			ESI,[EBP+PtrListPt]
+		PUSH        EDI
 
 		LODSD		; MOV EAX,[ESI];  ADD ESI,4
-		MOV		[NbPPoly],EAX
-		MOV		ECX,[ESI+8]
-		MOV		EAX,[ESI]
-		MOV		EBX,[ESI+4]
+		MOV			[NbPPoly],EAX
+		MOV			ECX,[ESI+8]
+		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
 		MOVQ		mm0,[EAX] ; = XP1, YP1
 		MOVQ		mm1,[EBX] ; = XP2, YP2
 		MOVQ		mm2,[ECX] ; = XP3, YP3
@@ -1319,31 +1319,31 @@ _Poly:
 		MOVD		EBX,mm2 ; = (YP3-YP2)
 		IMUL		EDI,EDX
 		IMUL		EAX,EBX
-		CMP		EAX,EDI
+		CMP			EAX,EDI
 
-		JL		.TstSiDblSide ; si <= 0 alors pas ok
-		JZ		.SpecialCase
+		JL			.TstSiDblSide ; si <= 0 alors pas ok
+		JZ			.SpecialCase
 
 ;****************
 .DrawPoly:
 		; Sauvegarde les parametre et libere EBP
-		MOV		EAX,[EBP+TypePoly]
-		MOV		EBX,[EBP+ColPoly]
-                AND             EAX,DEL_POLY_FLAG_DBL_SIDED16
-		MOV		ECX,[EBP+SSurf]
-		MOV		[PType],EAX
-		MOV		[clr],EBX
-		MOV		[PPtrListPt],ESI
-		MOV		EDI,[NbPPoly]
-		MOV		[SSSurf],ECX
+		MOV			EAX,[EBP+TypePoly]
+		MOV			EBX,[EBP+ColPoly]
+		AND     	EAX,DEL_POLY_FLAG_DBL_SIDED16
+		MOV			ECX,[EBP+SSurf]
+		MOV			[PType],EAX
+		MOV			[clr],EBX
+		MOV			[PPtrListPt],ESI
+		MOV			EDI,[NbPPoly]
+		MOV			[SSSurf],ECX
 ;-new born determination--------------
-		MOV		EBP,EDI
+		MOV			EBP,EDI
 		MOVQ		mm1,mm3 ; init min = XP1 | YP1
 		MOVQ		mm2,mm3 ; init max = XP1 | YP1
-		DEC		EBP ; = [NbPPoly] - 1
-		DEC		EDI ; " "
+		DEC			EBP ; = [NbPPoly] - 1
+		DEC			EDI ; " "
 .PBoucMnMxXY:
-		MOV		EAX,[ESI+EBP*4] ; = XN, YN
+		MOV			EAX,[ESI+EBP*4] ; = XN, YN
 		MOVQ		mm0,[EAX] ; = XN, YN
 		MOVQ		mm3,mm1 ; = min (x|y)
 		MOVQ		mm4,mm2 ; = max (x|y)
@@ -1357,10 +1357,10 @@ _Poly:
 		PAND		mm6,mm2 ; mm6 = ((xn|yn) < max(x|y)) ? max (x|y) : (0|0)
 		MOVQ		mm1,mm3
 		MOVQ		mm2,mm4
-		DEC		EBP
-		POR		mm1,mm5
-		POR		mm2,mm6
-		JNZ		.PBoucMnMxXY
+		DEC			EBP
+		POR			mm1,mm5
+		POR			mm2,mm6
+		JNZ			.PBoucMnMxXY
 
 		MOVD		EAX,mm2 ; maxx
 		MOVD		ECX,mm1 ; minx
@@ -1371,80 +1371,82 @@ _Poly:
 
 ; poly clipper ? dans l'ecran ? hors de l'ecran ?
 ; poly clipper ?
-		CMP		EAX,[_MaxX]
-		JG		.PolyClip
-		CMP		EBX,[_MaxY]
-		JG		.PolyClip
-		CMP		ECX,[_MinX]
-		JL		.PolyClip
-		CMP		EDX,[_MinY]
-		JL		.PolyClip
+		CMP			EAX,[_MaxX]
+		JG			.PolyClip
+		CMP			EBX,[_MaxY]
+		JG			.PolyClip
+		CMP			ECX,[_MinX]
+		JL			.PolyClip
+		CMP			EDX,[_MinY]
+		JL			.PolyClip
 
 ; trace Poly non Clipper  **************************************************
 		;JMP		.PolyClip
 
-		MOV		ECX,[_OrgY]	 ; calcule DebYPoly, FinYPoly
-		MOV		EAX,[ESI+EDI*4]
-		ADD		EDX,ECX
-		ADD		EBX,ECX
-		MOV		[DebYPoly],EDX
-		MOV		[FinYPoly],EBX
+		MOV			ECX,[_OrgY]	 ; calcule DebYPoly, FinYPoly
+		MOV			EAX,[ESI+EDI*4]
+		ADD			EDX,ECX
+		ADD			EBX,ECX
+		MOV			[DebYPoly],EDX
+		MOV			[FinYPoly],EBX
 ; calcule les bornes horizontal du poly
-		MOV		EDX,EDI	; EDX compteur de point = NbPPoly-1
+		MOV			EDX,EDI	; EDX compteur de point = NbPPoly-1
 		MOV 		ECX,[EAX]
 		MOV 		EBP,[EAX+4]
-		MOV		[XP2],ECX
-		MOV		[YP2],EBP
+		MOV			[XP2],ECX
+		MOV			[YP2],EBP
 		@InCalculerContour
-		MOV		EAX,[PType]
-		CALL		[InFillPolyProc+EAX*4]
-		JMP		.PasDrawPoly
+		MOV			EAX,[PType]
+		JMP			[InFillPolyProc+EAX*4]
+		;JMP			.PasDrawPoly
 .PolyClip:
 ; hors de l'ecran ? alors fin
-		CMP		EAX,[_MinX]
-		JL		.PasDrawPoly
-		CMP		EBX,[_MinY]
-		JL		.PasDrawPoly
-		CMP		ECX,[_MaxX]
-		JG		.PasDrawPoly
-		CMP		EDX,[_MaxY]
-		JG		.PasDrawPoly
+		CMP			EAX,[_MinX]
+		JL			.PasDrawPoly
+		CMP			EBX,[_MinY]
+		JL			.PasDrawPoly
+		CMP			ECX,[_MaxX]
+		JG			.PasDrawPoly
+		CMP			EDX,[_MaxY]
+		JG			.PasDrawPoly
 
 ; trace Poly Clipper  ******************************************************
-		MOV		EAX,[_MaxY]	; determine DebYPoly, FinYPoly
-		MOV		ECX,[_MinY]
-		CMP		EBX,EAX
-		JL		.PasSupMxY
-		MOV		EBX,EAX
-.PasSupMxY:	CMP		EDX,ECX
-		JG		.PasInfMnY
-		MOV		EDX,ECX
+		MOV			EAX,[_MaxY]	; determine DebYPoly, FinYPoly
+		MOV			ECX,[_MinY]
+		CMP			EBX,EAX
+		JL			.PasSupMxY
+		MOV			EBX,EAX
+.PasSupMxY:
+		CMP			EDX,ECX
+		JG			.PasInfMnY
+		MOV			EDX,ECX
 .PasInfMnY:
-		MOV		EBP,[_OrgY]	  ; Ajuste [DebYPoly],[FinYPoly]
-		MOV		EAX,[ESI+EDI*4]
-		ADD		EDX,EBP
-		ADD		EBX,EBP
-		MOV		[DebYPoly],EDX
-		MOV		[FinYPoly],EBX
-		MOV		EDX,EDI ; ; EDX compteur de point = NbPPoly-1
+		MOV			EBP,[_OrgY]	  ; Ajuste [DebYPoly],[FinYPoly]
+		MOV			EAX,[ESI+EDI*4]
+		ADD			EDX,EBP
+		ADD			EBX,EBP
+		MOV			[DebYPoly],EDX
+		MOV			[FinYPoly],EBX
+		MOV			EDX,EDI ; ; EDX compteur de point = NbPPoly-1
 		MOV 		ECX,[EAX]
 		MOV 		EBP,[EAX+4]
-		MOV		[XP2],ECX
-		MOV		[YP2],EBP
+		MOV			[XP2],ECX
+		MOV			[YP2],EBP
 		MOVD		mm4,ECX
 		MOVD		mm5,EBP		; sauvegarde xp2,yp2
 		@ClipCalculerContour
 
 		CMP		DWORD [DebYPoly],BYTE (-1)
-		JE		.PasDrawPoly
 		MOV		EAX,[PType]
-		CALL		[ClFillPolyProc+EAX*4]
+		JE		.PasDrawPoly
+		JMP		[ClFillPolyProc+EAX*4]
 .PasDrawPoly:
-                POP             EDI
+
+		POP             EDI
 		POP             EBX
-                POP             ESI
+        POP             ESI
 		;EMMS
-		RETURN
+	RETURN
 
 .TstSiDblSide:	TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED >> 24
 		MOV		ECX,[NbPPoly]
@@ -1870,16 +1872,16 @@ ALIGN 32
 _Poly16:
 	ARG	PtrListPt16, 4, SSurf16, 4, TypePoly16, 4, ColPoly16, 4
 
-		PUSH            ESI
-		PUSH            EBX
-		MOV		ESI,[EBP+PtrListPt16]
-		PUSH            EDI
+		PUSH        ESI
+		PUSH        EBX
+		MOV			ESI,[EBP+PtrListPt16]
+		PUSH        EDI
 
 		LODSD		; MOV EAX,[ESI];  ADD ESI,4
-		MOV		[NbPPoly],EAX
-		MOV		ECX,[ESI+8]
-		MOV		EAX,[ESI]
-		MOV		EBX,[ESI+4]
+		MOV			[NbPPoly],EAX
+		MOV			ECX,[ESI+8]
+		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
 		MOVQ		mm0,[EAX] ; = XP1, YP1
 		MOVQ		mm1,[EBX] ; = XP2, YP2
 		MOVQ		mm2,[ECX] ; = XP3, YP3
@@ -1900,30 +1902,30 @@ _Poly16:
 		MOVD		EBX,mm2 ; = (YP3-YP2)
 		IMUL		EDI,EDX
 		IMUL		EAX,EBX
-		CMP		EAX,EDI
+		CMP			EAX,EDI
 
-		JL		.TstSiDblSide ; si <= 0 alors pas ok
-		JZ		.SpecialCase
+		JL			.TstSiDblSide ; si <= 0 alors pas ok
+		JZ			.SpecialCase
 ;****************
 .DrawPoly:
 		; Sauvegarde les parametre et libere EBP
-		MOV		EAX,[EBP+TypePoly16]
-		MOV		EBX,[EBP+ColPoly16]
-                AND             EAX,DEL_POLY_FLAG_DBL_SIDED16
-		MOV		ECX,[EBP+SSurf16]
-		MOV		[PType],EAX
-		MOV		[clr],EBX
-		MOV		[PPtrListPt],ESI
-		MOV		EDI,[NbPPoly]
-		MOV		[SSSurf],ECX
+		MOV			EAX,[EBP+TypePoly16]
+		MOV			EBX,[EBP+ColPoly16]
+		AND     	EAX,DEL_POLY_FLAG_DBL_SIDED16
+		MOV			ECX,[EBP+SSurf16]
+		MOV			[PType],EAX
+		MOV			[clr],EBX
+		MOV			[PPtrListPt],ESI
+		MOV			EDI,[NbPPoly]
+		MOV			[SSSurf],ECX
 ;-new born determination--------------
-		MOV		EBP,EDI
+		MOV			EBP,EDI
 		MOVQ		mm1,mm3 ; init min = XP1 | YP1
 		MOVQ		mm2,mm3 ; init max = XP1 | YP1
-		DEC		EBP ; = [NbPPoly] - 1
-		DEC		EDI ; " "
+		DEC			EBP ; = [NbPPoly] - 1
+		DEC			EDI ; " "
 .PBoucMnMxXY:
-		MOV		EAX,[ESI+EBP*4] ; = XN, YN
+		MOV			EAX,[ESI+EBP*4] ; = XN, YN
 		MOVQ		mm0,[EAX] ; = XN, YN
 		MOVQ		mm3,mm1 ; = min (x|y)
 		MOVQ		mm4,mm2 ; = max (x|y)
@@ -1937,10 +1939,10 @@ _Poly16:
 		PAND		mm6,mm2 ; mm6 = ((xn|yn) < max(x|y)) ? max (x|y) : (0|0)
 		MOVQ		mm1,mm3
 		MOVQ		mm2,mm4
-		DEC		EBP
-		POR		mm1,mm5
-		POR		mm2,mm6
-		JNZ		.PBoucMnMxXY
+		DEC			EBP
+		POR			mm1,mm5
+		POR			mm2,mm6
+		JNZ			.PBoucMnMxXY
 		MOVD		EAX,mm2 ; maxx
 		MOVD		ECX,mm1 ; minx
 		PSRLQ		mm2,32
@@ -1950,88 +1952,90 @@ _Poly16:
 ;-----------------------------------------
 
 ; poly clipper ? dans l'ecran ? hors de l'ecran ?
-		CMP		EAX,[_MaxX]
-		JG		.PolyClip
-		CMP		ECX,[_MinX]
-		JL		.PolyClip
-		CMP		EBX,[_MaxY]
-		JG		.PolyClip
-		CMP		EDX,[_MinY]
-		JL		.PolyClip
+		CMP			EAX,[_MaxX]
+		JG			.PolyClip
+		CMP			ECX,[_MinX]
+		JL			.PolyClip
+		CMP			EBX,[_MaxY]
+		JG			.PolyClip
+		CMP			EDX,[_MinY]
+		JL			.PolyClip
 
 ; trace Poly non Clipper  **************************************************
 		;JMP		.PolyClip
 
-		MOV		ECX,[_OrgY]	 ; calcule DebYPoly, FinYPoly
-		MOV		EAX,[ESI+EDI*4]
-		ADD		EDX,ECX
-		ADD		EBX,ECX
-		MOV		[DebYPoly],EDX
-		MOV		[FinYPoly],EBX
+		MOV			ECX,[_OrgY]	 ; calcule DebYPoly, FinYPoly
+		MOV			EAX,[ESI+EDI*4]
+		ADD			EDX,ECX
+		ADD			EBX,ECX
+		MOV			[DebYPoly],EDX
+		MOV			[FinYPoly],EBX
 ; calcule les bornes horizontal du poly
-		MOV		EDX,EDI ; = NbPPoly - 1
-		MOV		ECX,[EAX]
-		MOV		EBP,[EAX+4]
-		MOV		[XP2],ECX
-		MOV		[YP2],EBP
+		MOV			EDX,EDI ; = NbPPoly - 1
+		MOV			ECX,[EAX]
+		MOV			EBP,[EAX+4]
+		MOV			[XP2],ECX
+		MOV			[YP2],EBP
 		@InCalculerContour16
-		MOV		EAX,[PType]
-		CALL		[InFillPolyProc16+EAX*4]
-		JMP		.PasDrawPoly
+		MOV			EAX,[PType]
+		JMP			[InFillPolyProc16+EAX*4]
+		;JMP			.PasDrawPoly
 .PolyClip:
 ; outside view ? now draw !
-		CMP		EAX,[_MinX]
-		JL		.PasDrawPoly
-		CMP		EBX,[_MinY]
-		JL		.PasDrawPoly
-		CMP		ECX,[_MaxX]
-		JG		.PasDrawPoly
-		CMP		EDX,[_MaxY]
-		JG		.PasDrawPoly
+		CMP			EAX,[_MinX]
+		JL			.PasDrawPoly
+		CMP			EBX,[_MinY]
+		JL			.PasDrawPoly
+		CMP			ECX,[_MaxX]
+		JG			.PasDrawPoly
+		CMP			EDX,[_MaxY]
+		JG			.PasDrawPoly
 ; Drop too big poly
 		; drop too BIG tri
-		SUB		ECX,EAX  ; deltaY
-		SUB		EDX,EBX  ; deltaX
-		CMP		ECX,MaxDeltaDim
-		JGE		.PasDrawPoly
-		CMP		EDX,MaxDeltaDim
-		JGE		.PasDrawPoly
-		ADD		ECX,EAX ; restor MaxY
-		ADD		EDX,EBX ; restor MaxX
+		SUB			ECX,EAX  ; deltaY
+		SUB			EDX,EBX  ; deltaX
+		CMP			ECX,MaxDeltaDim
+		JGE			.PasDrawPoly
+		CMP			EDX,MaxDeltaDim
+		JGE			.PasDrawPoly
+		ADD			ECX,EAX ; restor MaxY
+		ADD			EDX,EBX ; restor MaxX
 
 ; trace Poly Clipper  ******************************************************
-		MOV		EAX,[_MaxY]	; determine DebYPoly, FinYPoly
-		MOV		ECX,[_MinY]
-		CMP		EBX,EAX
-		JL		.PasSupMxY
-		MOV		EBX,EAX
-.PasSupMxY:	CMP		EDX,ECX
-		JG		.PasInfMnY
-		MOV		EDX,ECX
+		MOV			EAX,[_MaxY]	; determine DebYPoly, FinYPoly
+		MOV			ECX,[_MinY]
+		CMP			EBX,EAX
+		JL			.PasSupMxY
+		MOV			EBX,EAX
+.PasSupMxY:
+		CMP			EDX,ECX
+		JG			.PasInfMnY
+		MOV			EDX,ECX
 .PasInfMnY:
-		MOV		EBP,[_OrgY]	  ; Ajuste [DebYPoly],[FinYPoly]
-		MOV		EAX,[ESI+EDI*4]
-		ADD		EDX,EBP
-		ADD		EBX,EBP
-		MOV		[DebYPoly],EDX
-		MOV		[FinYPoly],EBX
-		MOV		EDX,EDI ; EDX compteur de point = NbPPoly-1
+		MOV			EBP,[_OrgY]	  ; Ajuste [DebYPoly],[FinYPoly]
+		MOV			EAX,[ESI+EDI*4]
+		ADD			EDX,EBP
+		ADD			EBX,EBP
+		MOV			[DebYPoly],EDX
+		MOV			[FinYPoly],EBX
+		MOV			EDX,EDI ; EDX compteur de point = NbPPoly-1
 		MOV 		ECX,[EAX]
 		MOV 		EBP,[EAX+4]
-		MOV		[XP2],ECX
-		MOV		[YP2],EBP
+		MOV			[XP2],ECX
+		MOV			[YP2],EBP
 		MOVD		mm4,ECX
 		MOVD		mm5,EBP		; sauvegarde xp2,yp2
 		@ClipCalculerContour ; use same as 8bpp as it compute xdeb and xfin for eax hzline
 
-		CMP		DWORD [DebYPoly],BYTE (-1)
-		JE		.PasDrawPoly
-		MOV		EAX,[PType]
-		CALL		[ClFillPolyProc16+EAX*4]
+		CMP			DWORD [DebYPoly],BYTE (-1)
+		MOV			EAX,[PType]
+		JE			.PasDrawPoly
+		JMP			[ClFillPolyProc16+EAX*4]
+
 .PasDrawPoly:
-        POP             EDI
-		POP             EBX
-        POP             ESI
+        POP         EDI
+		POP         EBX
+        POP         ESI
 		;EMMS
 		RETURN
 
@@ -2246,16 +2250,16 @@ ClFillPolyProc:	DD	ClipFillSOLID,ClipFillTEXT,ClipFillMASK_TEXT,ClipFillFLAT_DEG
 
 ;* 16bpp poly proc****
 InFillPolyProc16:
-				DD	InFillSOLID16,InFillTEXT16,InFillMASK_TEXT16,InFillFLAT_DEG,InFillDEG
-				DD	InFillFLAT_DEG_TEXT,InFillMASK_FLAT_DEG_TEXT
-				DD	InFillDEG_TEXT,InFillMASK_DEG_TEXT,InFillEFF_FDEG
-				DD	InFillEFF_DEG,InFillEFF_COLCONV
+				DD	InFillSOLID16,InFillTEXT16,InFillMASK_TEXT16,dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16,dummyFill16
 				DD	InFillRGB16,InFillSOLID_BLND16,InFillTEXT_BLND16,InFillMASK_TEXT_BLND16
 
 ClFillPolyProc16:
-				DD	ClipFillSOLID16,ClipFillTEXT16,ClipFillMASK_TEXT16,ClipFillFLAT_DEG,ClipFillDEG
-				DD	ClipFillFLAT_DEG_TEXT,ClipFillMASK_FLAT_DEG_TEXT
-				DD	ClipFillDEG_TEXT,ClipFillMASK_DEG_TEXT
-				DD	ClipFillEFF_FDEG,ClipFillEFF_DEG,ClipFillEFF_COLCONV
+				DD	ClipFillSOLID16,ClipFillTEXT16,ClipFillMASK_TEXT16,dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16
+				DD	dummyFill16,dummyFill16,dummyFill16
 				DD	ClipFillRGB16,ClipFillSOLID_BLND16,ClipFillTEXT_BLND16,ClipFillMASK_TEXT_BLND16
 

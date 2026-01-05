@@ -1,5 +1,10 @@
 DegMask		EQU		0x3f
 
+%macro  @FILLRET   0
+    JMP _Poly.PasDrawPoly
+%endmacro
+
+
 ; param ESI: source Surf, EDI: Dest Surf
 ; use mm0, ... , mm7
 ; return no : surf copied
@@ -30,27 +35,30 @@ DegMask		EQU		0x3f
 ALIGN 32
 InFillSOLID:
 		MOV       	EAX,[clr] ; rempli le polygone avec clr
-		MOV		EBX,[DebYPoly]	; -
-                MOV       	AH,AL
-		LEA		EDX,[EBX*4]	; -
-		MOV		ECX,EAX
-		SUB		EBX,[FinYPoly]	; -
+		MOV			EBX,[DebYPoly]	; -
+        MOV       	AH,AL
+		LEA			EDX,[EBX*4]	; -
+		MOV			ECX,EAX
+		SUB			EBX,[FinYPoly]	; -
 		BSWAP     	EAX
-		NEG		EBX		; -
-		MOV		AX,CX
+		NEG			EBX		; -
+		MOV			AX,CX
 ;ALIGN 4
-.BcFillText:	MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]
-		MOV		ESI,[_TPolyAdFin+EDX+EBX*4]
-		CMP		ESI,EDI
-		JG		.PasSwapAd
+.BcFillText:
+		MOV			EDI,[_TPolyAdDeb+EDX+EBX*4]
+		MOV			ESI,[_TPolyAdFin+EDX+EBX*4]
+		CMP			ESI,EDI
+		JG			.PasSwapAd
 		XCHG		EDI,ESI
-.PasSwapAd:	SUB		ESI,EDI
-		INC		ESI
+.PasSwapAd:
+		SUB			ESI,EDI
+		INC			ESI
 		@SolidHLine
-		DEC		EBX
+		DEC			EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
+
 ALIGN 32
 ClipFillSOLID:
 		MOV		EAX,[clr] ; rempli le polygone avec clr
@@ -98,7 +106,8 @@ ClipFillSOLID:
 		PADDD		mm3,[_ResH]
 		JNS		.BcFillSolid
 .FinClipSOLID:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = TEXT
 ALIGN 32
@@ -137,7 +146,7 @@ InFillTEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillTEXT:
@@ -210,7 +219,8 @@ ClipFillTEXT:
 		PADDD		mm3,mm4
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = MASK_TEXT
 ALIGN 32
@@ -249,7 +259,7 @@ InFillMASK_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillMASK_TEXT:
@@ -321,7 +331,8 @@ ClipFillMASK_TEXT:
 		PADDD		mm3,mm4
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = FLAT_DEG
 ALIGN 32
@@ -339,7 +350,7 @@ InFillFLAT_DEG:
 		MOV		[clr],EAX
 		JMP		ESI
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillFLAT_DEG:
@@ -356,7 +367,7 @@ ClipFillFLAT_DEG:
 		MOV		[clr],EAX
 		JMP		ESI
 
-		RET
+	@FILLRET
 
 ;******* POLYTYPE = DEG
 ;EAX;charge,EBX;l,;ECX;cpt hz,;EDX;l,;ESI;ptrTbDegCol,;EDI;Dest;EBP; l
@@ -393,7 +404,7 @@ InFillDEG:
 		DEC		EBX
 		JNS		.BcFillDEG
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillDEG:
@@ -466,7 +477,8 @@ ClipFillDEG:
 		PADDD		mm3,mm4
 		JNS		.BcFillDEG
 .FinClipDEG:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = FLAT_DEG_TEXT
 ALIGN 32
@@ -513,7 +525,7 @@ InFillFLAT_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillFLAT_DEG_TEXT:
@@ -593,7 +605,8 @@ ClipFillFLAT_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 
 ;******* POLYTYPE = MASK_FLAT_DEG_TEXT
@@ -642,7 +655,7 @@ InFillMASK_FLAT_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 
 ALIGN 32
@@ -723,7 +736,8 @@ ClipFillMASK_FLAT_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 
 ;******* POLYTYPE = DEG_TEXT
@@ -772,7 +786,7 @@ InFillDEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillDEG_TEXT:
@@ -852,7 +866,8 @@ ClipFillDEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 
 ;******* POLYTYPE = MASK_DEG_TEXT
@@ -901,7 +916,7 @@ InFillMASK_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillMASK_DEG_TEXT:
@@ -981,7 +996,8 @@ ClipFillMASK_DEG_TEXT:
 		DEC		EBX
 		JNS		.BcFillText
 .FinClipText:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = EFF_FDEG
 ALIGN 32
@@ -1014,7 +1030,7 @@ InFillEFF_FDEG:
 		DEC		EBX
 		JNS		.BcFillDEG
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillEFF_FDEG:
@@ -1084,7 +1100,8 @@ ClipFillEFF_FDEG:
 		PADDD		mm3,mm4
 		JNS		.BcFillDEG
 .FinClipDEG:
-		RET
+
+	@FILLRET
 
 
 ;******* POLYTYPE = EFF_DEG
@@ -1115,7 +1132,7 @@ InFillEFF_DEG:
 		DEC		EBX
 		JNS		.BcFillDEG
 
-		RET
+	@FILLRET
 
 ALIGN 32
 ClipFillEFF_DEG:
@@ -1181,7 +1198,8 @@ ClipFillEFF_DEG:
 		PADDD		mm3,mm4
 		JNS		.BcFillDEG
 .FinClipDEG:
-		RET
+
+	@FILLRET
 
 ;******* POLYTYPE = EFF_COLCONV
 ALIGN 32
@@ -1213,7 +1231,8 @@ InFillEFF_COLCONV:
 		DEC		EBX
 		JNS		.BcFillDEG
 .Fin:
-		RET
+
+	@FILLRET
 
 ALIGN 32
 ClipFillEFF_COLCONV:
@@ -1280,5 +1299,6 @@ ClipFillEFF_COLCONV:
 		PADDD		mm3,mm4
 		JNS		.BcFillDEG
 .FinClipDEG:
-		RET
+
+	@FILLRET
 

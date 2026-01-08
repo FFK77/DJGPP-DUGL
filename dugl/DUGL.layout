@@ -2,55 +2,24 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Release" />
-	<File name="hzline16.asm" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="poly16.asm" open="0" top="0" tabpos="20" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="496" topLine="177" />
+			<Cursor1 position="645" topLine="21" />
 		</Cursor>
 	</File>
-	<File name="mpoly16.asm" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="intrdugl.h" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="3130" topLine="180" />
 		</Cursor>
 	</File>
-	<File name="fill16.asm" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="timerc.c" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="17382" topLine="718" />
+			<Cursor1 position="559" topLine="9" />
 		</Cursor>
 	</File>
-	<File name="MFill16.asm" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="graphc.c" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="614" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="transf.asm" open="1" top="0" tabpos="2" split="2" active="1" splitpos="762" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="20394" topLine="822" />
-			<Cursor2 position="12364" topLine="505" />
-		</Cursor>
-	</File>
-	<File name="TIMER.ASM" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="335" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="mgraphc.c" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1091" topLine="21" />
-		</Cursor>
-	</File>
-	<File name="PTS_LINE.ASM" open="0" top="0" tabpos="23" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3961" topLine="127" />
-		</Cursor>
-	</File>
-	<File name="MOUSE.ASM" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4201" topLine="222" />
-		</Cursor>
-	</File>
-	<File name="CONTROLC.C" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="7052" topLine="190" />
+			<Cursor1 position="36849" topLine="1281" />
 		</Cursor>
 	</File>
 	<File name="DKeyb.h" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -58,9 +27,39 @@
 			<Cursor1 position="0" topLine="60" />
 		</Cursor>
 	</File>
-	<File name="HZLINE.ASM" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="ipxc.c" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="73580" topLine="3335" />
+			<Cursor1 position="2404" topLine="68" />
+		</Cursor>
+	</File>
+	<File name="mgraph.asm" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17948" topLine="27" />
+		</Cursor>
+	</File>
+	<File name="DGraph.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7400" topLine="164" />
+		</Cursor>
+	</File>
+	<File name="MOUSE.ASM" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4201" topLine="222" />
+		</Cursor>
+	</File>
+	<File name="mpoly16.asm" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="hzline16.asm" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="496" topLine="177" />
+		</Cursor>
+	</File>
+	<File name="TIMER.ASM" open="0" top="0" tabpos="23" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="427" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="KEYBOARD.ASM" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -68,24 +67,10 @@
 			<Cursor1 position="21196" topLine="1054" />
 		</Cursor>
 	</File>
-	<File name="mgraph.asm" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="transf.asm" open="0" top="0" tabpos="2" split="2" active="1" splitpos="762" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="17948" topLine="27" />
-		</Cursor>
-	</File>
-	<File name="graphc.c" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="46096" topLine="1694" />
-		</Cursor>
-	</File>
-	<File name="line16.asm" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1876" topLine="198" />
-		</Cursor>
-	</File>
-	<File name="graph.asm" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="25276" topLine="1267" />
+			<Cursor1 position="20394" topLine="822" />
+			<Cursor2 position="12364" topLine="505" />
 		</Cursor>
 	</File>
 	<File name="DMGRaph.h" open="0" top="0" tabpos="26" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -93,39 +78,75 @@
 			<Cursor1 position="1247" topLine="18" />
 		</Cursor>
 	</File>
-	<File name="intrdugl.h" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="graph.asm" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3130" topLine="180" />
+			<Cursor1 position="46198" topLine="2146" />
 		</Cursor>
 	</File>
-	<File name="FILL.ASM" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="line16.asm" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="537" topLine="1237" />
+			<Cursor1 position="1876" topLine="198" />
 		</Cursor>
 	</File>
-	<File name="DMouse.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="MFill16.asm" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="614" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="CONTROLC.C" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="369" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="pts16.asm" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="516" />
+		</Cursor>
+	</File>
+	<File name="HZLINE.ASM" open="0" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="73580" topLine="3323" />
+		</Cursor>
+	</File>
+	<File name="FILL.ASM" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="211" topLine="3" />
+		</Cursor>
+	</File>
+	<File name="DTimer.h" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="367" topLine="8" />
+		</Cursor>
+	</File>
+	<File name="PTS_LINE.ASM" open="1" top="0" tabpos="1" split="2" active="1" splitpos="615" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8297" topLine="133" />
+			<Cursor2 position="4442" topLine="166" />
+		</Cursor>
+	</File>
+	<File name="mgraphc.c" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1091" topLine="21" />
+		</Cursor>
+	</File>
+	<File name="DUGL.h" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="247" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="Poly.asm" open="0" top="0" tabpos="33" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="635" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="fill16.asm" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="114" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="DMouse.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="958" topLine="22" />
-		</Cursor>
-	</File>
-	<File name="DTimer.h" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="175" topLine="3" />
-		</Cursor>
-	</File>
-	<File name="poly16.asm" open="0" top="0" tabpos="21" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="645" topLine="21" />
-		</Cursor>
-	</File>
-	<File name="DGraph.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="7741" topLine="228" />
-		</Cursor>
-	</File>
-	<File name="DUGL.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="125" topLine="0" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

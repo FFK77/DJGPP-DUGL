@@ -2160,10 +2160,10 @@ Col1			DD	0
 Col2			DD	0
 revCol			DD	0
 _CurViewVSurf	DD	0;-----------------------
-PMaxX			DD	0
-PMaxY			DD	0
-PMinX			DD	0
-PMinY			DD	0
+PutSurfMaxX     DD	0
+PutSurfMaxY     DD	0
+PutSurfMinX     DD	0
+PutSurfMinY     DD	0
 NbPPoly			DD	0
 DebYPoly		DD	0
 FinYPoly		DD	0

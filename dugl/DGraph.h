@@ -204,6 +204,9 @@ void rectmap(int x1,int y1,int x2,int y2,int rcol,unsigned int rmap);
 
 // 16 bpp drawing functions
 // ------------------------
+
+#define RGB16(r,g,b) ((r>>3)|((g>>2)<<5)|((b>>3)<<11))
+
 void PutPixel16(void *Point,int col);
 int GetPixel16(void *Point);
 void Clear16(int clrcol);  // efface tout la surface
@@ -271,6 +274,7 @@ int  SizeOutRLE(void *In,int LenIn,int ResHz);
 // GIF
 int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn);
 int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024);
+int  LoadGIF16(Surf **S16,char *filename); // load a 8bpp gif and convert it to 16 bpp
 int  SaveMemGIF(Surf *S,void *Out,void *PalBGR1024); // NI (not implemented)
 int  SaveGIF(Surf *S,const char *Fname,void *PalBGR1024); // NI
 int  SizeSaveGIF(Surf *S); // NI

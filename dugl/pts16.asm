@@ -34,16 +34,39 @@ _PutSurf16:
 		ADD			EBX,[SMaxY] ; EBX = PutMaxY
 		ADD			EDX,[SMinY] ; EDX = PutMinY
 .InvVtPut:
-		CMP			EAX,[_MaxX]
+
+		CMP			EAX,[_MinX]
+		JL			.PasPutSurf
+		CMP			EBX,[_MinY]
+		JL			.PasPutSurf
+		CMP			ECX,[_MaxX]
+		JG			.PasPutSurf
+		CMP			EDX,[_MaxY]
+		JG			.PasPutSurf
+
+		MOV			[PType],ESI ; save put Type
+
+		; compute the clipped/unclipped put rectangle coordinaates in (PutSurfMinX, PutSurfMinY, PutSurfMaxX, PutSurfMaxY)
+		;==========================================
+		ClipStorePutSurfCoords
+
+		;=========================
+		; --- compute Put coordinates of the entire SrcSurf (as if source surf is full view)
+		MOV         EAX,[EBP+XPSN16]  ; EAX = PutMaxX / without clipping
+		MOV         EBX,[EBP+YPSN16]  ; EBX = PutMaxY / without clipping
+		MOV			ESI,[PType] ; restore PType
+		ComputeFullViewSrcSurfPutCoords
+
+		CMP			EAX,[PutSurfMaxX]
 		JG			.PutSurfClip
-		CMP			EBX,[_MaxY]
+		CMP			EBX,[PutSurfMaxY]
 		JG			.PutSurfClip
-		CMP			ECX,[_MinX]
+		CMP			ECX,[PutSurfMinX]
 		JL			.PutSurfClip
-		CMP			EDX,[_MinY]
+		CMP			EDX,[PutSurfMinY]
 		JL			.PutSurfClip
+
 ; PutSurf non Clipper *****************************
-		MOV			[PType],ESI
 		MOV			EBP,[SResV]
 		TEST		ESI,2 ; vertically reversed ?
 		JZ			.NormAdSPut
@@ -125,7 +148,7 @@ _PutSurf16:
 		MOV			[Plus],EAX
 
 .IBcPutSurf:
-		MOV			EBX,[SResH]
+		MOV			EBX,EDX
 .IBcStBAv:
 		TEST		EDI,2
 		JZ			.IFPasStBAv
@@ -145,24 +168,27 @@ _PutSurf16:
 		ROR			EAX,16 ; swap word order
 		STOSD
 .IPasStDAv:
-		MOV			ECX,EBX
-		SHR			ECX,2
-		JZ			.IStDAp
+		;MOV			ECX,EBX
+		;SHR			ECX,2
+		;JZ			.IStDAp
 ;ALIGN 4
 .IStoMMX:
+		TEST		EBX,0xfffffffc
+		JZ			SHORT .IStDAp
+
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
-		MOV			EDX,[ESI+4]
+		MOV			ECX,[ESI+4]
 		ROR			EAX,16
-		ROR			EDX,16
+		ROR			ECX,16
 		MOVD		mm1,EAX
-		MOVD		mm0,EDX
-		DEC			ECX
+		MOVD		mm0,ECX
+		SUB			EBX, BYTE 4
 		PUNPCKLDQ	mm0,mm1
 		MOVQ		[EDI],mm0
 		LEA			EDI,[EDI+8]
 
-		JNZ			.IStoMMX
+		JMP			.IStoMMX
 
 		AND			EBX,BYTE 3
 		JZ			.IFinSHLine
@@ -190,23 +216,19 @@ _PutSurf16:
 		DEC			EBP
 		JNZ			.IBcPutSurf
 
-		JMP			.PasPutSurf
+.PasPutSurf:
+		POP		ESI
+		POP		EDI
+		POP		EBX
+
+	RETURN
 
 .PutSurfClip:
-		CMP			EAX,[_MinX]
-		JL			.PasPutSurf
-		CMP			EBX,[_MinY]
-		JL			.PasPutSurf
-		CMP			ECX,[_MaxX]
-		JG			.PasPutSurf
-		CMP			EDX,[_MaxY]
-		JG			.PasPutSurf
 ; PutSurf Clipper **********************************************
-		MOV			[PType],ESI ; sauvegarde le type
 		XOR			EDI,EDI   ; Y Fin Source
 		XOR			ESI,ESI   ; X deb Source
 
-		MOV			EBP,[_MinX]
+		MOV			EBP,[PutSurfMinX]
 		CMP			ECX,EBP ; CMP minx, _MinX
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
@@ -217,7 +239,7 @@ _PutSurf16:
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
-		MOV			EBP,[_MaxY]
+		MOV			EBP,[PutSurfMaxY]
 		CMP			EBX,EBP ; cmp maxy, _MaxY
 		JLE			.PsSupMaxY   ; YP2>_MaxY
 		MOV			EDI,EBP
@@ -226,12 +248,12 @@ _PutSurf16:
 		ADD			EDI,EBX
 		MOV			EBX,EBP
 .PsSupMaxY:
-		MOV			EBP,[_MinY]
+		MOV			EBP,[PutSurfMinY]
 		CMP			EDX,EBP      ; YP1<_MinY
 		JGE			.PsInfMinY
 		MOV			EDX,EBP
 .PsInfMinY:
-		MOV			EBP,[_MaxX]
+		MOV			EBP,[PutSurfMaxX]
 		CMP			EAX,EBP      ; XP2>_MaxX
 		JLE			.PsSupMaxX
 		TEST		BYTE [PType],1
@@ -285,52 +307,7 @@ _PutSurf16:
 		TEST		BYTE [PType],1
 		JNZ        .CInvHzPSurf
 		ADD			[Plus],EAX
-.CBcPutSurf:
-		MOV			EBX,EDX
-.CBcStBAv:
-		TEST		EDI,2
-		JZ			.CFPasStBAv
-		DEC			EBX
-		MOVSW
-		JZ			.CFinSHLine
-.CFPasStBAv:
-		TEST		EDI,4
-		JZ			.CPasStDAv
-		CMP			EBX,1
-		JLE			.CStBAp
-		MOVSD
-		SUB			EBX,BYTE 2
-.CPasStDAv:
-		MOV			ECX,EBX
-		SHR			ECX,2
-		JZ			.CStDAp
-;ALIGN 4
-.CStoMMX:
-		MOVQ		mm0,[ESI]
-		DEC			ECX
-		MOVQ		[EDI],mm0
-		LEA			ESI,[ESI+8]
-		LEA			EDI,[EDI+8]
-		JNZ			.CStoMMX
-
-		AND			EBX,BYTE 3
-		JZ			.CFinSHLine
-.CStDAp:
-		TEST		EBX,2
-		JZ			.CStBAp
-		MOVSD
-		SUB			EBX,BYTE 2
-.CStBAp:
-		OR			EBX,EBX
-		JZ			.CPasStBAp
-		MOVSW
-.CPasStBAp:
-.CFinSHLine:
-		ADD			ESI,[Plus] ; += PlusSSurf + nextLinePlus
-		ADD			EDI,[Plus2] ; += PlusDSurf
-		DEC			EBP
-		JNZ			.CBcPutSurf
-		JMP			.PasPutSurf
+		JMP			.BcPutSurf
 
 .CInvHzPSurf:   ; clipper et inverser horizontalement
 
@@ -338,74 +315,8 @@ _PutSurf16:
 		LEA			EAX,[EAX+EDX*2] ; add to jump to the end
 		LEA			ESI,[ESI+EDX*2] ; jump to the end
 		MOV			[Plus],EAX
-.CIBcPutSurf:
-		MOV			EBX,EDX
-.CIBcStBAv:
-		TEST		EDI,2
-		JZ			.CIFPasStBAv
-		SUB			ESI, BYTE 2
-		MOV			AX,[ESI]
-		DEC			EBX
-		STOSW
-		JZ			.CIFinSHLine
-.CIFPasStBAv:
-		TEST		EDI,4
-		JZ			.CIPasStDAv
-		CMP			EBX,1
-		JLE			.CIStBAp
-		SUB			ESI,BYTE 4
-		MOV			EAX,[ESI]
-		ROR			EAX,16 ; reverse word order
-		STOSD
-		SUB			EBX,BYTE 2
-.CIPasStDAv:
-		MOV			ECX,EBX
-		SHR			ECX,2
-		JZ			.CIStDAp
-;ALIGN 4
-.CIStoMMX:
-		SUB			ESI,BYTE 8
-		MOV			EAX,[ESI]
-		ROR			EAX,16
-		MOVD		mm1,EAX
-		MOV			EAX,[ESI+4]
-		ROR			EAX,16
-		DEC			ECX
-		MOVD		mm0,EAX
-		PUNPCKLDQ	mm0,mm1
-		MOVQ		[EDI],mm0
-		LEA			EDI,[EDI+8]
-		JNZ			.CIStoMMX
+		JMP			.IBcPutSurf
 
-		AND			EBX,BYTE 3
-		JZ			.CIFinSHLine
-.CIStDAp:
-		TEST		EBX,2
-		JZ			.CIStBAp
-		SUB			ESI,BYTE 4
-		MOV			EAX,[ESI]
-		ROR			EAX,16
-		STOSD
-		SUB			EBX,BYTE 2
-.CIStBAp:
-		OR			EBX,EBX
-		JZ			.CIPasStBAp
-.CIBcStBAp:
-		SUB			ESI,BYTE 2
-		MOV			AX,[ESI]
-		STOSW
-.CIPasStBAp:
-.CIFinSHLine:
-		ADD			EDI,[Plus2]; ; += PlusDSurf , ECX
-		ADD			ESI,[Plus]
-		DEC			EBP
-		JNZ			.CIBcPutSurf
-
-.PasPutSurf:
-		POP		ESI
-		POP		EDI
-		POP		EBX
-		RETURN
 
 
 ; PUT masked Surf
@@ -453,13 +364,35 @@ _PutMaskSurf16:
 		ADD			EBX,[SMaxY] ; EBX = PutMaxY
 		ADD			EDX,[SMinY] ; EDX = PutMinY
 .InvVtPut:
-		CMP			EAX,[_MaxX]
+		CMP			EAX,[_MinX]
+		JL			.PasPutSurf
+		CMP			EBX,[_MinY]
+		JL			.PasPutSurf
+		CMP			ECX,[_MaxX]
+		JG			.PasPutSurf
+		CMP			EDX,[_MaxY]
+		JG			.PasPutSurf
+
+		MOV			[PType],ESI ; save put Type
+
+		; compute the clipped/unclipped put rectangle coordinaates in (PutSurfMinX, PutSurfMinY, PutSurfMaxX, PutSurfMaxY)
+		;==========================================
+		ClipStorePutSurfCoords
+
+		;=========================
+		; --- compute Put coordinates of the entire SrcSurf (as if source surf is full view)
+		MOV         EAX,[EBP+MXPSN16]  ; EAX = PutMaxX / without clipping
+		MOV         EBX,[EBP+MYPSN16]  ; EBX = PutMaxY / without clipping
+		MOV			ESI,[PType] ; restore PType
+		ComputeFullViewSrcSurfPutCoords
+
+		CMP			EAX,[PutSurfMaxX]
 		JG			.PutSurfClip
-		CMP			EBX,[_MaxY]
+		CMP			EBX,[PutSurfMaxY]
 		JG			.PutSurfClip
-		CMP			ECX,[_MinX]
+		CMP			ECX,[PutSurfMinX]
 		JL			.PutSurfClip
-		CMP			EDX,[_MinY]
+		CMP			EDX,[PutSurfMinY]
 		JL			.PutSurfClip
 ; PutSurf non Clipper *****************************
 		MOV			[PType],ESI
@@ -536,7 +469,7 @@ _PutMaskSurf16:
 		MOV			[Plus],EAX
 
 .IBcPutSurf:
-		MOV			EBX,[SResH]
+		MOV			EBX,EDX
 		TEST		BL,1  		; dword aligned ?
 		JZ			.IFPasStWAv
 		SUB			ESI,BYTE 2
@@ -574,20 +507,12 @@ _PutMaskSurf16:
 		JMP			.PasPutSurf
 
 .PutSurfClip:
-		CMP			EAX,[_MinX]
-		JL			.PasPutSurf
-		CMP			EBX,[_MinY]
-		JL			.PasPutSurf
-		CMP			ECX,[_MaxX]
-		JG			.PasPutSurf
-		CMP			EDX,[_MaxY]
-		JG			.PasPutSurf
 ; PutSurf Clipper **********************************************
 		MOV			[PType],ESI ; sauvegarde le type
 		XOR			EDI,EDI   ; Y Fin Source
 		XOR			ESI,ESI   ; X deb Source
 
-		MOV			EBP,[_MinX]
+		MOV			EBP,[PutSurfMinX]
 		CMP			ECX,EBP ; CMP minx, _MinX
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
@@ -598,7 +523,7 @@ _PutMaskSurf16:
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
-		MOV			EBP,[_MaxY]
+		MOV			EBP,[PutSurfMaxY]
 		CMP			EBX,EBP ; cmp maxy, _MaxY
 		JLE			.PsSupMaxY   ; YP2>_MaxY
 		MOV			EDI,EBP
@@ -607,12 +532,12 @@ _PutMaskSurf16:
 		ADD			EDI,EBX
 		MOV			EBX,EBP
 .PsSupMaxY:
-		MOV			EBP,[_MinY]
+		MOV			EBP,[PutSurfMinY]
 		CMP			EDX,EBP      ; YP1<_MinY
 		JGE			.PsInfMinY
 		MOV			EDX,EBP
 .PsInfMinY:
-		MOV			EBP,[_MaxX]
+		MOV			EBP,[PutSurfMaxX]
 		CMP			EAX,EBP      ; XP2>_MaxX
 		JLE			.PsSupMaxX
         TEST		BYTE [PType],1
@@ -666,42 +591,7 @@ _PutMaskSurf16:
 		TEST		BYTE [PType],1
 		JNZ     	.CInvHzPSurf
 		ADD			[Plus],EAX
-.CBcPutSurf:
-		MOV			EBX,EDX
-		TEST		BL,1  		; dword aligned ?
-		JZ			.CFPasStWAv
-		MOV			AX,[ESI]
-		CMP			AX,[SMask]
-		JZ			.CPasPutW
-		MOV			[EDI],AX
-.CPasPutW:
-		ADD			ESI,BYTE 2
-		LEA			EDI,[EDI+2]
-		DEC			EBX
-		JZ			.CFinSHLine
-.CFPasStWAv:
-		SHR			EBX,1
-.CBcStMD:
-		MOV			EAX,[ESI]
-		SHLD		ECX,EAX,16
-		CMP			AX,[SMask]
-		JE			.CPasPutW1
-		MOV			[EDI],AX
-.CPasPutW1:
-		CMP			CX,[SMask]
-		JE			.CPasPutW2
-		MOV			[EDI+2],CX
-.CPasPutW2:
-		ADD			ESI,BYTE 4
-		DEC			EBX
-		LEA			EDI,[EDI+4]
-		JNZ			.CBcStMD
-.CFinSHLine:
-		ADD			ESI,[Plus] ; += PlusSSurf + nextLinePlus
-		ADD			EDI,[Plus2] ; += PlusDSurf
-		DEC			EBP
-		JNZ			.CBcPutSurf
-		JMP			.PasPutSurf
+		JMP			.BcPutSurf
 
 .CInvHzPSurf:   ; clipper et inverser horizontalement
 
@@ -709,41 +599,7 @@ _PutMaskSurf16:
 		LEA			EAX,[EAX+EDX*2] ; add to jump to the end
 		LEA			ESI,[ESI+EDX*2] ; jump to the end
 		MOV			[Plus],EAX
-.CIBcPutSurf:
-		MOV			EBX,EDX
-		TEST		BL,1  		; dword aligned ?
-		JZ			.CIFPasStWAv
-		SUB			ESI,BYTE 2
-		MOV			AX,[ESI]
-		CMP			AX,[SMask]
-		JZ			.CIPasPutW
-		MOV			[EDI],AX
-.CIPasPutW:
-		DEC			EBX
-		LEA			EDI,[EDI+2]
-		JZ			.CIFinSHLine
-.CIFPasStWAv:
-		SHR			EBX,1
-.CIBcStMD:
-		SUB			ESI,BYTE 4
-		MOV			EAX,[ESI]
-		SHLD		ECX,EAX,16
-		CMP			CX,[SMask]
-		JE			.CIPasPutW1
-		MOV			[EDI],CX
-.CIPasPutW1:
-		CMP			AX,[SMask]
-		JE			.CIPasPutW2
-		MOV			[EDI+2],AX
-.CIPasPutW2:
-		DEC			EBX
-		LEA			EDI,[EDI+4]
-		JNZ			.CIBcStMD
-.CIFinSHLine:
-		ADD			EDI,[Plus2]; ; += PlusDSurf , ECX
-		ADD			ESI,[Plus]
-		DEC			EBP
-		JNZ			.CIBcPutSurf
+		JMP			.IBcPutSurf
 
 .PasPutSurf:
 		POP		ESI

@@ -610,7 +610,7 @@ ALIGN 32
 		AND			EDX,0xffff
 		ADD			EAX,EDX
 		SHR			EAX,4 ; EAX=EAX/16
-		;AND			EAX,BYTE Blue16_MASK
+		;AND		EAX,BYTE Blue16_MASK
 		PAND		mm3,[QGreen16Mask] ; - G
 		PAND		mm4,[QGreen16Mask] ; - G
 		MOVD		mm6,EAX
@@ -679,10 +679,10 @@ ALIGN 32
 		PSRLQ		mm4,32
 		MOVD		EDX,mm4
 		MOVQ		mm4,mm1 ; read mid row - G
-		;AND			EDX,0xffff ; B - not needed as 4th byte 0
+		;AND		EDX,0xffff ; B - not needed as 4th word 0
 		ADD			EAX,EDX
 		SHR			EAX,4 ; EAX=EAX/16
-		;AND			EAX,BYTE Blue16_MASK
+		;AND		EAX,BYTE Blue16_MASK
 		;MOVQ		mm3,[LastAddMM_G]  ; - G
 		PAND		mm4,[QGreen16Mask] ; - G
 		MOVD		mm6,EAX
@@ -698,7 +698,7 @@ ALIGN 32
 		PSRLQ		mm4,32 ; - G
         PAND        mm1,[QRed16Mask] ; - R
 		MOVD		EDX,mm4 ; - G
-		;AND			EDX,0xffff ; - G - not needed as 4th byte 0
+		;AND		EDX,0xffff ; - G - not needed as 4th word 0
 		ADD			EAX,EDX ; - G
 		SHR			EAX,4 ; EAX=EAX/16 ; - G
 		AND			EAX, Green16_MASK ; - G
@@ -714,9 +714,9 @@ ALIGN 32
 		PSRLQ		mm1,32 ; - R
 		POR			mm6,mm7 ; combine B+G
 		MOVD		EDX,mm1 ; - R
-		;AND			EDX,0xffff ; - R not needed as 4th byte 0
+		;AND		EDX,0xffff ; - R not needed as 4th word 0
 		ADD			EAX,EDX ; - R
-		;SHR			EAX,4 ; EAX=EAX/16 ; - R div 16 not needed for R
+		;SHR		EAX,4 ; EAX=EAX/16 ; - R div 16 not needed for R
 		MOVD		EDX, mm6
 		AND			EAX, Red16_MASK ; - R
 		LEA			ESI,[ESI+2] ; increment source

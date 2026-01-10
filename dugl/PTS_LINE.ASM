@@ -520,8 +520,8 @@ _PutSurf:
 .PasStDAv:
 		MOV			ECX,EBX
 		SHR			ECX,3
-		OR			ECX,ECX
-		JZ			.StDAp
+		;OR			ECX,ECX
+		JZ			SHORT .StDAp
 ALIGN 4
 .StoMMX:
 		MOVQ		mm0,[ESI]
@@ -559,66 +559,63 @@ ALIGN 4
 		LEA			EBX,[EBX+EAX*2]
 		MOVD		mm7,EBX ; mm7 += [SResH*2]
 .IBcPutSurf:
-		MOVD		EBX,mm1 ; [SResH]
+		MOVD		ECX,mm1 ; [SResH]
 .IBcStBAv:
 		TEST		EDI,3
 		JZ			.IFPasStBAv
 		DEC			ESI
 		MOV			AL,[ESI]
 		STOSB
-		DEC			EBX
+		DEC			ECX
 		JZ			.IFinSHLine
 		JMP			SHORT .IBcStBAv
 .IFPasStBAv:
 		TEST		EDI,4
 		JZ			.IPasStDAv
-		TEST		EBX,0xfffffffc
+		TEST		ECX,0xfffffffc
 		JZ			.IStBAp
 		SUB			ESI,BYTE 4
 		MOV			EAX,[ESI]
-		SUB			EBX,BYTE 4
+		SUB			ECX,BYTE 4
 		BSWAP		EAX
 		STOSD
 .IPasStDAv:
-		MOV			ECX,EBX
-		SHR			ECX,3
-		OR			ECX,ECX
-		JZ			.IStDAp
-ALIGN 4
+		;MOV			ECX,EBX
+		;SHR			ECX,3
+		;OR			ECX,ECX
 .IStoMMX:
+		TEST		ECX,0xfffffff8
+		JZ			.IStDAp
+
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
 		BSWAP		EAX
-		DEC			ECX
-		MOVD		mm6,EAX
-		MOV			EAX,[ESI+4]
-		BSWAP		EAX
-		MOVD		mm4,EAX
-		PUNPCKLDQ	mm4,mm6
-		MOVQ		[EDI],mm4
+		BSWAP		EBX
+		MOV			[EDI+4],EAX
+		MOV			[EDI],EBX
+		SUB			ECX, BYTE 8
 		LEA			EDI,[EDI+8]
 
-		JNZ			.IStoMMX
+		JMP			.IStoMMX
 
-		AND			EBX,BYTE 7
-		JZ			.IFinSHLine
+		;AND			EBX,BYTE 7
 .IStDAp:
-		TEST		EBX,4
+		TEST		ECX,4
 		JZ			.IStBAp
 		SUB			ESI,4
 		MOV			EAX,[ESI]
 		BSWAP		EAX
 		STOSD
-		SUB			EBX,BYTE 4
+		SUB			ECX,BYTE 4
 
 .IStBAp:
-		OR			EBX,EBX
-		JZ			.IPasStBAp
+		JECXZ		.IPasStBAp
 .IBcStBAp:
 		DEC			ESI
 		MOV			AL,[ESI]
 		STOSB
-		DEC			EBX
+		DEC			ECX
 		JNZ			.IBcStBAp
 .IPasStBAp:
 .IFinSHLine:

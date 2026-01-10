@@ -1776,6 +1776,23 @@ int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024)
 	return 1;
 }
 
+
+int LoadGIF16(Surf **S16,char *filename) {
+  char tmpBGRA[1024];
+  Surf *SGIF8bpp = NULL;
+  if (LoadGIF(&SGIF8bpp,filename,tmpBGRA)==0) return 0;
+  if (CreateSurf(S16,SGIF8bpp->ResH,SGIF8bpp->ResV,16)==0) {
+    DestroySurf(SGIF8bpp);
+    return 0;
+  }
+  // use the new DUGL 1.12 + conversion function
+  ConvSurf8ToSurf16Pal(*S16,SGIF8bpp,tmpBGRA);
+  DestroySurf(SGIF8bpp);
+
+  return 1;
+}
+
+
 // BMP
 int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn) {
 	FILE *InBMP;

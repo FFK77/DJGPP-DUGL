@@ -11,6 +11,7 @@ int LoadMemJPG16(Surf **S,void *buffJpeg,int sizeBuff);
 int SaveJPG16(Surf *S,char *filename,int quality);
 
 int LoadPNG16(Surf **S,char *filename);
+int LoadMemPNG16(Surf **S, void *In, int SizeIn);
 int LoadPNG(Surf **S,char *filename, void *PalBGR1024);
 int SavePNG16(Surf *S,char *filename);
 

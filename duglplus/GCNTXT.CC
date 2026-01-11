@@ -5,8 +5,6 @@
 #include <dugl.h>
 #include "dgui.h"
 
-#define RGB16(r,g,b) ((r>>3)|((g>>2)<<5)|((b>>3)<<11))
-
 
 CGraphContext::CGraphContext(int BitsPixel,void *PalBGR1024) {
   // set default values

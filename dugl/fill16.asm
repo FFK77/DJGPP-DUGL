@@ -467,7 +467,7 @@ InFillSOLID_BLND16:
 		DEC		EBX
 		JNS		.BcFillSolid16
 .EndInBlend:
-		RET
+		@FILLRET16
 
 
 ALIGN 32

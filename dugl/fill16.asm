@@ -87,112 +87,116 @@ ClipFillSOLID16:
 
 ;******* POLYTYPE = TEXT
 ALIGN 32
+
 InFillTEXT16:
 		@InCalcTextCnt
-		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EBX,[DebYPoly] ; -
-		MOV		EDI,_SrcSurf
-		LEA		EDX,[EBX*4]    ; -
+		MOV			ESI,[SSSurf] ; sauvegarde la surf Source
+		MOV			EBX,[DebYPoly] ; -
+		MOV			EDI,_SrcSurf
+		LEA			EDX,[EBX*4]    ; -
 		CopySurf  ; copy the source texture surface
-		SUB		EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
-		NEG		EBX	       ; -  EBX = FinYPoly-DebYPoly
+		SUB			EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
+		NEG			EBX	       ; -  EBX = FinYPoly-DebYPoly
+		MOVD		mm6,EDX
 ;ALIGN 4
-.BcFillText:	MOVD		mm7,EBX
-		LEA		EBX,[EDX+EBX*4]
-		MOV		EDI,[_TPolyAdDeb+EBX]
-		MOV		ECX,[_TPolyAdFin+EBX]
-		MOV		EAX,[_TexXDeb+EBX]
-		MOV		ESI,[_TexYDeb+EBX]
-		MOV		[XT1],EAX
-		MOV		[YT1],ESI
-		MOV		EAX,[_TexXFin+EBX]
-		MOV		ESI,[_TexYFin+EBX]
-		MOV		[XT2],EAX
-		MOV		[YT2],ESI
+.BcFillText:
+		MOVD		mm7,EBX
+		LEA			EBX,[EDX+EBX*4]
+		MOV			EDI,[_TPolyAdDeb+EBX]
+		MOV			ECX,[_TPolyAdFin+EBX]
+		MOV			EAX,[_TexXDeb+EBX]
+		MOV			ESI,[_TexYDeb+EBX]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EBX]
+		MOV			ESI,[_TexYFin+EBX]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
 
-		CMP		ECX,EDI
-		JG		.PasSwapAd
+		CMP			ECX,EDI
+		JG			.PasSwapAd
 		XCHG		EDI,ECX
 .PasSwapAd:
-		MOVD		mm6,EDX
-		SUB		ECX,EDI
-		SHR		ECX,1
+		SUB			ECX,EDI
+		SHR			ECX,1
 		@InTextHLine16
 		MOVD		EBX,mm7
 		MOVD		EDX,mm6
-		DEC		EBX
-		JNS		.BcFillText
+		DEC			EBX
+		JNS			.BcFillText
 
 	@FILLRET16
 
 ALIGN 32
 ClipFillTEXT16:
-                @ClipCalcTextCnt
-		MOV		ESI,[SSSurf] ; sauvegarde la surf Source
-		MOV		EDI,_SrcSurf
+		@ClipCalcTextCnt
+		MOV			ESI,[SSSurf] ; sauvegarde la surf Source
+		MOV			EDI,_SrcSurf
 
-		MOV		EBP,[FinYPoly]
+		MOV			EBP,[FinYPoly]
 		CopySurf  ; copy the source texture surface
-		SUB		EBP,[_OrgY]
-		MOV		EBX,[DebYPoly] ; -
+		SUB			EBP,[_OrgY]
+		MOV			EBX,[DebYPoly] ; -
 		IMUL		EBP,[_ScanLine]
-		LEA		EDX,[EBX*4]    ; -
-		SUB		EBX,[FinYPoly] ; -
-		NEG		EBP
-		NEG		EBX	       ; -
-		ADD		EBP,[_vlfb]
+		LEA			EDX,[EBX*4]    ; -
+		SUB			EBX,[FinYPoly] ; -
+		NEG			EBP
+		NEG			EBX	       ; -
+		ADD			EBP,[_vlfb]
 		MOVD		mm3,EBP
 		MOVD		mm4,[_ScanLine]
-.BcFillText:	MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]  ; X1
-		MOV		ECX,[_TPolyAdFin+EDX+EBX*4]  ; X2
-		MOV		EAX,[_TexXDeb+EDX+EBX*4]
-		MOV		ESI,[_TexYDeb+EDX+EBX*4]
-		MOV		[XT1],EAX
-		MOV		[YT1],ESI
-		MOV		EAX,[_TexXFin+EDX+EBX*4]
-		MOV		ESI,[_TexYFin+EDX+EBX*4]
-		MOV		[XT2],EAX
-		MOV		[YT2],ESI
+.BcFillText:
+		MOV			EDI,[_TPolyAdDeb+EDX+EBX*4]  ; X1
+		MOV			ECX,[_TPolyAdFin+EDX+EBX*4]  ; X2
+		MOV			EAX,[_TexXDeb+EDX+EBX*4]
+		MOV			ESI,[_TexYDeb+EDX+EBX*4]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EDX+EBX*4]
+		MOV			ESI,[_TexYFin+EDX+EBX*4]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
 
-		CMP		ECX,EDI
-		JG		.PasSwapAd
+		CMP			ECX,EDI
+		JG			.PasSwapAd
 		XCHG		EDI,ECX
 .PasSwapAd:
 		MOVD		mm7,EBX
 		MOVD		mm6,EDX
-		MOV		EBX,[_MinX]
-		MOV		EDX,[_MaxX]
-		CMP		ECX,EBX	  	; [XP2] < [_MinX]
-		JL		.PasDrwClTx
-		CMP		EDI,EDX		; [XP1] > [_MaxX]
-		JG		.PasDrwClTx
-		SUB		ECX,EDI
-		MOV		[Plus2],ECX	; Plus2 = DltX sans ajust
-		XOR		EAX,EAX
-		ADD		ECX,EDI
-		CMP		ECX,EDX 	; [XP2] > [_MaxX]
-		JLE		.PasAJX2
-		MOV		ECX,EDX
-.PasAJX2:	CMP		EDI,EBX 	; [XP1] < [_MinX]
-		JGE		.PasAJX1
-		MOV		EAX,EBX
-		SUB		EAX,EDI         ; EAX = [_MinX] - [XP1]
-		MOV		EDI,EBX
+		MOV			EBX,[_MinX]
+		MOV			EDX,[_MaxX]
+		CMP			ECX,EBX	  	; [XP2] < [_MinX]
+		JL			.PasDrwClTx
+		CMP			EDI,EDX		; [XP1] > [_MaxX]
+		JG			.PasDrwClTx
+		SUB			ECX,EDI
+		MOV			[Plus2],ECX	; Plus2 = DltX sans ajust
+		XOR			EAX,EAX
+		ADD			ECX,EDI
+		CMP			ECX,EDX 	; [XP2] > [_MaxX]
+		JLE			.PasAJX2
+		MOV			ECX,EDX
+.PasAJX2:
+		CMP			EDI,EBX 	; [XP1] < [_MinX]
+		JGE			.PasAJX1
+		MOV			EAX,EBX
+		SUB			EAX,EDI         ; EAX = [_MinX] - [XP1]
+		MOV			EDI,EBX
 .PasAJX1:
 		MOVD		ESI,mm3
-		SUB		ECX,EDI
-		MOV		[Plus],EAX
+		SUB			ECX,EDI
+		MOV			[Plus],EAX
 		;SHL		EDI,1 ; 16bpp : xdeb*2
-		INC		ECX
+		INC			ECX
 		;ADD		EDI,ESI
-		LEA		EDI,[ESI+EDI*2]
+		LEA			EDI,[ESI+EDI*2]
 		@ClipTextHLine16
 .PasDrwClTx:
 		MOVD		EBX,mm7
 		MOVD		EDX,mm6
-		DEC		EBX
+		DEC			EBX
 		PADDD		mm3,mm4
-		JNS		.BcFillText
+		JNS			.BcFillText
 .FinClipText:
 
 	@FILLRET16
@@ -933,3 +937,315 @@ ClipFillMASK_TEXT_BLND16:
 
 	@FILLRET16
 
+
+;******* POLYTYPE = TEXT_TRANS
+
+ALIGN 32
+InFillTEXT_TRANS16:
+        AND         DWORD [clr],BYTE BlendMask ;
+		MOV			EDI,_SrcSurf
+        JZ          .End ; zero transparency no need to draw any thing
+		MOV			ESI,[SSSurf] ;
+		CopySurf  		; copy the source texture surface
+
+		@InCalcTextCnt
+		; prepare transparency
+		MOV         AX,[clr]
+		MOV			DX,AX ;
+		INC			AX
+		XOR			DX,BlendMask ; 31-blendsrc
+		MOV			EBX,[DebYPoly] ; -
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+		; counter/indexes
+		LEA			EDX,[EBX*4]    ; -
+		SUB			EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
+		NEG			EBX	       ; -  EBX = FinYPoly-DebYPoly
+		MOV			[DebStartAddr],EDX
+		MOV			[HzLinesCount],EBX
+;ALIGN 4
+.BcFillText:
+		LEA			EBX,[EDX+EBX*4]
+		MOV			EDI,[_TPolyAdDeb+EBX]
+		MOV			ECX,[_TPolyAdFin+EBX]
+		MOV			EAX,[_TexXDeb+EBX]
+		MOV			ESI,[_TexYDeb+EBX]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EBX]
+		MOV			ESI,[_TexYFin+EBX]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
+
+		CMP			ECX,EDI
+		JG			.PasSwapAd
+		XCHG		EDI,ECX
+.PasSwapAd:
+		SUB			ECX,EDI
+		SHR			ECX,1
+		@InTransTextHLine16
+		DEC			DWORD [HzLinesCount]
+		MOV			EDX,[DebStartAddr]
+		MOV			EBX,[HzLinesCount]
+		JNS			.BcFillText
+.End:
+    @FILLRET16
+
+ALIGN 32
+ClipFillTEXT_TRANS16:
+        AND         DWORD [clr],BYTE BlendMask ;
+		MOV			EDI,_SrcSurf
+        JZ          .End ; zero transparency no need to draw any thing
+		MOV			ESI,[SSSurf] ; sauvegarde la surf Source
+		MOV			EDI,_SrcSurf
+		CopySurf  ; copy the source texture surface
+
+		@ClipCalcTextCnt
+		; prepare transparency
+		MOV         AX,[clr]
+		MOV			DX,AX ;
+		INC			AX
+		XOR			DX,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+		; counter/indexes
+
+		MOV			EBP,[FinYPoly]
+		SUB			EBP,[_OrgY]
+		MOV			EBX,[DebYPoly] ; -
+		IMUL		EBP,[_ScanLine]
+		LEA			EDX,[EBX*4]    ; -
+		SUB			EBX,[FinYPoly] ; -
+		NEG			EBP
+		NEG			EBX	       ; -
+		MOV			[DebStartAddr],EDX
+		MOV			[HzLinesCount],EBX
+
+		ADD			EBP,[_vlfb]
+		MOV			[ClipHStartAddr],EBP
+.BcFillText:
+		MOV			EDI,[_TPolyAdDeb+EDX+EBX*4]  ; X1
+		MOV			ECX,[_TPolyAdFin+EDX+EBX*4]  ; X2
+		MOV			EAX,[_TexXDeb+EDX+EBX*4]
+		MOV			ESI,[_TexYDeb+EDX+EBX*4]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EDX+EBX*4]
+		MOV			ESI,[_TexYFin+EDX+EBX*4]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
+
+		CMP			ECX,EDI
+		JG			.PasSwapAd
+		XCHG		EDI,ECX
+.PasSwapAd:
+		MOV			EBX,[_MinX]
+		MOV			EDX,[_MaxX]
+		CMP			ECX,EBX	  	; [XP2] < [_MinX]
+		JL			.PasDrwClTx
+		CMP			EDI,EDX		; [XP1] > [_MaxX]
+		JG			.PasDrwClTx
+		SUB			ECX,EDI
+		MOV			[Plus2],ECX	; Plus2 = DltX sans ajust
+		XOR			EAX,EAX
+		ADD			ECX,EDI
+		CMP			ECX,EDX 	; [XP2] > [_MaxX]
+		JLE			.PasAJX2
+		MOV			ECX,EDX
+.PasAJX2:
+		CMP			EDI,EBX 	; [XP1] < [_MinX]
+		JGE			.PasAJX1
+		MOV			EAX,EBX
+		SUB			EAX,EDI         ; EAX = [_MinX] - [XP1]
+		MOV			EDI,EBX
+.PasAJX1:
+		MOV			ESI,EBP 	; hz start adress
+		SUB			ECX,EDI
+		MOV			[Plus],EAX
+		;SHL		EDI,1 ; 16bpp : xdeb*2
+		INC			ECX
+		;ADD		EDI,ESI
+		LEA			EDI,[ESI+EDI*2]
+		@ClipTransTextHLine16
+.PasDrwClTx:
+		MOV			EBP,[_ScanLine]
+		MOV			EDX,[DebStartAddr]
+		ADD			EBP,[ClipHStartAddr] ; EBP = new hz start adress
+		DEC			DWORD [HzLinesCount]
+		MOV			[ClipHStartAddr],EBP ; save hz start adress
+		MOV			EBX,[HzLinesCount]
+		JNS			.BcFillText
+.FinClipText:
+
+.End:
+    @FILLRET16
+
+;******* POLYTYPE = MASK_TEXT_TRANS
+ALIGN 32
+InFillMASK_TEXT_TRANS16:
+
+        AND         DWORD [clr],BYTE BlendMask ;
+		MOV			EDI,_SrcSurf
+        JZ          .End ; zero transparency no need to draw any thing
+		MOV			ESI,[SSSurf] ;
+		CopySurf  		; copy the source texture surface
+
+		@InCalcTextCnt
+		; prepare transparency / mask
+		MOV			BX,[SMask]
+		MOV         AX,[clr]
+		MOV			DX,AX ;
+		INC			AX
+		XOR			DX,BlendMask ; 31-blendsrc
+		MOVD		mm0,EBX
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm0,mm0
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm0,mm0
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+		MOVQ		[QSMask16],mm0
+		; counter/indexes
+		MOV			EBX,[DebYPoly] ; -
+		LEA			EDX,[EBX*4]    ; -
+		SUB			EBX,[FinYPoly] ; -  EBX = DebYPoly-FinYPoly
+		NEG			EBX	       ; -  EBX = FinYPoly-DebYPoly
+		MOV			[DebStartAddr],EDX
+		MOV			[HzLinesCount],EBX
+;ALIGN 4
+.BcFillText:
+		LEA			EBX,[EDX+EBX*4]
+		MOV			EDI,[_TPolyAdDeb+EBX]
+		MOV			ECX,[_TPolyAdFin+EBX]
+		MOV			EAX,[_TexXDeb+EBX]
+		MOV			ESI,[_TexYDeb+EBX]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EBX]
+		MOV			ESI,[_TexYFin+EBX]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
+
+		CMP			ECX,EDI
+		JG			.PasSwapAd
+		XCHG		EDI,ECX
+.PasSwapAd:
+		SUB			ECX,EDI
+		SHR			ECX,1
+		@InMaskTransTextHLine16
+		DEC			DWORD [HzLinesCount]
+		MOV			EDX,[DebStartAddr]
+		MOV			EBX,[HzLinesCount]
+		JNS			.BcFillText
+.End:
+    @FILLRET16
+
+
+ALIGN 32
+ClipFillMASK_TEXT_TRANS16:
+        AND         DWORD [clr],BYTE BlendMask ;
+		MOV			EDI,_SrcSurf
+        JZ          .End ; zero transparency no need to draw any thing
+		MOV			ESI,[SSSurf] ; sauvegarde la surf Source
+		MOV			EDI,_SrcSurf
+		CopySurf  ; copy the source texture surface
+
+		@ClipCalcTextCnt
+		; prepare transparency / mask
+		MOV			BX,[SMask]
+		MOV         AX,[clr]
+		MOV			DX,AX ;
+		INC			AX
+		XOR			DX,BlendMask ; 31-blendsrc
+		MOVD		mm0,EBX
+		MOVD		mm7,EAX
+		MOVD		mm6,EDX
+		PUNPCKLWD	mm0,mm0
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm0,mm0
+		PUNPCKLDQ	mm7,mm7
+		PUNPCKLDQ	mm6,mm6
+		MOVQ		[QSMask16],mm0
+		; counter/indexes
+
+		MOV			EBP,[FinYPoly]
+		MOV			EBX,[DebYPoly] ; -
+		SUB			EBP,[_OrgY]
+		MOV			EBX,[DebYPoly] ; -
+		IMUL		EBP,[_ScanLine]
+		LEA			EDX,[EBX*4]    ; -
+		SUB			EBX,[FinYPoly] ; -
+		NEG			EBP
+		NEG			EBX	       ; -
+		MOV			[DebStartAddr],EDX
+		MOV			[HzLinesCount],EBX
+
+		ADD			EBP,[_vlfb]
+		MOV			[ClipHStartAddr],EBP
+.BcFillText:
+		MOV			EDI,[_TPolyAdDeb+EDX+EBX*4]  ; X1
+		MOV			ECX,[_TPolyAdFin+EDX+EBX*4]  ; X2
+		MOV			EAX,[_TexXDeb+EDX+EBX*4]
+		MOV			ESI,[_TexYDeb+EDX+EBX*4]
+		MOV			[XT1],EAX
+		MOV			[YT1],ESI
+		MOV			EAX,[_TexXFin+EDX+EBX*4]
+		MOV			ESI,[_TexYFin+EDX+EBX*4]
+		MOV			[XT2],EAX
+		MOV			[YT2],ESI
+
+		CMP			ECX,EDI
+		JG			.PasSwapAd
+		XCHG		EDI,ECX
+.PasSwapAd:
+		MOV			EBX,[_MinX]
+		MOV			EDX,[_MaxX]
+		CMP			ECX,EBX	  	; [XP2] < [_MinX]
+		JL			.PasDrwClTx
+		CMP			EDI,EDX		; [XP1] > [_MaxX]
+		JG			.PasDrwClTx
+		SUB			ECX,EDI
+		MOV			[Plus2],ECX	; Plus2 = DltX sans ajust
+		XOR			EAX,EAX
+		ADD			ECX,EDI
+		CMP			ECX,EDX 	; [XP2] > [_MaxX]
+		JLE			.PasAJX2
+		MOV			ECX,EDX
+.PasAJX2:
+		CMP			EDI,EBX 	; [XP1] < [_MinX]
+		JGE			.PasAJX1
+		MOV			EAX,EBX
+		SUB			EAX,EDI         ; EAX = [_MinX] - [XP1]
+		MOV			EDI,EBX
+.PasAJX1:
+		MOV			ESI,EBP 	; hz start adress
+		SUB			ECX,EDI
+		MOV			[Plus],EAX
+		;SHL		EDI,1 ; 16bpp : xdeb*2
+		INC			ECX
+		;ADD		EDI,ESI
+		LEA			EDI,[ESI+EDI*2]
+		@ClipMaskTransTextHLine16
+.PasDrwClTx:
+		MOV			EBP,[_ScanLine]
+		ADD			EBP,[ClipHStartAddr] ; EBP = new hz start adress
+		DEC			DWORD [HzLinesCount]
+		MOV			EDX,[DebStartAddr]
+		MOV			[ClipHStartAddr],EBP ; save hz start adress
+		MOV			EBX,[HzLinesCount]
+		JNS			.BcFillText
+.FinClipText:
+
+.End:
+    @FILLRET16

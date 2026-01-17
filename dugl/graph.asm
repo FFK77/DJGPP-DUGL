@@ -57,26 +57,10 @@ ALIGN 32
 %include "pts16.asm"
 %include "fill16.asm"
 
-;*********** Donnee DEF LZW*****************************
-;*******************************************************
-Prefix_Code	DD	0
-Suffix_Code	DD	0
-Old_Code	DD	0
-CasSpecial	DD	0
-DStackPtr	DD	0
-NbBitCode	DD	0
-MaxCode		DD	0
-BuffPtrLZW	DD	0
-BuffIndexLZW	DD	0
-OutBuffLZW	DD	0
-OutBuffIndex	DD	0
-FreeAb		DD	0
-UtlBitCurAdd	DD	0
-RestBytes	DD	0
-CPTLZW		DD	0
-CPTCLR		DD	0
-ClrAb		EQU	256
-EndOF		EQU	257
+;*********** DEF LZW*****************************
+;************************************************
+ClrAb			EQU	256
+EndOF			EQU	257
 
 _InLZW:
 	ARG    InBuffLZW, 4, OutLZW, 4
@@ -376,21 +360,23 @@ _SetSurf:
 	ARG	S1, 4
 
 		PUSH		EDI
-		PUSH	        ESI
+		PUSH	    ESI
 
-		MOV		ESI,[EBP+S1]
-		MOV		EAX,[ESI+_ResV-_CurSurf]
-		CMP		EAX,MaxResV
-		JG		.Error
-		MOV		EDI,_CurSurf
-                CopySurf
-		OR		EAX,BYTE -1
-		JMP		SHORT .Ok
-.Error:		XOR		EAX,EAX
+		MOV			ESI,[EBP+S1]
+		MOV			EAX,[ESI+_ResV-_CurSurf]
+		CMP			EAX,MaxResV
+		JG			.Error
+		MOV			EDI,_CurSurf
+		CopySurf
+		OR			EAX,BYTE -1
+		JMP			SHORT .Ok
+.Error:
+		XOR		EAX,EAX
 .Ok:
 		POP		ESI
-		POP             EDI
-		RETURN
+		POP     EDI
+
+	RETURN
 
 ALIGN 32
 _SetSrcSurf:
@@ -1980,6 +1966,7 @@ _Poly16:
 		MOV			EAX,[PType]
 		JMP			[InFillPolyProc16+EAX*4]
 		;JMP			.PasDrawPoly
+
 .PolyClip:
 ; outside view ? now draw !
 		CMP			EAX,[_MinX]
@@ -2106,104 +2093,148 @@ _Poly16:
 		JMP		.DrawPoly
 
 
-SECTION	.data
-ALIGN 32
+SECTION .bss   ALIGN=32
 _CurSurf:
-_vlfb			DD	0
-_ResH 			DD	0
-_ResV 			DD	0
-_MaxX 			DD	0
-_MaxY 			DD	0
-_MinX 			DD	0
-_MinY 			DD	0
-_OrgY			DD	0;-----------------------
-_OrgX			DD	0
-_SizeSurf		DD	0
-_OffVMem		DD	0
-_rlfb			DD	0
-_BitsPixel  	DD  0
-_ScanLine   	DD	0
-_Mask  			DD	0
-_Resv2  		DD	0 ;-----------------------
+_vlfb			RESD   1
+_ResH 			RESD   1
+_ResV 			RESD   1
+_MaxX 			RESD   1
+_MaxY 			RESD   1
+_MinX 			RESD   1
+_MinY 			RESD   1
+_OrgY			RESD   1;-----------------------
+_OrgX			RESD   1
+_SizeSurf		RESD   1
+_OffVMem		RESD   1
+_rlfb			RESD   1
+_BitsPixel  	RESD   1
+_ScanLine   	RESD   1
+_Mask  			RESD   1
+_NegScanLine	RESD   1 ;-----------------------
 ; source texture
 _SrcSurf:
-Svlfb			DD	0
-SResH			DD	0
-SResV			DD	0
-SMaxX			DD	0
-SMaxY			DD	0
-SMinX			DD	0
-SMinY			DD	0
-SOrgY			DD	0;-----------------------
-SOrgX			DD	0
-SSizeSurf		DD	0
-SOffVMem		DD	0
-Srlfb			DD	0
-SBitsPixel  	DD  0
-SScanLine   	DD	0
-SMask			DD	0
-SResv2  		DD	0;-----------------------
+Svlfb			RESD   1
+SResH			RESD   1
+SResV			RESD   1
+SMaxX			RESD   1
+SMaxY			RESD   1
+SMinX			RESD   1
+SMinY			RESD   1
+SOrgY			RESD   1;-----------------------
+SOrgX			RESD   1
+SSizeSurf		RESD   1
+SOffVMem		RESD   1
+Srlfb			RESD   1
+SBitsPixel  	RESD   1
+SScanLine   	RESD   1
+SMask			RESD   1
+SNegScanLine	RESD   1;-----------------------
 
-XP1				DD	0
-YP1				DD	0
-XP2				DD	0
-YP2				DD	0
-XP3				DD	0
-YP3				DD	0
-Plus			DD	0
-clr				DD	0;-----------------------
-XT1				DD	0
-YT1				DD	0
-XT2				DD	0
-YT2				DD	0
-Col1			DD	0
-Col2			DD	0
-revCol			DD	0
-_CurViewVSurf	DD	0;-----------------------
-PutSurfMaxX     DD	0
-PutSurfMaxY     DD	0
-PutSurfMinX     DD	0
-PutSurfMinY     DD	0
-NbPPoly			DD	0
-DebYPoly		DD	0
-FinYPoly		DD	0
-PType			DD	0;-----------------------
-PType2			DD	0
-PPtrListPt		DD	0
-SSSurf			DD	0
-PntPlusX		DD	0
-PntPlusY		DD	0
-PlusX			DD	0
-PlusY			DD	0
-Plus2			DD	0;-----------------------
+XP1				RESD   1
+YP1				RESD   1
+XP2				RESD   1
+YP2				RESD   1
+XP3				RESD   1
+YP3				RESD   1
+Plus			RESD   1
+clr				RESD   1;-----------------------
+XT1				RESD   1
+YT1				RESD   1
+XT2				RESD   1
+YT2				RESD   1
+Col1			RESD   1
+Col2			RESD   1
+revCol			RESD   1
+_CurViewVSurf	RESD   1;-----------------------
+PutSurfMaxX     RESD   1
+PutSurfMaxY     RESD   1
+PutSurfMinX     RESD   1
+PutSurfMinY     RESD   1
+NbPPoly			RESD   1
+DebYPoly		RESD   1
+FinYPoly		RESD   1
+PType			RESD   1;-----------------------
+PType2			RESD   1
+PPtrListPt		RESD   1
+SSSurf			RESD   1
+PntPlusX		RESD   1
+PntPlusY		RESD   1
+PlusX			RESD   1
+PlusY			RESD   1
+Plus2			RESD   1;-----------------------
 _CurFONT:
-_FntPtr			DD	0
-_FntHaut		DB	0
-_FntDistLgn		DB	0
-_FntLowPos		DB	0
-_FntHighPos		DB	0
-_FntSens		DB	0
-_FntTab			DB	0,0,0 ; 2 DB reserv
-_FntX			DD	0
-_FntY			DD	0
-_FntCol			DD	0
-FntResv			DD	0,0;---------------------
-ChHaut			DD	0
-ChLarg			DD	0
-ChPlus			DD	0
-ChPlusX			DD	0
-ChPlusLgn		DD	0
-ChAvPlus		DD	0
-ChApPlus		DD	0
-ChAvDecal		DB	0
-ChNbBitDat		DB	0
-ChResvW			DW	0;-----------------------
-Temp			DD	0,0
-QMulSrcBlend	DD	0,0
-QMulDstBlend	DD	0,0
-PlusCol			DD	0
-PtrTbDegCol		DD	0;-----------------------
-_PtrTbColConv	DD	0
+_FntPtr			RESD   1
+_FntHaut		RESB   1
+_FntDistLgn		RESB   1
+_FntLowPos		RESB   1
+_FntHighPos		RESB   1
+_FntSens		RESB   1
+_FntTab			RESB   3 ; 2 DB reserv
+_FntX			RESD   1
+_FntY			RESD   1
+_FntCol			RESD   1
+FntResv			RESD   2 ;---------------------
+ChHaut			RESD   1
+ChLarg			RESD   1
+ChPlus			RESD   1
+ChPlusX			RESD   1
+ChPlusLgn		RESD   1
+ChAvPlus		RESD   1
+ChApPlus		RESD   1
+ChAvDecal		RESB   1
+ChNbBitDat		RESB   1
+ChResvW			RESW   1;-----------------------
+Temp			RESD   2
+QMulSrcBlend	RESD   2
+QMulDstBlend	RESD   2
+PlusCol			RESD   1
+PtrTbDegCol		RESD   1;-----------------------
+
+Prefix_Code		RESD   1
+Suffix_Code		RESD   1
+Old_Code		RESD   1
+CasSpecial		RESD   1
+DStackPtr		RESD   1
+NbBitCode		RESD   1
+MaxCode			RESD   1
+BuffPtrLZW		RESD   1
+BuffIndexLZW	RESD   1
+OutBuffLZW		RESD   1
+OutBuffIndex	RESD   1
+FreeAb			RESD   1
+UtlBitCurAdd	RESD   1
+RestBytes		RESD   1
+CPTLZW			RESD   1
+CPTCLR			RESD   1 ; end LZW DATA -----
+
+
+; used by Poly and Poly16
+_TbDegCol		RESB	256*64
+_TPolyAdDeb		RESD	MaxResV
+_TPolyAdFin		RESD	MaxResV
+_TexXDeb 		RESD	MaxResV
+_TexXFin 		RESD	MaxResV
+_TexYDeb 		RESD	MaxResV
+_TexYFin 		RESD	MaxResV
+_PColDeb 		RESD	MaxResV
+_PColFin 		RESD	MaxResV
+
+; glob variables for Poly/Poly16 ..
+QBlue16Blend	RESD	2
+QGreen16Blend	RESD	2
+QRed16Blend		RESD	2
+QSMask16		RESD	2
+QHLineOrg		RESD	2
+DebStartAddr	RESD	1
+HzLinesCount	RESD	1
+HzLineLength	RESD	1
+HzLineDstAddr	RESD	1
+ClipHStartAddr	RESD	1
+_PtrTbColConv	RESD	1
+
+SECTION .data   ALIGN=32
+
+
 PntInitCPTDbrd	DD	0,((1<<Prec)-1)
 Temp2			DD	0
 MaskB_RGB16		DD	0x1f	 ; blue bits 0->4
@@ -2234,9 +2265,6 @@ RGBFinMask_III	DD	0,0,0,0
 QBlue16Mask		DW	CMaskB_RGB16,CMaskB_RGB16,CMaskB_RGB16,CMaskB_RGB16
 QGreen16Mask	DW	CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16,CMaskG_RGB16
 QRed16Mask		DW	CMaskR_RGB16,CMaskR_RGB16,CMaskR_RGB16,CMaskR_RGB16
-QBlue16Blend	DD	0,0
-QGreen16Blend	DD	0,0
-QRed16Blend		DD	0,0
 
 ;* 8bpp poly proc****
 InFillPolyProc:	DD	InFillSOLID,InFillTEXT,InFillMASK_TEXT,InFillFLAT_DEG,InFillDEG
@@ -2253,13 +2281,13 @@ InFillPolyProc16:
 				DD	InFillSOLID16,InFillTEXT16,InFillMASK_TEXT16,dummyFill16,dummyFill16
 				DD	dummyFill16,dummyFill16
 				DD	dummyFill16,dummyFill16
-				DD	dummyFill16,dummyFill16,dummyFill16
+				DD	dummyFill16,InFillTEXT_TRANS16,InFillMASK_TEXT_TRANS16
 				DD	InFillRGB16,InFillSOLID_BLND16,InFillTEXT_BLND16,InFillMASK_TEXT_BLND16
 
 ClFillPolyProc16:
 				DD	ClipFillSOLID16,ClipFillTEXT16,ClipFillMASK_TEXT16,dummyFill16,dummyFill16
 				DD	dummyFill16,dummyFill16
 				DD	dummyFill16,dummyFill16
-				DD	dummyFill16,dummyFill16,dummyFill16
+				DD	dummyFill16,ClipFillTEXT_TRANS16, ClipFillMASK_TEXT_TRANS16
 				DD	ClipFillRGB16,ClipFillSOLID_BLND16,ClipFillTEXT_BLND16,ClipFillMASK_TEXT_BLND16
 

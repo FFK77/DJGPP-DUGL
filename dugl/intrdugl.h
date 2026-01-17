@@ -16,7 +16,6 @@
 #define FLAG_NWVGA	64
 #define FLAG_LFB	128
 
-#define MaxResV		2048
 
 typedef struct
 {	int 	Sign		  __attribute__ ((packed));

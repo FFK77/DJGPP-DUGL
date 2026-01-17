@@ -10,7 +10,7 @@ typedef struct
 	int	OffVMem;
 	int	rlfb;
 	int	BitsPixel;
-	int	ScanLine,Mask,Resv2;
+	int	ScanLine,Mask,NegScanLine;
 } Surf;
 
 typedef struct
@@ -218,7 +218,9 @@ void LineMapBlnd16(void *Point1,void *Point2,int col,unsigned int Map);
 #define POLY16_SOLID			0
 #define POLY16_TEXT				1
 #define POLY16_MASK_TEXT		2
-#define POLY16_RGB				12
+#define POLY16_TEXT_TRANS       10
+#define POLY16_MASK_TEXT_TRANS  11
+#define POLY16_RGB              12
 #define POLY16_SOLID_BLND		13
 #define POLY16_TEXT_BLND		14
 #define POLY16_MASK_TEXT_BLND	15

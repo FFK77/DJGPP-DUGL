@@ -12,12 +12,7 @@
 #include <sys/segments.h>
 #include "dugl.h"
 #include "intrdugl.h"
-// utiliser par poly
-unsigned char		TbDegCol[256*64];
-int 			TPolyAdDeb[MaxResV],TPolyAdFin[MaxResV];
-int			TexXDeb[MaxResV],TexXFin[MaxResV],
-                        TexYDeb[MaxResV],TexYFin[MaxResV];
-int 			PColDeb[MaxResV],PColFin[MaxResV];
+
 // used to convert color
 // lookup table to convert from 8bits paletted BGRA to true color 15,16, 24, 32 bits
 // and from 15bits true color to 8bits paletted
@@ -740,6 +735,7 @@ int  CreateSurf(Surf **S, int ResHz, int ResVt, char BitPixel)
 	  (*S)->OrgY= ResVt-1;
       (*S)->BitsPixel= BitPixel;
 	  (*S)->ScanLine= ResHz *pixelsize;
+	  (*S)->NegScanLine = -((*S)->ScanLine);
 	  SetOrgSurf((*S),0,0);
 	  return 1;
 	}
@@ -774,6 +770,7 @@ int  CreateSurfBuff(Surf **S, int ResHz, int ResVt, char BitPixel,void *Buff) {
     (*S)->OrgY= ResVt-1;
     (*S)->BitsPixel= BitPixel;
     (*S)->ScanLine= ResHz *pixelsize;
+    (*S)->NegScanLine = -((*S)->ScanLine);
     SetOrgSurf((*S),0,0);
     return 1;
 }
@@ -1029,7 +1026,6 @@ int InitVesa()
 	          (VesaInf.ModeFlag& FLAG_COLOR)   &&
 	          (VesaInf.ModeFlag& FLAG_GRAPH)   &&
 	          (VesaInf.ModeFlag& FLAG_LFB)     &&
-	          (VesaInf.ResY<=MaxResV)          && // Max Res ?xMaxResV
 	          ((VesaInf.BitPixel==8) ||       // 8 Bpp or 16bpp
 		   (VesaInf.BitPixel==16 && VesaInf.RedMaxSize==5 &&
  		    VesaInf.GreenMaxSize==6 && VesaInf.BlueMaxSize==5)) )
@@ -1097,6 +1093,8 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 				VSurf[j].OrgY= ResVt-1;
 				VSurf[j].BitsPixel=BitPixel;
 				VSurf[j].ScanLine=ResHz*pixelsize;
+  			    VSurf[j].NegScanLine = -VSurf[j].ScanLine;
+
 
 				SetOrgSurf(&VSurf[j],0,0);
 				cvlfb+= ScreenSize;
@@ -1537,7 +1535,7 @@ int  LoadPCX(Surf **S,const char *Fname,void *PalBGR1024)
 	if (hpcx.Comp==1) {
 		BuffIn=malloc(FinIn-sizeof(HeadPCX)+1);
 		if (BuffIn==NULL) {
-			DestroySurf(S);
+			DestroySurf(*S);
 			fclose(InPCX);
 			return 0;
 		}
@@ -1754,7 +1752,7 @@ int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024)
 	BuffIn=malloc(FinInGIF-DebInGIF+4);
 
 	if (BuffIn==NULL) {
-        DestroySurf(S);
+        DestroySurf(*S);
         fclose(InGIF);
         printf("no mem2\n");
         return 0;
@@ -2017,7 +2015,6 @@ int  SizeSaveBMP(Surf *S) {
 }
 
 int  LoadMemBMP16(Surf **S,void *In,int SizeIn) {
-	FILE *InBMP;
 	int irow,j,padd,CurInBMP,BfPos;
 	HeadBMP hbmp;
 	InfoBMP ibmp;

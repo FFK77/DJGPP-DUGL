@@ -51,7 +51,6 @@
 		<Unit filename="DGraph.h" />
 		<Unit filename="DIPX.H" />
 		<Unit filename="DKeyb.h" />
-		<Unit filename="DMGRaph.h" />
 		<Unit filename="DMouse.h" />
 		<Unit filename="DTimer.h" />
 		<Unit filename="DUGL.h" />
@@ -64,10 +63,6 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="KEYBOARD.ASM" />
-		<Unit filename="MFill16.asm">
-			<Option compile="0" />
-			<Option link="0" />
-		</Unit>
 		<Unit filename="MOUSE.ASM" />
 		<Unit filename="PTS_LINE.ASM">
 			<Option compile="0" />
@@ -99,10 +94,6 @@
 		<Unit filename="line16.asm">
 			<Option compile="0" />
 			<Option link="0" />
-		</Unit>
-		<Unit filename="mgraph.asm" />
-		<Unit filename="mgraphc.c">
-			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="mline16.asm">
 			<Option compile="0" />

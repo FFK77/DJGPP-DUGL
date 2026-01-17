@@ -173,8 +173,8 @@ _PutSurf16:
 		;JZ			.IStDAp
 ;ALIGN 4
 .IStoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			SHORT .IStDAp
+		CMP			EBX,BYTE 3
+		JLE			SHORT .IStDAp
 
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
@@ -819,8 +819,8 @@ _PutSurfBlnd16:
 		JZ			.IStBAp
 ;ALIGN 4
 .IStoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			SHORT .IStBAp
+		CMP			EBX,BYTE 3
+		JLE			SHORT .IStBAp
 
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
@@ -1210,8 +1210,8 @@ _PutMaskSurfBlnd16:
 		;JZ			.StBAp
 ;ALIGN 4
 .StoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.StBAp
+		CMP			EBX,BYTE 3
+		JLE			.StBAp
 
 		MOVQ		mm0,[ESI]
 		MOVQ		mm1,[ESI]
@@ -1305,8 +1305,8 @@ _PutMaskSurfBlnd16:
 		;JZ			.IStBAp
 ;ALIGN 4
 .IStoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.IStBAp
+		CMP			EBX,BYTE 3
+		JLE			.IStBAp
 
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
@@ -1600,26 +1600,26 @@ _SurfMaskCopyBlnd16:
 		POP		EDI
 		RETURN
 
-; -------------------------------
-; Put a Transparent Surf
-; -------------------------------
+; mix 16bpp colors: source in (mm0, mm1, mm2) / dest in (mm3, mm4, mm5)
+; source miltipilier mm7 (4 words from 0 to 31)
+; dest   miltipilier mm6 (4 words from 0 to 31)
 %macro	@TransBlndQ 0
 		PAND		mm0,[QBlue16Mask]
 		PAND		mm3,[QBlue16Mask]
 		PAND		mm1,[QGreen16Mask]
 		PAND		mm4,[QGreen16Mask]
 		PAND		mm2,[QRed16Mask]
-		PAND		mm5,[QRed16Mask]
 		PMULLW		mm0,mm7 ; [blend_src]
+		PAND		mm5,[QRed16Mask]
 		PMULLW		mm3,mm6 ; [blend_dst]
 		PSRLW		mm2,5
-		PSRLW		mm5,5
 		PMULLW		mm4,mm6 ; [blend_dst]
+		PSRLW		mm5,5
 		PMULLW		mm1,mm7 ; [blend_src]
-		PMULLW		mm5,mm6 ; [blend_dst]
 		PMULLW		mm2,mm7 ; [blend_src]
-
 		PADDW		mm0,mm3
+		PMULLW		mm5,mm6 ; [blend_dst]
+
 		PADDW		mm1,mm4
 		PADDW		mm2,mm5
 		PSRLW		mm0,5
@@ -1627,9 +1627,13 @@ _SurfMaskCopyBlnd16:
 		PAND		mm2,[QRed16Mask]
 		;PAND		mm0,[QBlue16Mask]
 		PAND		mm1,[QGreen16Mask]
-		POR		mm0,mm2
-		POR		mm0,mm1
+		POR			mm0,mm2
+		POR			mm0,mm1
 %endmacro
+
+; -------------------------------
+; Put a Transparent Surf
+; -------------------------------
 
 ALIGN 32
 _PutSurfTrans16:
@@ -1769,8 +1773,8 @@ _PutSurfTrans16:
 		;JZ			.StBAp
 ;ALIGN 4
 .StoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.StBAp
+		CMP			EBX,BYTE 3
+		JLE			.StBAp
 
 		MOVQ		mm0,[ESI]
 		MOVQ		mm3,[EDI]
@@ -1843,8 +1847,8 @@ _PutSurfTrans16:
 		;JZ			.IStBAp
 ;ALIGN 4
 .IStoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.IStBAp
+		CMP			EBX,BYTE 3
+		JLE			.IStBAp
 
 		SUB			ESI,BYTE 8
 		MOVQ		mm3,[EDI]
@@ -2225,8 +2229,8 @@ _PutMaskSurfTrans16:
 		;JZ			.StBAp
 ;ALIGN 4
 .StoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.StBAp
+		CMP			EBX,BYTE 3
+		JLE			.StBAp
 
 		MOVQ		mm0,[ESI]
 		MOVQ		mm3,[EDI]
@@ -2332,8 +2336,8 @@ _PutMaskSurfTrans16:
 		;JZ			.IStBAp
 ;ALIGN 4
 .IStoMMX:
-		TEST		EBX,0xfffffffc
-		JZ			.IStBAp
+		CMP			EBX,BYTE 3
+		JLE			.IStBAp
 
 		SUB			ESI,BYTE 8
 		MOVQ		mm3,[EDI]

@@ -1100,12 +1100,11 @@ InFillMASK_TEXT_TRANS16:
 
 		@InCalcTextCnt
 		; prepare transparency / mask
-		MOV			BX,[SMask]
 		MOV         AX,[clr]
 		MOV			DX,AX ;
 		INC			AX
 		XOR			DX,BlendMask ; 31-blendsrc
-		MOVD		mm0,EBX
+		MOVD		mm0,[SMask]
 		MOVD		mm7,EAX
 		MOVD		mm6,EDX
 		PUNPCKLWD	mm0,mm0
@@ -1162,12 +1161,11 @@ ClipFillMASK_TEXT_TRANS16:
 
 		@ClipCalcTextCnt
 		; prepare transparency / mask
-		MOV			BX,[SMask]
 		MOV         AX,[clr]
 		MOV			DX,AX ;
 		INC			AX
 		XOR			DX,BlendMask ; 31-blendsrc
-		MOVD		mm0,EBX
+		MOVD		mm0,[SMask]
 		MOVD		mm7,EAX
 		MOVD		mm6,EDX
 		PUNPCKLWD	mm0,mm0
@@ -1232,9 +1230,7 @@ ClipFillMASK_TEXT_TRANS16:
 		MOV			ESI,EBP 	; hz start adress
 		SUB			ECX,EDI
 		MOV			[Plus],EAX
-		;SHL		EDI,1 ; 16bpp : xdeb*2
 		INC			ECX
-		;ADD		EDI,ESI
 		LEA			EDI,[ESI+EDI*2]
 		@ClipMaskTransTextHLine16
 .PasDrwClTx:

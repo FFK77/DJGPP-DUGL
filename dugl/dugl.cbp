@@ -95,11 +95,6 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
-		<Unit filename="mline16.asm">
-			<Option compile="0" />
-			<Option link="0" />
-		</Unit>
-		<Unit filename="mpoly16.asm" />
 		<Unit filename="poly16.asm">
 			<Option compile="0" />
 			<Option link="0" />

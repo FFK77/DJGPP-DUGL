@@ -1316,8 +1316,8 @@ ALIGN 4
 		PAND		mm2,[QRed16Mask]
 		;PAND		mm0,[QBlue16Mask]
 		PAND		mm1,[QGreen16Mask]
-		POR		mm0,mm2
-		POR		mm0,mm1
+		POR			mm0,mm2
+		POR			mm0,mm1
 %endmacro
 
 ;****** TEXT BLEND
@@ -1964,14 +1964,13 @@ ALIGN 4
 		MOV		ESI,[YT1]      ; - 1
 		SHL 		EAX,Prec
 		CDQ
-		IMUL		ESI,[SScanLine]    ; - 2
+		IMUL		ESI,[SNegScanLine]    ; - 2
 		OR		ECX,ECX
 		JZ		%%PDivPntPY
 		IDIV		ECX
 		JMP		SHORT %%DivPntPY
 %%PDivPntPY:	XOR		EAX,EAX
 %%DivPntPY:
-		NEG		ESI	       ; - 3
 		NEG		EAX
 		ADD		ESI,[XT1]      ; - 4
 		MOV		[PntPlusY],EAX  ;[PntPlusY]
@@ -2081,14 +2080,14 @@ ALIGN 4
 		MOV		ESI,[YT1]    ; - 1
 		SHL		EAX,Prec
 		CDQ
-		IMUL		ESI,[SScanLine]  ; - 2
+		IMUL	ESI,[SNegScanLine]  ; - 2
 		OR		ECX,ECX
 		JZ		%%PDivPntPX
-		IDIV		ECX
+		IDIV	ECX
 		JMP		SHORT %%DivPntPX
-%%PDivPntPX:	XOR		EAX,EAX
+%%PDivPntPX:
+		XOR		EAX,EAX
 %%DivPntPX:
-		NEG		ESI	     ; - 3
 		MOV		EBP,EAX ; [PntPlusY]
 		ADD		ESI,[XT1]    ; - 4
 		XOR		EBX,EBX      ; Cpt Dbrd Y
@@ -2180,11 +2179,10 @@ ALIGN 4
 		SUB		EBP,[XT1]
 		MOV		ESI,[YT1]   ; - 1
 		MOV		EAX,EBP
-		IMUL		ESI,[SScanLine] ; - 2
+		IMUL		ESI,[SNegScanLine] ; - 2
 		SHL 		EAX,Prec
-		NEG		ESI	    ; - 3
-		CDQ
 		ADD		ESI,[XT1]   ; - 4
+		CDQ
 		ADD		ESI,[XT1]   ; - 4 + (XT1*2) as 16bpp
 		OR		ECX,ECX
 		JZ		%%PDivPntPX
@@ -2303,16 +2301,15 @@ ALIGN 4
 		JMP		SHORT %%DivPPlusY
 %%PDivPPlusY:	XOR		EAX,EAX
 %%DivPPlusY:
-		IMUL		ESI,[SScanLine]    ; - 2'
+		IMUL		ESI,[SNegScanLine]    ; - 2'
 		NEG		EAX
 		MOV		[PntPlusY],EAX  ;[PntPlusY]
 
 		MOV		EAX,EBP
 		XOR		EDX,EDX
 		OR		EDX,BYTE 8
-		NEG		ESI	       ; - 3'
-		SHL		EAX,Prec
 		ADD		ESI,[XT1]      ; - 4'
+		SHL		EAX,Prec
 		ADD		ESI,[XT1]      ; - 4' +2*XT : 16bpp
 		MOVD		mm5,EDX
 		ADD		ESI,[Svlfb]    ; - 5'
@@ -2415,7 +2412,7 @@ ALIGN 4
 %macro	@ClipMaskTextBlndHLineDXZ16  0
 		MOV		ESI,[YT1]   ; - 1
 		SHL		EAX,Prec
-		IMUL		ESI,[SScanLine] ; - 2
+		IMUL		ESI,[SNegScanLine] ; - 2
 		CMP		DWORD [Plus2],0
 		JZ		%%PDivPPlusY
 		CDQ
@@ -2423,7 +2420,6 @@ ALIGN 4
 		JMP		SHORT %%DivPPlusY
 %%PDivPPlusY:	XOR		EAX,EAX
 %%DivPPlusY:
-		NEG		ESI	    ; - 3
 		MOV		EBP,EAX ; [PntPlusY]
 		ADD		ESI,[XT1]   ; - 4
 		MOV		EDX,[Plus]
@@ -2520,11 +2516,10 @@ ALIGN 4
 %%PDivPPlusY:	XOR		EAX,EAX
 %%DivPPlusY:
 		MOV		EBP,EAX  ;[PntPlusX]
-		IMUL		ESI,[SScanLine]
+		IMUL		ESI,[SNegScanLine]
 		MOV		EDX,[Plus]
-		NEG		ESI
-		IMUL		EDX,EBP ;+[PntPlusX]
 		ADD		ESI,[XT1]
+		IMUL		EDX,EBP ;+[PntPlusX]
 		ADD		ESI,[XT1] ; 16bpp
 		ADD		ESI,[Svlfb]
 		OR		EAX,EAX
@@ -3512,8 +3507,9 @@ ALIGN 4
 		TEST		EDI,6
 		JZ			%%FPasStBAv
 		@AjAdDXZ16
-		DEC			ECX
 		MOV			AX,[EBX+ESI]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAv
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3523,7 +3519,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JZ			%%FinSHLine
 
 		JMP			%%BcStBAv
@@ -3555,14 +3554,25 @@ ALIGN 4
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 
 		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
 		MOVQ		mm1,mm0
 		MOVQ		mm4,mm3
 		MOVQ		mm2,mm0
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
 		SUB			ECX, BYTE 4
-		MOVQ		[EDI],mm0 ; write the 8 bytes
+		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
 		LEA			EDI,[EDI+8]
@@ -3571,8 +3581,9 @@ ALIGN 4
 		JZ			%%FinSHLine
 %%BcStBAp:
 		@AjAdDXZ
-		DEC			ECX
 		MOV			AX,[EBX+ESI]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAp
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3582,7 +3593,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JNZ		%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:
@@ -3616,8 +3630,9 @@ ALIGN 4
 		TEST		EDI,6
 		JZ			%%FPasStBAv
 		@AjAdDYZ16
-		DEC			ECX
 		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAv
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3627,7 +3642,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JZ			%%FinSHLine
 
 		JMP			%%BcStBAv
@@ -3659,14 +3677,25 @@ ALIGN 4
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 
 		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
 		MOVQ		mm1,mm0
 		MOVQ		mm4,mm3
 		MOVQ		mm2,mm0
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
-		SUB			ECX,BYTE 4
-		MOVQ		[EDI],mm0 ; write the 8 bytes
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
+		SUB			ECX, BYTE 4
+		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
 		LEA			EDI,[EDI+8]
@@ -3675,8 +3704,9 @@ ALIGN 4
 		JZ			%%FinSHLine
 %%BcStBAp:
 		@AjAdDYZ16
-		DEC			ECX
 		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAp
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3686,7 +3716,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JNZ			%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:
@@ -3763,8 +3796,9 @@ ALIGN 4
 		TEST		EDI,6
 		JZ			%%FPasStBAv
 		@AjAdNormB16
-		DEC			ECX
 		MOV			AX,[EBX+ESI]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAv
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3774,7 +3808,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JZ			%%FinSHLine
 
 		JMP			%%BcStBAv
@@ -3810,14 +3847,25 @@ ALIGN 4
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
 
 		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
 		MOVQ		mm1,mm0
 		MOVQ		mm4,mm3
 		MOVQ		mm2,mm0
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
 		SUB			ECX, BYTE 4
-		MOVQ		[EDI],mm0 ; write the 8 bytes
+		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
 		LEA			EDI,[EDI+8]
@@ -3826,8 +3874,9 @@ ALIGN 4
 		JZ			%%FinSHLine
 %%BcStBAp:
 		@AjAdNormB16
-		DEC			ECX
 		MOV			AX,[ESI+EBX]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAp
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3837,7 +3886,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JNZ			%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:
@@ -3871,8 +3923,9 @@ ALIGN 4
 		TEST		EDI,6
 		JZ			%%FPasStBAv
 		@AjAdDXZ16
-		DEC			ECX
 		MOV			AX,[EBX+ESI]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAv
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3882,7 +3935,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JZ			%%FinSHLine
 
 		JMP			%%BcStBAv
@@ -3914,14 +3970,25 @@ ALIGN 4
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
 
 		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
 		MOVQ		mm1,mm0
 		MOVQ		mm4,mm3
 		MOVQ		mm2,mm0
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
 		SUB			ECX, BYTE 4
-		MOVQ		[EDI],mm0 ; write the 8 bytes
+		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
 		LEA			EDI,[EDI+8]
@@ -3931,8 +3998,9 @@ ALIGN 4
 
 %%BcStBAp:
 		@AjAdDXZ16
-		DEC			ECX
 		MOV			AX,[EBX+ESI]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAp
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3942,7 +4010,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JNZ			%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:
@@ -3978,8 +4049,9 @@ ALIGN 4
 		TEST		EDI,6
 		JZ			%%FPasStBAv
 		@AjAdDYZ16
-		DEC			ECX
 		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAv
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -3989,7 +4061,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JZ			%%FinSHLine
 
 		JMP			%%BcStBAv
@@ -4021,14 +4096,25 @@ ALIGN 4
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
 
 		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
 		MOVQ		mm1,mm0
 		MOVQ		mm4,mm3
 		MOVQ		mm2,mm0
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
-		SUB			ECX,BYTE 4
-		MOVQ		[EDI],mm0 ; write the 8 bytes
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
+		SUB			ECX, BYTE 4
+		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
 		LEA			EDI,[EDI+8]
@@ -4037,8 +4123,9 @@ ALIGN 4
 		JZ			%%FinSHLine
 %%BcStBAp:
 		@AjAdDYZ16
-		DEC			ECX
 		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			%%MaskStBAp
 		MOV			BX,[EDI]
 		MOVD		mm0,EAX
 		MOVD		mm3,EBX
@@ -4048,7 +4135,10 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 		MOVD		EAX,mm0
-		STOSW
+		MOV			[EDI],AX
+%%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
 		JNZ			%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:

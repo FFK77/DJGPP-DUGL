@@ -1235,30 +1235,30 @@ ALIGN 4
 
 %macro	@SolidBlndHLine16	0
 		TEST		EDI,2
-		JZ		%%FPasStBAv
-		MOV		AX,[EDI]
+		JZ			%%FPasStBAv
+		MOV			AX,[EDI]
 		MOVD		mm0,EAX ; B
 		MOVD		mm1,EAX ; G
 		;MOVQ		mm2,mm0	  ; R
 		MOVD		mm2,EAX	  ; R
 		@SolidBlndQ
 		MOVD		EAX,mm0
-		DEC		ESI
+		DEC			ESI
 		STOSW
 		JZ		%%FinSHLine
 %%FPasStBAv:
 		TEST		EDI,4
-		JZ		SHORT %%PasStDAv
-		CMP		ESI,2
-		JL		%%StBAp
-		MOV		EAX,[EDI]
+		JZ			SHORT %%PasStDAv
+		CMP			ESI,2
+		JL			%%StBAp
+		MOV			EAX,[EDI]
 		MOVD		mm0,EAX ; B
 		MOVD		mm1,EAX   ; G
 		MOVD		mm2,EAX	  ; R
 		@SolidBlndQ
 		MOVD		[EDI],mm0
-		SUB		ESI,BYTE 2
-		LEA		EDI,[EDI+4]
+		SUB			ESI,BYTE 2
+		LEA			EDI,[EDI+4]
 %%PasStDAv:
 		MOV		ECX,ESI
 		SHR		ECX,2
@@ -1333,109 +1333,116 @@ ALIGN 4
 		JZ		%%CasDYZ
 		SUB		EBP,[XT1]   ; EBP = DX
 		JZ		%%CasDXZ
-%%CasNorm:	@InTextBlndHLineNorm16
+%%CasNorm:
+		@InTextBlndHLineNorm16
 		JMP		%%FinInTextHLg
-%%CasDXZ:	@InTextBlndHLineDXZ16
+%%CasDXZ:
+		@InTextBlndHLineDXZ16
 		JMP		%%FinInTextHLg
-%%CasDYZ:	@InTextBlndHLineDYZ16
+%%CasDYZ:
+		@InTextBlndHLineDYZ16
 %%FinInTextHLg:
 %endmacro
 
 ; AX : DYT, EBP : DXT
 
 %macro	@InTextBlndHLineNorm16 0
-		MOV		ESI,[YT1]      ; - 1
+		MOV			ESI,[YT1]      ; - 1
 		SHL 		EAX,Prec
 		CDQ
-		IMUL		ESI,[SScanLine]    ; - 2
-		OR		ECX,ECX
-		JZ		%%PDivPntPY
+		IMUL		ESI,[SNegScanLine]    ; - 2
+		OR			ECX,ECX
+		JZ			%%PDivPntPY
 		IDIV		ECX
-		JMP		SHORT %%DivPntPY
-%%PDivPntPY:	XOR		EAX,EAX
+		JMP			SHORT %%DivPntPY
+%%PDivPntPY:
+		XOR			EAX,EAX
 %%DivPntPY:
-		NEG		ESI	       ; - 3
-		NEG		EAX
-		ADD		ESI,[XT1]      ; - 4
-		MOV		[PntPlusY],EAX  ;[PntPlusY]
-		ADD		ESI,[XT1]      ; - 4(2) as 16bpp
+		NEG			EAX
+		ADD			ESI,[XT1]      ; - 4
+		MOV			[PntPlusY],EAX  ;[PntPlusY]
+		ADD			ESI,[XT1]      ; - 4(2) as 16bpp
 
-		MOV		EAX,EBP
+		MOV			EAX,EBP
 
-		ADD		ESI,[Svlfb]    ; - 5
-		SHL		EAX,Prec
+		ADD			ESI,[Svlfb]    ; - 5
+		SHL			EAX,Prec
 		CDQ
-		OR		ECX,ECX
-		JZ		%%PDivPntPX
+		OR			ECX,ECX
+		JZ			%%PDivPntPX
 		IDIV		ECX
-		JMP		SHORT %%DivPntPX
-%%PDivPntPX:	XOR		EAX,EAX
+		JMP			SHORT %%DivPntPX
+%%PDivPntPX:
+		XOR			EAX,EAX
 %%DivPntPX:
 		;--- ajuste Cpt Dbrd X et Y pour SAR
-		MOV		[PntPlusX],EAX
-		XOR		EBX,EBX
-		OR		EAX,EAX
+		MOV			[PntPlusX],EAX
+		XOR			EBX,EBX
+		OR			EAX,EAX
 		SETL		BL
-		MOV		EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr X
-		MOV		EAX,[PntPlusY]
-		INC		ECX
-		OR		EAX,EAX
+		MOV			EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr X
+		MOV			EAX,[PntPlusY]
+		INC			ECX
+		OR			EAX,EAX
 		SETL		BL
-		MOV		EBP,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
+		MOV			EBP,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
 
 
-%%BcStBAv:	TEST		EDI,6
-		JZ		%%FPasStBAv
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
 		@AjAdNormB16
-		MOV		AX,[EBX+ESI]
-		DEC		ECX
+		MOV			AX,[EBX+ESI]
+		DEC			ECX
 		@SolidTextBlndW
 		STOSW
-		JZ		%%FinSHLine
+		JZ			%%FinSHLine
 
-		JMP		%%BcStBAv
+		JMP			%%BcStBAv
 %%FPasStBAv:
-		CMP		ECX,BYTE 3
-		JLE		%%StBAp
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
 		PUSH		ECX
 
-		SHR		ECX,2
+		SHR			ECX,2
 ;ALIGN 4
-%%StoMMX:	MOVD		mm5,EDI  ; save EDI in mm5
+%%StoMMX:
+		MOVD		mm5,EDI  ; save EDI in mm5
 		@AjAdNormQ16
-                MOVD		mm3,ECX   ; save ECX
-		MOV		AX,[ESI+EBX] ; read word 0
+		MOVD		mm3,ECX   ; save ECX
+		MOV			AX,[ESI+EBX] ; read word 0
 		@AjAdNormQ16
-		ROR		EAX,16 ; move first word to upper EAX word
-		MOV		CX,[ESI+EBX] ; read word 1
+		ROR			EAX,16 ; move first word to upper EAX word
+		MOV			CX,[ESI+EBX] ; read word 1
 		@AjAdNormQ16
-		ROR		ECX,16
-		MOV		AX,[ESI+EBX] ; read word 2
+		ROR			ECX,16
+		MOV			AX,[ESI+EBX] ; read word 2
 		@AjAdNormQ16
-		ROR		EAX,16 ; EAX words on the right order
-		MOV		CX,[ESI+EBX] ; read byte 3
+		ROR			EAX,16 ; EAX words on the right order
+		MOV			CX,[ESI+EBX] ; read byte 3
 		MOVD		EDI,mm5 ; restore EDI
-		ROR		ECX,16   ; ; ECX words on the right order
-                MOVD            mm0,EAX ; first 4 bytes to write
-                MOVD            mm4,ECX ; second 4 byte to write
+		ROR			ECX,16   ; ; ECX words on the right order
+		MOVD        mm0,EAX ; first 4 bytes to write
+		MOVD        mm4,ECX ; second 4 byte to write
 		PUNPCKLWD	mm0,mm4 ; make the full 8 bytes to write
-                MOVD		ECX,mm3   ; restore ECX
+        MOVD		ECX,mm3   ; restore ECX
 		@SolidTextBlndQ
 		MOVQ		[EDI],mm0 ; write the 8 bytes
-		DEC		ECX
-		LEA		EDI,[EDI+8]
-		JNZ		%%StoMMX
+		DEC			ECX
+		LEA			EDI,[EDI+8]
+		JNZ			%%StoMMX
 
-		POP		ECX  ; restore first 3 bits of ECX
-		AND		ECX,BYTE 3
-		JZ		%%FinSHLine
+		POP			ECX  ; restore first 3 bits of ECX
+		AND			ECX,BYTE 3
+		JZ			%%FinSHLine
 %%StBAp:
-%%BcStBAp:	@AjAdNormB16
-		MOV		AX,[ESI+EBX]
-		DEC		ECX
+%%BcStBAp:
+		@AjAdNormB16
+		MOV			AX,[ESI+EBX]
+		DEC			ECX
 		@SolidTextBlndW
 		STOSW
-		JNZ		%%BcStBAp
+		JNZ			%%BcStBAp
 %%PasStBAp:
 %%FinSHLine:
 %endmacro
@@ -1458,8 +1465,8 @@ ALIGN 4
 		PAND		mm2,[QRed16Mask]
 		;PAND		mm0,[QBlue16Mask]
 		PAND		mm1,[QGreen16Mask]
-		POR		mm0,mm2
-		POR		mm0,mm1
+		POR			mm0,mm2
+		POR			mm0,mm1
 %endmacro
 
 %macro	@SolidTextBlndW 0

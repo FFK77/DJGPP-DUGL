@@ -75,6 +75,8 @@ extern Surf CurSurf;
 extern int  CurViewVSurf;
 extern unsigned char TbDegCol[256*64];
 extern void *PtrTbColConv;
+extern char LastPolyStatus; // Warning ReadOnly! used internally by (Poly16, RePoly16) / (Poly, RePoly)
+                            // Last Rendered Poly Status: ='N' not rendered, ='C' clipped, ='I' In rendererd
 
 
 #ifdef __cplusplus
@@ -176,6 +178,15 @@ void LineMap(void *Point1,void *Point2,int col,unsigned int Map); // Mapped line
 #define POLY_MAX_TYPE			11
 #define POLY_FLAG_DBL_SIDED		0x80000000
 void Poly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+// Redo the last rendered Poly: *ListPt is ignored in this call,
+// if the last Poly is a reversed Double sided poly and POLY_FLAG_DBL_SIDED isn't enabled the RePoly will be skipped
+// user can update *SS, TypePoly, ColPoly and texture coordinates[U,V] using the same Point List pointers the Poly was called with
+// Should be used through REPOLY else LastPolyStatus 'N' will not be ignored
+// if used after Poly16 /not Poly behavior will be undefined
+void RePoly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+// REPOLY provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
+#define REPOLY(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly(ListPt, SS, TypePoly, ColPoly);
+
 int  ValidSPoly(void *ListPt);
 int  SensPoly(void *ListPt);
 
@@ -205,7 +216,7 @@ void rectmap(int x1,int y1,int x2,int y2,int rcol,unsigned int rmap);
 // 16 bpp drawing functions
 // ------------------------
 
-#define RGB16(r,g,b) ((r>>3)|((g>>2)<<5)|((b>>3)<<11))
+#define RGB16(r,g,b) ((b>>3)|((g>>2)<<5)|((r>>3)<<11))
 
 void PutPixel16(void *Point,int col);
 int GetPixel16(void *Point);
@@ -227,6 +238,14 @@ void LineMapBlnd16(void *Point1,void *Point2,int col,unsigned int Map);
 #define POLY16_MAX_TYPE			15
 #define POLY16_FLAG_DBL_SIDED	0x80000000
 void Poly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+// Redo the last rendered Poly16: *ListPt is ignored in this call,
+// if the last Poly16 is a reversed Double sided poly and POLY16_FLAG_DBL_SIDED isn't enabled the RePoly16 will be skipped
+// user can update *SS, TypePoly, ColPoly and texture coordinates[U,V] using the same Point List pointers the Poly16 was called with
+// Should be used through REPOLY16 else LastPolyStatus 'N' will not be ignored
+// if used after Poly /not Poly16 behavior will be undefined
+void RePoly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+// REPOLY16 provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
+#define REPOLY16(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly16(ListPt, SS, TypePoly, ColPoly);
 
 // 16 bpp Drawing helper functions provided for convenience
 // -------------------------------------------------------

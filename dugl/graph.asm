@@ -6,7 +6,7 @@ GLOBAL	_PutPixel,_GetPixel,_line,_Line,_linemap,_LineMap,_SetSurf,_SurfCopy
 GLOBAL	_SetSrcSurf,_GetSurf,_Clear,_ProtectSetPalette,_ProtectViewSurf
 GLOBAL	_ProtectViewSurfWaitVR,_WaitRetrace,_GetMaxResVSetSurf
 ;********************
-GLOBAL	_Poly,_SensPoly,_ValidSPoly,_PutSurf,_PutMaskSurf
+GLOBAL	_Poly, _RePoly, _SensPoly,_ValidSPoly,_PutSurf,_PutMaskSurf
 GLOBAL	_InRLE,_OutRLE,_SizeOutRLE,_InLZW
 GLOBAL	_SetFONT, _GetFONT,_OutText,_LargText,_LargPosText,_PosLargText
 ; 16bpp
@@ -15,7 +15,7 @@ GLOBAL	_PutSurf16,_PutMaskSurf16,_PutSurfBlnd16,_PutMaskSurfBlnd16
 GLOBAL	_PutSurfTrans16,_PutMaskSurfTrans16
 GLOBAL	_SurfCopyBlnd16,_SurfMaskCopyBlnd16,_SurfCopyTrans16,_SurfMaskCopyTrans16
 GLOBAL	_line16,_Line16,_linemap16,_LineMap16,_lineblnd16,_LineBlnd16
-GLOBAL	_linemapblnd16,_LineMapBlnd16,_Poly16
+GLOBAL	_linemapblnd16,_LineMapBlnd16,_Poly16, _RePoly16
 GLOBAL	_Clear16,_OutText16
 
 
@@ -23,7 +23,7 @@ GLOBAL	_Clear16,_OutText16
 GLOBAL	_CurViewVSurf, _CurSurf, _SrcSurf
 GLOBAL	_CurFONT, _FntPtr, _FntHaut, _FntDistLgn, _FntLowPos, _FntHighPos
 GLOBAL	_FntSens, _FntTab, _FntX, _FntY, _FntCol
-GLOBAL	_PtrTbColConv
+GLOBAL	_PtrTbColConv, _LastPolyStatus
 
 ; EXTERN DATA
 EXTERN	_SetPalPMI, _CurPalette, _ShiftPal, _ViewAddressPMI, _VSurf, _NbVSurf
@@ -33,15 +33,15 @@ EXTERN	_TPolyAdDeb, _TPolyAdFin, _TexXDeb, _TexXFin, _TexYDeb, _TexYFin
 EXTERN	_PColDeb, _PColFin, _TbDegCol
 ; --GIF------
 EXTERN	_Prefix, _Suffix, _DStack
-Prec			EQU	12
-MaxResV			EQU	4096
-BlendMask		EQU	0x1f
-SurfUtilSize    EQU 64
-CMaskB_RGB16	EQU	0x1f	 ; blue bits 0->4
-CMaskG_RGB16	EQU	0x3f<<5  ; green bits 5->10
-CMaskR_RGB16	EQU	0x1f<<11 ; red bits 11->15
-MaxDeltaDim		EQU	1<< (31-Prec)
-
+Prec					EQU	12
+MaxResV					EQU	4096
+BlendMask				EQU	0x1f
+SurfUtilSize    		EQU 64
+CMaskB_RGB16			EQU	0x1f	 ; blue bits 0->4
+CMaskG_RGB16			EQU	0x3f<<5  ; green bits 5->10
+CMaskR_RGB16			EQU	0x1f<<11 ; red bits 11->15
+MaxDeltaDim				EQU	1<< (31-Prec)
+MaxDblSidePolyPts    	EQU 256
 
 SECTION .text
 [BITS 32]
@@ -1248,6 +1248,35 @@ _SensPoly:
 		;EMMS
 		RETURN
 
+_RePoly:
+    ARG RePtrListPt, 4, ReSSurf, 4, ReTypePoly, 4, ReColPoly, 4
+
+            PUSH        ESI
+            PUSH        EBX
+            PUSH        EDI
+
+            ;CMP         [LastPolyStatus], BYTE 'N'
+            MOV         EAX,[EBP+ReTypePoly]
+            MOV			EBX,[EBP+ReColPoly]
+            ;JE			_Poly16.PasDrawPoly
+            TEST		EAX,POLY_FLAG_DBL_SIDED
+            JZ			SHORT .DblSideCheck ; not a double-sided RePoly16 ?
+.doRePoly:
+            AND         EAX,DEL_POLY_FLAG_DBL_SIDED
+            MOV         ECX,[EBP+ReSSurf]
+            MOV         [clr],EBX
+            MOV         [SSSurf],ECX
+            CMP         [_LastPolyStatus], BYTE 'I' ; last render IN ?
+            JNE			.ClipRepoly
+            JMP			[InFillPolyProc+EAX*4]
+.ClipRepoly:
+			JMP			[ClFillPolyProc+EAX*4]
+.DblSideCheck:
+			; if this is a reversed dbl_sided then skip repoly
+			CMP			DWORD [PPtrListPt], ReversedPtrListPt
+			JNE			SHORT .doRePoly
+			JMP			_Poly.PasDrawPoly
+
 ;****************************************************************************
 ; struct of PtrlistPt
 ; 0‚		  DWORD : n count of PtrPoint
@@ -1281,6 +1310,7 @@ _Poly:
 		PUSH        EDI
 
 		LODSD		; MOV EAX,[ESI];  ADD ESI,4
+        MOV         [_LastPolyStatus], BYTE 'N' ; default no render
 		MOV			[NbPPoly],EAX
 		MOV			ECX,[ESI+8]
 		MOV			EAX,[ESI]
@@ -1308,7 +1338,7 @@ _Poly:
 		CMP			EAX,EDI
 
 		JL			.TstSiDblSide ; si <= 0 alors pas ok
-		JZ			.SpecialCase
+		JZ			.PasDrawPoly ; ignore poly if first 3 points aligned
 
 ;****************
 .DrawPoly:
@@ -1383,6 +1413,7 @@ _Poly:
 		MOV			[YP2],EBP
 		@InCalculerContour
 		MOV			EAX,[PType]
+        MOV         [_LastPolyStatus], BYTE 'I'; In render
 		JMP			[InFillPolyProc+EAX*4]
 		;JMP			.PasDrawPoly
 .PolyClip:
@@ -1422,83 +1453,40 @@ _Poly:
 		MOVD		mm5,EBP		; sauvegarde xp2,yp2
 		@ClipCalculerContour
 
-		CMP		DWORD [DebYPoly],BYTE (-1)
-		MOV		EAX,[PType]
-		JE		.PasDrawPoly
-		JMP		[ClFillPolyProc+EAX*4]
+		CMP			DWORD [DebYPoly],BYTE (-1)
+		MOV			EAX,[PType]
+		JE			.PasDrawPoly
+        MOV         [_LastPolyStatus], BYTE 'C' ; Clip render
+		JMP			[ClFillPolyProc+EAX*4]
 .PasDrawPoly:
 
-		POP             EDI
-		POP             EBX
-        POP             ESI
+		POP         EDI
+		POP         EBX
+        POP         ESI
 		;EMMS
 	RETURN
 
-.TstSiDblSide:	TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED >> 24
-		MOV		ECX,[NbPPoly]
-		JZ		.PasDrawPoly
-		DEC		ECX
-		MOV		EBX,ESI ; = PtrListPt16 + 4
-		LEA		EDI,[EBX+ECX*4]
-		ADD		EBX,BYTE 4
-		SHR		ECX,1
+.TstSiDblSide:
+		TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED >> 24
+		MOV			ECX,[NbPPoly]
+		JZ			.PasDrawPoly
+		; swap all points except P1 !
+		MOV         EAX,[ESI]
+		MOV         EDX,ReversedPtrListPt
+		DEC         ECX
+		MOV         [EDX],EAX
 
-.BcSwapPts:	MOV		EAX,[EBX]
-		MOV		EDX,[EDI]
-		MOV		[EDI],EAX
-		MOV		[EBX],EDX
-		SUB		EDI,BYTE 4
-		DEC		ECX
-		LEA		EBX,[EBX+4]
-		JNZ		.BcSwapPts
-		JMP		.DrawPoly
-.SpecialCase:
-		MOV		ECX,[NbPPoly]
-		CMP		ECX,BYTE 3
-		JLE		.PasDrawPoly
-; first loop fin any x or y not equal to P1
-		DEC		ECX
-		MOV		EAX,[XP1]
-		MOV		ESI,[EBP+PtrListPt]
-		MOV		EBX,[YP1]
-		ADD		ESI,BYTE 8 ; jump over number of points + p1
-.lpAnydiff:	MOV		EDI,[ESI]  ;
-		CMP		EAX,[EDI] ; XP1 != XP[N]
-		JNE		.finddiffP3
-		CMP		EBX,[EDI+4] ; YP1 != YP[N]
-		JNE		.finddiffP3
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JNZ		.lpAnydiff
-		JMP		.PasDrawPoly ; failed
-
-.finddiffP3:	MOV		EAX,[EDI]
-		MOV		EBX,[EDI+4]
-		MOV		[XP2],EAX
-		MOV		[YP2],EBX
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JZ		.PasDrawPoly ; no more points ? :(
-		SUB		EAX,[XP1] ; = XP2-XP1
-		SUB		EBX,[YP1] ; = YP2-YP1
-
-.lpPdiff:	MOV		EDI,[ESI]
-		MOV		EDX,[EDI] ; XP3
-		MOV		EDI,[EDI+4] ; YP3
-		SUB		EDX,[XP2] ; XP3-XP2
-		SUB		EDI,[YP2] ; YP3-YP2
-		IMUL		EDX,EBX ; = (YP2-YP1)*(XP3-XP2)
-		IMUL		EDI,EAX ; = (XP2-XP1)*(YP3-YP2)
-		SUB		EDI,EDX
-		JNZ		.P3ok
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JNZ		.lpPdiff
-		JMP		.PasDrawPoly ; failed
-.P3ok:		MOV		ESI,[EBP+PtrListPt]
-		LEA		ESI,[ESI+4]
-		JL		.TstSiDblSide
-		JMP		.DrawPoly
+		LEA         EDI,[ESI+ECX*4]
+		LEA         EBX,[EDX+4] ; P1 already copied
+		MOV         ESI,EDX ; update [PPtrListPt] In ESI
+.BcSwapPts:
+		MOV         EAX,[EDI]
+		MOV         [EBX],EAX
+		SUB         EDI,BYTE 4
+		DEC         ECX
+		LEA         EBX,[EBX+4]
+		JNZ         SHORT .BcSwapPts
+		JMP         .DrawPoly
 
 ;************************************************
 ;------------------------------------------------
@@ -1837,6 +1825,35 @@ _Clear16:
 		RETURN
 
 
+_RePoly16:
+    ARG RePtrListPt16, 4, ReSSurf16, 4, ReTypePoly16, 4, ReColPoly16, 4
+
+            PUSH        ESI
+            PUSH        EBX
+            PUSH        EDI
+
+            ;CMP         [LastPolyStatus], BYTE 'N'
+            MOV         EAX,[EBP+ReTypePoly16]
+            MOV			EBX,[EBP+ReColPoly16]
+            ;JE			_Poly16.PasDrawPoly
+            TEST		EAX,POLY_FLAG_DBL_SIDED16
+            JZ			SHORT .DblSideCheck ; not a double-sided RePoly16 ?
+.doRePoly:
+            AND         EAX,DEL_POLY_FLAG_DBL_SIDED16
+            MOV         ECX,[EBP+ReSSurf16]
+            MOV         [clr],EBX
+            MOV         [SSSurf],ECX
+            CMP         [_LastPolyStatus], BYTE 'I' ; last render IN ?
+            JNE			.ClipRepoly16
+            JMP			[InFillPolyProc16+EAX*4]
+.ClipRepoly16:
+			JMP			[ClFillPolyProc16+EAX*4]
+.DblSideCheck:
+			; if this is a reversed dbl_sided then skip repoly
+			CMP			DWORD [PPtrListPt], ReversedPtrListPt
+			JNE			SHORT .doRePoly
+			JMP			_Poly16.PasDrawPoly
+
 ;****************************************************************************
 ;struct of PtrlistPt
 ;0‚		  DWORD : n count of PtrPoint
@@ -1864,6 +1881,7 @@ _Poly16:
 		PUSH        EDI
 
 		LODSD		; MOV EAX,[ESI];  ADD ESI,4
+        MOV         [_LastPolyStatus], BYTE 'N' ; default no render
 		MOV			[NbPPoly],EAX
 		MOV			ECX,[ESI+8]
 		MOV			EAX,[ESI]
@@ -1891,7 +1909,7 @@ _Poly16:
 		CMP			EAX,EDI
 
 		JL			.TstSiDblSide ; si <= 0 alors pas ok
-		JZ			.SpecialCase
+		JZ			.PasDrawPoly ; ignore poly if first 3 points aligned
 ;****************
 .DrawPoly:
 		; Sauvegarde les parametre et libere EBP
@@ -1964,6 +1982,7 @@ _Poly16:
 		MOV			[YP2],EBP
 		@InCalculerContour16
 		MOV			EAX,[PType]
+        MOV         [_LastPolyStatus], BYTE 'I'; In render
 		JMP			[InFillPolyProc16+EAX*4]
 		;JMP			.PasDrawPoly
 
@@ -2017,6 +2036,7 @@ _Poly16:
 		CMP			DWORD [DebYPoly],BYTE (-1)
 		MOV			EAX,[PType]
 		JE			.PasDrawPoly
+        MOV         [_LastPolyStatus], BYTE 'C' ; Clip render
 		JMP			[ClFillPolyProc16+EAX*4]
 
 .PasDrawPoly:
@@ -2026,71 +2046,28 @@ _Poly16:
 		;EMMS
 		RETURN
 
-.TstSiDblSide:	TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED16 >> 24
-		MOV		ECX,[NbPPoly]
-		JZ		.PasDrawPoly
-		DEC		ECX
-		MOV		EBX,ESI ; = PtrListPt16 + 4
-		LEA		EDI,[EBX+ECX*4]
-		ADD		EBX,BYTE 4
-		SHR		ECX,1
-.BcSwapPts:	MOV		EAX,[EBX]
-		MOV		EDX,[EDI]
-		MOV		[EDI],EAX
-		MOV		[EBX],EDX
-		SUB		EDI,BYTE 4
-		DEC		ECX
-		LEA		EBX,[EBX+4]
-		JNZ		.BcSwapPts
-		JMP		.DrawPoly
+.TstSiDblSide:
+		TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED16 >> 24
+		MOV			ECX,[NbPPoly]
+		JZ			.PasDrawPoly
+		; swap all points except P1 !
+		MOV         EAX,[ESI]
+		MOV         EDX,ReversedPtrListPt
+		DEC         ECX
+		MOV         [EDX],EAX
 
-.SpecialCase:
-		MOV		ECX,[NbPPoly]
-		CMP		ECX,BYTE 3
-		JLE		.PasDrawPoly
-; first loop fin any x or y not equal to P1
-		DEC		ECX
-		MOV		EAX,[XP1]
-		MOV		ESI,[EBP+PtrListPt16]
-		MOV		EBX,[YP1]
-		ADD		ESI,BYTE 8 ; jump over number of points + p1
-.lpAnydiff:	MOV		EDI,[ESI]  ;
-		CMP		EAX,[EDI] ; XP1 != XP[N]
-		JNE		.finddiffP3
-		CMP		EBX,[EDI+4] ; YP1 != YP[N]
-		JNE		.finddiffP3
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JNZ		.lpAnydiff
-		JMP		.PasDrawPoly ; failed
+		LEA         EDI,[ESI+ECX*4]
+		LEA         EBX,[EDX+4] ; P1 already copied
+		MOV         ESI,EDX ; update [PPtrListPt] In ESI
+.BcSwapPts:
+		MOV         EAX,[EDI]
+		MOV         [EBX],EAX
+		SUB         EDI,BYTE 4
+		DEC         ECX
+		LEA         EBX,[EBX+4]
+		JNZ         SHORT .BcSwapPts
+		JMP         .DrawPoly
 
-.finddiffP3:	MOV		EAX,[EDI]
-		MOV		EBX,[EDI+4]
-		MOV		[XP2],EAX
-		MOV		[YP2],EBX
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JZ		.PasDrawPoly ; no more points ? :(
-		SUB		EAX,[XP1] ; = XP2-XP1
-		SUB		EBX,[YP1] ; = YP2-YP1
-
-.lpPdiff:	MOV		EDI,[ESI]
-		MOV		EDX,[EDI] ; XP3
-		MOV		EDI,[EDI+4] ; YP3
-		SUB		EDX,[XP2] ; XP3-XP2
-		SUB		EDI,[YP2] ; YP3-YP2
-		IMUL		EDX,EBX ; = (YP2-YP1)*(XP3-XP2)
-		IMUL		EDI,EAX ; = (XP2-XP1)*(YP3-YP2)
-		SUB		EDI,EDX
-		JNZ		.P3ok
-		DEC		ECX
-		LEA		ESI,[ESI+4]
-		JNZ		.lpPdiff
-		JMP		.PasDrawPoly ; failed
-.P3ok:		MOV		ESI,[EBP+PtrListPt16]
-		LEA		ESI,[ESI+4]
-		JL		.TstSiDblSide
-		JMP		.DrawPoly
 
 
 SECTION .bss   ALIGN=32
@@ -2219,6 +2196,9 @@ _TexYFin 		RESD	MaxResV
 _PColDeb 		RESD	MaxResV
 _PColFin 		RESD	MaxResV
 
+; reversed PPtrListPt pointer
+ReversedPtrListPt   RESD  MaxDblSidePolyPts
+
 ; glob variables for Poly/Poly16 ..
 QBlue16Blend	RESD	2
 QGreen16Blend	RESD	2
@@ -2231,6 +2211,7 @@ HzLineLength	RESD	1
 HzLineDstAddr	RESD	1
 ClipHStartAddr	RESD	1
 _PtrTbColConv	RESD	1
+_LastPolyStatus RESD  	1
 
 SECTION .data   ALIGN=32
 

@@ -44,7 +44,7 @@ unsigned int CopyCar[2][64];
 Caract CopyInfCar;
 unsigned char palette[1024],mpalette[1024];
 Surf *SMouse, *SImg;
-FONT F1;
+DFONT F1;
 KbMAP *KM;
 View MsV;
 FILE *Pal;
@@ -110,7 +110,7 @@ int main(int argc,char *argv[]) {
    fread(&palette,1024,1,Pal);
    fclose(Pal);
    //InitPaletteGUI(&palette);
-   if (!LoadFONT(&F1,"hello.chr")) {
+   if (!LoadDFONT(&F1,"hello.chr")) {
      printf("hello.chr introuvable\n"); exit(-1); }
    if (!LoadKbMAP(&KM,"kbmap.map")) {
      printf("kbmap.map introuvable\n"); exit(-1); }
@@ -144,7 +144,7 @@ int main(int argc,char *argv[]) {
   Yellow=FindCol(0,255,0,255,0,&palette);
   FREE_MMX();
   SetPalette(0,256,&palette);
-  SetFONT(&F1);
+  SetDFONT(&F1);
   SetOrgSurf(SMouse,0,SMouse->ResV-1);
   GetSurfView(&VSurf[0],&MsV);
   SetMouseView(&MsV);

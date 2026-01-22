@@ -50,7 +50,7 @@ Surf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 unsigned char palette[1024];
 
 // FONT
-FONT F1;
+DFONT F1;
 // mouse View
 View MsV;
 // keyborad map
@@ -198,7 +198,7 @@ int main (int argc, char ** argv) {
       printf("Error loading keyboardmap '%s'\n", keybMapFileName); exit(-1); }
 
     // load font
-    if (!LoadFONT(&F1,"hello.chr")) {
+    if (!LoadDFONT(&F1,"hello.chr")) {
       printf("Error loading hello.chr\n"); exit(-1); }
 
     // init the lib
@@ -221,7 +221,7 @@ int main (int argc, char ** argv) {
     Clear16(0); // clear by black
 
     // set font
-    SetFONT(&F1);
+    SetDFONT(&F1);
     // mouse
     if (MouseSupported) {
        // set mouse pointer Orig to the upper left corner
@@ -1121,17 +1121,10 @@ bool LoadImg(char *filename, Surf **DstSurf)
       return true;
    if (LoadJPG16(DstSurf,filename)!=0)
       return true;
+   if (LoadGIF16(DstSurf,filename)!=0)
+      return true;
 
    if (LoadBMP(&Surf8bpp,filename,palette)!=0) {
-      if (CreateSurf(DstSurf, Surf8bpp->ResH, Surf8bpp->ResV, 16)==0) {
-        DestroySurf(Surf8bpp);
-        return false;
-      }
-      ConvSurf8ToSurf16Pal(*DstSurf,Surf8bpp,&palette);
-      DestroySurf(Surf8bpp);
-      return true;
-   }
-   if (LoadGIF(&Surf8bpp,filename,palette)!=0) {
       if (CreateSurf(DstSurf, Surf8bpp->ResH, Surf8bpp->ResV, 16)==0) {
         DestroySurf(Surf8bpp);
         return false;

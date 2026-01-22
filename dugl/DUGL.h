@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "DGraph.h"
+#include "DFONT.h"
 #include "DKeyb.h"
 #include "DMouse.h"
 #include "DTimer.h"

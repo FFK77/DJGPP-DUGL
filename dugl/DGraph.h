@@ -38,30 +38,30 @@ typedef struct
 
 //** CHR FONT FORMAT ****************************
 typedef struct
-{	int		DatCar;
+{	int				DatCar;
 	char	        PlusX,PlusLgn;
 	unsigned char   Ht,Lg;
 } Caract;
 
 typedef struct
 {	int	       	Sign;  		// = "FCHR"
-	char	       	MaxHautFnt,
+	char	    MaxHautFnt,
 		       	MaxHautLgn,
 		       	MinPlusLgn,
 		       	SensFnt;
 	int	       	SizeDataCar,
-			PtrBuff;
-	int		Resv[28];
-	Caract	       	C[256];
+				PtrBuff;
+	int			Resv[28];
+	Caract	    C[256];
 } HeadCHR;
 
 typedef struct {
-	int  		FntPtr;
+	int  			FntPtr;
 	unsigned char	FntHaut,FntDistLgn;
-	char		FntLowPos, FntHighPos,FntSens;
+	char			FntLowPos, FntHighPos,FntSens;
 	unsigned char	FntTab,Fntrevb[2];
-	int		FntX, FntY, FntCol,FntBCol,FntDresv;
-} FONT;
+	int				FntX, FntY, FntCol,FntBCol,FntDresv;
+} DFONT;
 
 // DUGL Graphics Global vars
 extern	int	      NbVSurf,NbMode;
@@ -182,8 +182,8 @@ void Poly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
 // if the last Poly is a reversed Double sided poly and POLY_FLAG_DBL_SIDED isn't enabled the RePoly will be skipped
 // user can update *SS, TypePoly, ColPoly and texture coordinates[U,V] using the same Point List pointers the Poly was called with
 // Should be used through REPOLY else LastPolyStatus 'N' will not be ignored
-// if used after Poly16 /not Poly behavior will be undefined
-void RePoly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+// if used after Poly16 /not Poly behavior, will be undefined
+void RePoly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
 // REPOLY provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
 #define REPOLY(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly(ListPt, SS, TypePoly, ColPoly);
 
@@ -297,11 +297,7 @@ int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn);
 int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024);
 int  LoadGIF16(Surf **S16,char *filename); // load a 8bpp gif and convert it to 16 bpp
 int  SaveMemGIF(Surf *S,void *Out,void *PalBGR1024); // NI (not implemented)
-int  SaveGIF(Surf *S,const char *Fname,void *PalBGR1024); // NI
-int  SizeSaveGIF(Surf *S); // NI
 void InLZW(void *InBuffLZW,void *Out);
-void OutLZW(void *OutBuffLZW,void *In,int LenIn); // NI
-int  SizeOutLZW(void *In,int LenIn,int ResHz); // NI
 
 // BMP
 int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
@@ -314,57 +310,6 @@ int  LoadBMP16(Surf **S,const char *Fname);
 int  SaveMemBMP16(Surf *S,void *Out); // save  a 16bpp surf into a 24bpp uncompressed BMP
 int  SaveBMP16(Surf *S,const char *Fname);
 int  SizeSaveBMP16(Surf *S);
-
-// FONT character loading, handling and drawing functions
-// of the DUGL CHR FONT FORMAT
-// ---------------------------------------------------------
-
-extern FONT		CurFONT;
-extern int		FntPtr, FntX, FntY, FntCol;
-extern unsigned char	FntHaut, FntDistLgn, FntTab;
-extern char		FntLowPos, FntHighPos,FntSens;
-// Text drawing Mode
-#define AJ_CUR_POS	0 // draw starting from the current xy test position
-#define AJ_MID		1 // set the text on the middle of the current Surf View
-#define AJ_SRC		2 // justify to the text source (left in case of left to right)
-#define AJ_DST		3 // justify to the text destination
-#define AJ_LEFT		4 // justify always to the left
-#define AJ_RIGHT	5 // justify always to the right
-
-int  LoadMemFONT(FONT *F,void *In,int SizeIn);
-int  LoadFONT(FONT *F,const char *Fname);
-void DestroyFONT(FONT *F);
-void SetFONT(FONT *F);
-void GetFONT(FONT *F);
-void ClearText(); // clear text position inside the CurSurf current View
-void SetTextAttrib(int TX,int TY,int TCol);
-void SetTextPos(int TX,int TY);
-void SetTextCol(int TCol); // set text color
-int  GetXOutTextMode(const char *str,int Mode);
-int  GetFntYMID();
-int  LargText(const char *str); // text width in pixel
-int  LargPosText(const char *str,int Pos);
-int  PosLargText(const char *str,int Larg);
-// Outputting Text without altering the CurSurf View
-void ViewClearText(View *V);
-int  ViewGetFntYMID(View *V);
-int  ViewGetXOutTextMode(View *V,const char *str,int Mode);
-// 8bpp
-void OutText(const char *str);
-void OutTextXY(int TX,int TY,const char *str);
-int  OutTextMode(const char *str,int Mode);
-int  OutTextYMode(int TY,const char *str,int Mode);
-int  ViewOutTextMode(View *V,const char *str,int Mode);
-int  ViewOutTextYMode(View *V,int TY,const char *str,int Mode);
-int  ViewOutTextXY(View *V,int TX,int TY,const char *str);
-// 16bpp
-void OutText16(const char *str);
-void OutText16XY(int TX,int TY,const char *str);
-int  OutText16Mode(const char *str,int Mode);
-int  OutText16YMode(int TY,const char *str,int Mode);
-int  ViewOutText16Mode(View *V,const char *str,int Mode);
-int  ViewOutText16YMode(View *V,int TY,const char *str,int Mode);
-int  ViewOutText16XY(View *V,int TX,int TY,const char *str);
 
 
 #ifdef __cplusplus

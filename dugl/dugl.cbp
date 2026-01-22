@@ -48,6 +48,11 @@
 		<Unit filename="CONTROLC.C">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="DFONT.ASM" />
+		<Unit filename="DFONT.h" />
+		<Unit filename="DFONTC.C">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="DGraph.h" />
 		<Unit filename="DIPX.H" />
 		<Unit filename="DKeyb.h" />

@@ -16,6 +16,7 @@
 /*     this boosted quad cores rendering performance by up to 30% on QuadCore CPU */
 /* 18 April 2023: Add screenshot capability */
 /* 17 June 2023: Add capability of switching to any of the 6 possible Put functions (PUT, MASK PUT, COL BLND PUT, MASK COL BLND PUT, TRANSP PUT and MASK TRANSP PUT */
+/* 21 January 2026: back ported to DJGPP-DUGL removing some unsupported functions mainly DWOrker/multi-cores rendering */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +35,7 @@ typedef struct {
 int NbSprites = 0;
 mySprite Sprites[MAX_SPRITES];
 
-FONT F1;
+DFONT F1;
 unsigned char rouge,bleu,jaune,noir,blanc; // index of needed colors
 //int ScrResH = 640, ScrResV = 480;
 int ScrResH = 800, ScrResV = 600;
@@ -46,7 +47,7 @@ bool dualCoreRender = false;
 bool quadCoreRender = false;
 bool PauseMove = false;
 bool takeScreenShot=false;
-int PutFuncIdx = 0; // MASK_PUT
+int PutFuncIdx = 5; // MASK_PUT
 char *PutFuncNames[] = { "PUT", "MASK_PUT", "COL_BLND_PUT", "COL_BLND_MASK_PUT", "TRANSP_PUT", "TRANSP_MASK_PUT" };
 // used view *******
 int TextViewHeight = 50;
@@ -78,8 +79,6 @@ int main(int argc,char *argv[]) {
         printf("man1.gif error\n");
         exit(-1);
     }
-    //sprites[0]->MaxX /= 2;
-    //sprites[0]->MaxY /= 2;
     if (!LoadGIF16(&sprites[1],"cat1.GIF")) {
         printf("cat1.gif error\n");
         exit(-1);
@@ -89,11 +88,11 @@ int main(int argc,char *argv[]) {
         exit(-1);
     }
     // load the font
-    if (!LoadFONT(&F1,"HELLO.chr")) {
+    if (!LoadDFONT(&F1,"HELLO.chr")) {
         printf("HELLOC.chr error loading\n");
         exit(-1);
     }
-    SetFONT(&F1);
+    SetDFONT(&F1);
 
     if (!CreateSurf(&rendSurf, ScrResH,ScrResV,16)) {
         printf("no mem: create renderSurf failed\n");

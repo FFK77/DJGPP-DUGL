@@ -89,11 +89,12 @@ void DGWaitRetrace();
 // synch buffer
 char SynchBuff[SIZE_SYNCH_BUFF];
 
-FONT F1;
+DFONT F1;
 
 int i,j; // counters
 
 Surf *JpegIMG,*convSurf16,*rendSurf16;
+bool bPaused = false, bExitApp = false, bBlur = true;
 
 int main(int argc,char *argv[])
 {
@@ -107,7 +108,7 @@ int main(int argc,char *argv[])
      printf("player.bmp not found or invalid\n"); exit(-1); }
 
    // load the font
-   if (!LoadFONT(&F1,"hello.chr")) {
+   if (!LoadDFONT(&F1,"hello.chr")) {
      printf("hello.chr not found\n"); exit(-1); }
 
 
@@ -133,7 +134,7 @@ int main(int argc,char *argv[])
          printf("VESA mode error\n"); exit(-1); }
 
    // set the used FONT
-   SetFONT(&F1);
+   SetDFONT(&F1);
 
    Surf *pSurfRend=rendSurf16,
         *pSurfBlur=convSurf16,*pSurfTemp;
@@ -153,19 +154,67 @@ int main(int argc,char *argv[])
      float avgFps=SynchAverageTime(SynchBuff),
            lastFps=SynchLastTime(SynchBuff);
 
-     SetSurf(pSurfRend);
+     if (bBlur)
+        SetSurf(pSurfRend);
+     else
+        SetSurf(&VSurf[0]);
+
+
+    // get key
+    unsigned char keyCode;
+    unsigned int keyFLAG;
+
+    GetKey(&keyCode, &keyFLAG);
+    switch (keyCode) {
+    case KB_KEY_SPACE :
+        bPaused=!bPaused;
+        break;
+    case KB_KEY_F2 :
+        bBlur=!bBlur;
+        break;
+    case KB_KEY_ESC:
+        bExitApp = true;
+        break;
+    case KB_KEY_TAB:
+     // create a screenshot
+     // tab + ctrl + shift
+        if (IsKeyDown(KB_KEY_TAB) && (keyFLAG&KB_SHIFT_PR) && (keyFLAG&KB_CTRL_PR))
+            SaveBMP16(&VSurf[0],"realblur.bmp");
+        break;
+
+    }
+
 
      // render a moving text
      ClearText(); // clear test position to upper left
      SetTextCol(0xff00);
      FntY=FntY-((RotX*3)&255);
-     OutText16("Esc to Exit");
+     OutText16("Esc: Exit, Space: Pause, F2:Toggle Blur");
 
+     FREE_MMX();
+
+     ClearText(); // clear test position to upper left
+     SetTextCol(0xffff);
+     sprintf(text,"Last fps %03i, avg fps %03i, Esc to exit",
+            (int)((lastFps>0.0)?(1.0/(lastFps)):-1),
+            (int)((avgFps>0.0)?(1.0/(avgFps)):-1));
+     int Xtext=GetXOutTextMode(text,AJ_RIGHT);
+     int Ytext=FntY+FntLowPos-1;
+     int widthText=WidthText(text);
+     //barblnd16(Xtext,Ytext,Xtext+WidthText,Ytext+FntHaut,0|(5<<24));
+     bar16(Xtext,Ytext,Xtext+widthText,Ytext+FntHaut,0);
+
+     OutText16Mode(text,AJ_RIGHT); // clear last text with black
+
+     // exit if esc pressed
+     if (bExitApp) break;
+     // do nothing if paused
+     if (bPaused) continue;
 
      // 3D **********
      // get transformation matrix
      FREE_MMX();
-     GetGRotTransFMatrix(&MatTr, 0.0, 0.0, 700.0, RotX, RotY, RotZ);
+     GetGRotTransFMatrix(&MatTr, 0.0f /*(float)(j%600)*/, 0.0f, 700.0f, RotX, RotY, RotZ);
      //ReverseFMatrix(&MatTr,&MatTr);
      // rotate points
      FMatrixRotTransF(&MatTr, (float *)ListFPt, (float *)ListRFPt, 8);
@@ -176,10 +225,16 @@ int main(int argc,char *argv[])
        ListObjPts[i].x=(((int)ListRFPt[i].x)*(CurSurf.ResH/2))/((int)ListRFPt[i].z);
        ListObjPts[i].y=(((int)ListRFPt[i].y)*(CurSurf.ResV/2))/((int)ListRFPt[i].z);
      }
+     FREE_MMX();
      // set origin to the center
      SetOrgSurf(&CurSurf,CurSurf.ResH/2,CurSurf.ResV/2);
      for (i=0;i<6;i++) {
-        Poly16(&ListObjPolys[i], JpegIMG, POLY16_TEXT, 0);
+        Poly16(&ListObjPolys[i], JpegIMG, POLY16_MASK_TEXT_TRANS | POLY16_FLAG_DBL_SIDED, 15);
+        //Poly16(&ListObjPolys[i], JpegIMG, POLY16_TEXT_BLND|POLY16_FLAG_DBL_SIDED, RGB16(0,0,255) | (15<<24));
+        //Poly16(&ListObjPolys[i], NULL, POLY16_SOLID_BLND, RGB16(0,0,255) | (3<<24));
+        if (i==5)
+            REPOLY16(NULL, NULL, POLY16_SOLID_BLND, RGB16(255,255,255) | (3<<24));
+            //Poly16(&ListObjPolys[i], NULL, POLY16_SOLID_BLND, RGB16(255,255,255) | (3<<24));
      }
      SetOrgSurf(&CurSurf,0,0);
 
@@ -199,43 +254,33 @@ int main(int argc,char *argv[])
      ListObjRGB[3].RGB=rand()&0xffff;
      Poly16(&ListObjPolysRGB[0], NULL, POLY16_RGB|POLY16_FLAG_DBL_SIDED, rand());
 
-     // blur
-     BlurSurf16(pSurfBlur,&CurSurf);
+     if (bBlur)
+     {
+         // blur
+         BlurSurf16(pSurfBlur,&CurSurf);
 
-     // display fps
-     SetSurf(pSurfBlur);
+         // display fps
+         SetSurf(pSurfBlur);
 
-     ClearText(); // clear test position to upper left
-     SetTextCol(0x0);
-     OutText16Mode(text,AJ_RIGHT); // clear last text with black
+         ClearText(); // clear test position to upper left
+         SetTextCol(0x0);
+         OutText16Mode(text,AJ_RIGHT); // clear last text with black
 
-     FREE_MMX();
+         // display on the screen the result :)
+         //SetSurf(&VSurf[0]);
+         //DGWaitRetrace();
+         SurfCopy(&VSurf[0],pSurfBlur);
+        // swap rend and blur Surf
 
-     ClearText(); // clear test position to upper left
-     SetTextCol(0xffff);
-     sprintf(text,"Last fps %03i, avg fps %03i, Esc to exit",
-            (int)((lastFps>0.0)?(1.0/(lastFps)):-1),
-            (int)((avgFps>0.0)?(1.0/(avgFps)):-1));
-     OutText16Mode(text,AJ_RIGHT); // clear last text with black
+         pSurfTemp=pSurfRend;
+         pSurfRend=pSurfBlur;
+         pSurfBlur=pSurfTemp;
 
-     // display on the screen the result :)
-     //SetSurf(&VSurf[0]);
-     //DGWaitRetrace();
-     SurfCopy(&VSurf[0],pSurfBlur);
+     }
 
 //     PutSurf16(pSurfBlur,0,0,0);
 
-     // exit if esc pressed
-     if (IsKeyDown(KB_KEY_ESC)) break;
-     // swap rend and blur Surf
-     pSurfTemp=pSurfRend;
-     pSurfRend=pSurfBlur;
-     pSurfBlur=pSurfTemp;
 
-     // create a screenshot
-     // tab + ctrl + shift
-     if (IsKeyDown(KB_KEY_TAB) && (KbFLAG&KB_SHIFT_PR) && (KbFLAG&KB_CTRL_PR))
-       SaveBMP16(&VSurf[0],"realblur.bmp");
 
    }
 

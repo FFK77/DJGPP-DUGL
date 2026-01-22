@@ -248,7 +248,7 @@ KeybButton KbTb[]={
 FILE *Pal;
 Surf *MsPtr;
 View MsV,SaveView;
-FONT F1;
+DFONT F1;
 unsigned char Pal3d[1024],palette[1024];
 char *LoadKbConfig="kbconfig.cfg",*CreateKbMap="kbmap.map",
      *SaveKbConfig="kbconfig.cfg";
@@ -349,7 +349,7 @@ int main(int argc,char *argv[])
 	if (!LoadGIF(&MsPtr,"mouseimg.gif",&palette))
 	  { printf("mouseimg.gif error\n"); exit(-1); }
 	SetOrgSurf(MsPtr,0,MsPtr->ResV-1);
-	if (!LoadFONT(&F1,"hello.chr"))
+	if (!LoadDFONT(&F1,"hello.chr"))
 	  { printf("hello.chr error\n"); exit(-1); }
 
 	if (!InstallMouse())
@@ -368,8 +368,8 @@ int main(int argc,char *argv[])
 	  printf("error init vesa mode\n");
 	  exit(0);
 	}
-        SetPalette(0,256,&Pal3d);
-	SetFONT(&F1);
+	SetPalette(0,256,&Pal3d);
+	SetDFONT(&F1);
 	GetSurfView(&VSurf[0],&MsV);
 	SetMouseView(&MsV);
 	FREE_MMX();

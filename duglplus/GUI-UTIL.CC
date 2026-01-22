@@ -40,15 +40,15 @@ void MessageBox(WinHandler *MsgBoxWH,char *NmWin, char *Msg,
      char *NmCancel, void (*clickCancel)()) {
    if (InitMsgBx) InitMsgBox(DEFAULT_MAX_MSGBOX);
    if (CptMsgBx>=MaxMsgBx) return;
-   int MaxLargButt=LargText(NmOk),largText,HautMsgBox=FntHaut*8;
+   int MaxLargButt=WidthText(NmOk),largText,HautMsgBox=FntHaut*8;
    int NbButt=1,LargButtons;
    int YPosMsgBox=MsgBoxWH->S->ResV/2-FntHaut*4,XPosMsgBox;
    int XPosButton;
-   int LargMsg=LargText(Msg)+30,LargMsgBox;
+   int LargMsg=WidthText(Msg)+30,LargMsgBox;
    View V1;
-   if (NmNo && (largText=LargText(NmNo))>MaxLargButt) MaxLargButt=largText;
+   if (NmNo && (largText=WidthText(NmNo))>MaxLargButt) MaxLargButt=largText;
    if (NmNo) NbButt++;
-   if (NmCancel && (largText=LargText(NmCancel))>MaxLargButt) MaxLargButt=largText;
+   if (NmCancel && (largText=WidthText(NmCancel))>MaxLargButt) MaxLargButt=largText;
    if (NmCancel) NbButt++;
    MaxLargButt+=30;
    if (MaxLargButt<90) MaxLargButt=90;

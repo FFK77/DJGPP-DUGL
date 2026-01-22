@@ -677,7 +677,7 @@ void ContBox::Draw() {
    Surf SaveSurf;
    View V1;
    Node *ParcNode;
-   int lgTxt=LargText(Label.StrPtr);
+   int lgTxt=WidthText(Label.StrPtr);
 
    GetSurf(&SaveSurf);
    SetSurf(Main->S);
@@ -1173,7 +1173,7 @@ void TextBox::DrawSurf(Surf *DestSurf) {
      V1.MaxX=XC2-3; V1.MaxY=YC2-3;
      SetSurfInView(&CurSurf,&V1);
      if ((DgTimerFreq && ((DgTime/(DgTimerFreq/10))&1)) || (!DgTimerFreq)) {
-      	larg=LargPosText(cstr,PosCursor);
+      	larg=WidthPosText(cstr,PosCursor);
 	if (larg>0) larg++;
         FntY=ViewGetFntYMID(&V1);
      	if (!FntSens) {
@@ -1216,7 +1216,7 @@ void TextBox::Scan() {
           } else cstr=Text.StrPtr;
 	  TestStr=cstr;
           TestPosCursor=TestStr.AddCursChar(PosCursor,Main->Ascii,Insert);
-	  if (LargText(TestStr.StrPtr)<(MaxLargText)) {
+	  if (WidthText(TestStr.StrPtr)<(MaxLargText)) {
 	    Text.AddCursChar(PosCursor,Main->Ascii,Insert);
 	    PosCursor=TestPosCursor;
 	  }
@@ -1323,10 +1323,10 @@ void TextBox::TextCatInBox() {
    unsigned int len,PosLarg;
 
    if (TextInBox) {
-     if (TextInBox && (LargText(Text.StrPtr)>=(MaxLargText)))
+     if (TextInBox && (WidthText(Text.StrPtr)>=(MaxLargText)))
      {
-       PosLarg=PosLargText(Text.StrPtr,MaxLargText);
-       if (PosLarg && LargPosText(Text.StrPtr,PosLarg)>=(MaxLargText))
+       PosLarg=PosWidthText(Text.StrPtr,MaxLargText);
+       if (PosLarg && WidthPosText(Text.StrPtr,PosLarg)>=(MaxLargText))
          PosLarg--;
        Text.StrPtr[PosLarg]='\0';
      }
@@ -1336,7 +1336,7 @@ void TextBox::TextCatInBox() {
 void TextBox::CalcTextX() {
     int LargPos;
     if (!TextInBox) {
-      LargPos=LargPosText(Text.StrPtr,PosCursor);
+      LargPos=WidthPosText(Text.StrPtr,PosCursor);
       if (FntSens) {
         if ((XC2-LargPos+TextX)<(XC1+8))
           TextX=XC1+8-XC2+LargPos;
@@ -1504,7 +1504,7 @@ void CocheBox::Draw() {
        m_GraphCtxt->DrawCoche(XC2-10,YC2-13);
      m_GraphCtxt->CadBoxWin(XC2-13,YC2-16,XC2-1,YC2-4);
      if (Focus) {
-       hlgtext=LargText(Label.StrPtr)+4+18;
+       hlgtext=WidthText(Label.StrPtr)+4+18;
        m_GraphCtxt->rectmap(XC2-hlgtext,YC2+FntLowPos+2,
                XC2-18,YC2+FntLowPos-FntHaut-2,m_GraphCtxt->WinNoir,0xaaaaaaaa);
      }
@@ -1516,7 +1516,7 @@ void CocheBox::Draw() {
      if (True) m_GraphCtxt->DrawCoche(XC1+4,YC2-13);
      m_GraphCtxt->CadBoxWin(XC1+1,YC2-16,XC1+13,YC2-4);
      if (Focus) {
-       hlgtext=LargText(Label.StrPtr)+4+18;
+       hlgtext=WidthText(Label.StrPtr)+4+18;
        m_GraphCtxt->rectmap(XC1+18,YC2+FntLowPos+2,
                XC1+hlgtext,YC2+FntLowPos-FntHaut-2,m_GraphCtxt->WinNoir,0xaaaaaaaa);
      }
@@ -1663,7 +1663,7 @@ void OptionButt::Draw() {
      m_GraphCtxt->Line((void*)ListPt[7],(void*)ListPt[8],m_GraphCtxt->WinNoir);
      m_GraphCtxt->Line((void*)ListPt[8],(void*)ListPt[1],m_GraphCtxt->WinNoir);
      if (Focus) {
-       hlgtext=LargText(Label.StrPtr)+4+18;
+       hlgtext=WidthText(Label.StrPtr)+4+18;
        m_GraphCtxt->rectmap(XC2-hlgtext,YC2+FntLowPos+2,
            XC2-18,YC2+FntLowPos-FntHaut-2,m_GraphCtxt->WinNoir,0xaaaaaaaa);
      }
@@ -1705,7 +1705,7 @@ void OptionButt::Draw() {
        m_GraphCtxt->bar(XC1+6,YC2-12,XC1+8,YC2-8,m_GraphCtxt->WinNoir);
        m_GraphCtxt->bar(XC1+5,YC2-11,XC1+9,YC2-9,m_GraphCtxt->WinNoir); }
      if (Focus) {
-       hlgtext=LargText(Label.StrPtr)+4+18;
+       hlgtext=WidthText(Label.StrPtr)+4+18;
        m_GraphCtxt->rectmap(XC1+18,YC2+FntLowPos+2,
                XC1+hlgtext,YC2+FntLowPos-FntHaut-2,m_GraphCtxt->WinNoir,0xaaaaaaaa);
      }

@@ -533,7 +533,7 @@ void Menu::Draw() {
      for (i=0;i<NdMenu->NbNodeMenu;i++) {
        if (NdMenu->TbNodeMenu[i].Activ) {
          if (i==choix) {
-	   m_GraphCtxt->bar(FntX-6,FntY+FntLowPos-1,FntX+LargText(NdMenu->TbNodeMenu[i].Name)+6,FntY+FntHighPos+1,m_GraphCtxt->WinRougeF);
+	   m_GraphCtxt->bar(FntX-6,FntY+FntLowPos-1,FntX+WidthText(NdMenu->TbNodeMenu[i].Name)+6,FntY+FntHighPos+1,m_GraphCtxt->WinRougeF);
 	   FntCol=m_GraphCtxt->WinBlanc;
            m_GraphCtxt->OutText(NdMenu->TbNodeMenu[i].Name); FntX+=12;
 	 }
@@ -567,7 +567,7 @@ void Menu::Scan() {
        if (NdMenu->NbNodeMenu && NdMenu->TbNodeMenu) {
          choix=-1; oldx=XC1;
      	 for (i=0;i<NdMenu->NbNodeMenu;i++) {
-	   newx=oldx+LargText(NdMenu->TbNodeMenu[i].Name)+13;
+	   newx=oldx+WidthText(NdMenu->TbNodeMenu[i].Name)+13;
            if (NdMenu->TbNodeMenu[i].Activ) {
 	     if (RMsX>=oldx && RMsX<newx) choix=i;
 	   }
@@ -593,7 +593,7 @@ void Menu::Scan() {
        if (NdMenu->NbNodeMenu && NdMenu->TbNodeMenu) {
          oldx=XC1;
      	 for (i=0;i<NdMenu->NbNodeMenu;i++) {
-	   newx=oldx+LargText(NdMenu->TbNodeMenu[i].Name)+13;
+	   newx=oldx+WidthText(NdMenu->TbNodeMenu[i].Name)+13;
            if (NdMenu->TbNodeMenu[i].Activ) {
 	     if (RMsX>=oldx && RMsX<=newx) chx=i;
 	   }
@@ -787,7 +787,7 @@ int MaxLargTextNodeMenu(NodeMenu *NM) {
    int MaxLarg=0,i,l;
    if (NM)
      for (i=0;i<NM->NbNodeMenu;i++)
-       if ((l=LargText(NM->TbNodeMenu[i].Name))>MaxLarg) MaxLarg=l;
+       if ((l=WidthText(NM->TbNodeMenu[i].Name))>MaxLarg) MaxLarg=l;
    return MaxLarg;
 }
 

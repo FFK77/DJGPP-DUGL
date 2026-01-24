@@ -82,12 +82,11 @@ _PutSurf16:
 		MOV			ESI,[Srlfb] ; ESI : start copy adress
 .InvAdSPut:
 		MOV			EDI,EBX ; PutMaxY or the top left corner
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
-		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		IMUL		EDI,[_NegScanLine]
 		MOV			EDX,[_ScanLine]
-		ADD			EDI,[_vlfb]
+		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
 		SUB			EDX,[SScanLine] ; EDX : dest adress plus
+		ADD			EDI,[_vlfb]
 		MOV			[Plus2],EDX
 
 		TEST		BYTE [PType],1
@@ -297,8 +296,7 @@ _PutSurf16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]
@@ -415,12 +413,11 @@ _PutMaskSurf16:
 		MOV			ESI,[Srlfb] ; ESI : start copy adress
 .InvAdSPut:
 		MOV			EDI,EBX ; PutMaxY or the top left corner
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
-		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		IMUL		EDI,[_NegScanLine]
 		MOV			EDX,[_ScanLine]
-		ADD			EDI,[_vlfb]
+		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
 		SUB			EDX,[SScanLine] ; EDX : dest adress plus
+		ADD			EDI,[_vlfb]
 		MOV			[Plus2],EDX
 
 		TEST		BYTE [PType],1
@@ -639,8 +636,7 @@ _PutMaskSurf16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]
@@ -778,12 +774,11 @@ _PutSurfBlnd16:
 		MOV			ESI,[Srlfb] ; ESI : start copy adress
 .InvAdSPut:
 		MOV			EDI,EBX ; PutMaxY or the top left corner
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
-		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		IMUL		EDI,[_NegScanLine]
 		MOV			EDX,[_ScanLine]
-		ADD			EDI,[_vlfb]
+		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
 		SUB			EDX,[SScanLine] ; EDX : dest adress plus
+		ADD			EDI,[_vlfb]
 		MOV			[Plus2],EDX
 
 		TEST		BYTE [PType],1
@@ -992,8 +987,7 @@ _PutSurfBlnd16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]
@@ -1233,12 +1227,11 @@ _PutMaskSurfBlnd16:
 		MOV			ESI,[Srlfb] ; ESI : start copy adress
 .InvAdSPut:
 		MOV			EDI,EBX ; PutMaxY or the top left corner
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
-		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
+		IMUL		EDI,[_NegScanLine]
 		MOV			EDX,[_ScanLine]
-		ADD			EDI,[_vlfb]
+		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
 		SUB			EDX,[SScanLine] ; EDX : dest adress plus
+		ADD			EDI,[_vlfb]
 		MOV			[Plus2],EDX
 
 		TEST		BYTE [PType],1
@@ -1491,8 +1484,7 @@ _PutMaskSurfBlnd16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]
@@ -1767,8 +1759,7 @@ _PutSurfTrans16:
 		MOV			ESI,[Srlfb] ; ESI : start copy adress
 .InvAdSPut:
 		MOV			EDI,EBX ; PutMaxY or the top left corner
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; += PutMinX*2 top left croner
 		MOV			EDX,[_ScanLine]
 		ADD			EDI,[_vlfb]
@@ -2007,8 +1998,7 @@ _PutSurfTrans16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]
@@ -2506,8 +2496,7 @@ _PutMaskSurfTrans16:
 		MOV			ESI,EDI
 .CInvAdSPut:
 		MOV			EDI,EBX
-		IMUL		EDI,[_ScanLine]
-		NEG			EDI
+		IMUL		EDI,[_NegScanLine]
 		LEA			EDI,[EDI+ECX*2] ; + XP1*2 as 16bpp
 		PSRLD		mm0,1 ; (deltaX*2) / 2
 		ADD			EDI,[_vlfb]

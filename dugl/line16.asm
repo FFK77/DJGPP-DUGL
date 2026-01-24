@@ -30,7 +30,6 @@ _Line16:
 		MOVD		mm6,EDI
 		MOVD		mm5,ESI
 
-
 		MOV		EAX,[EBP+Col16]
 		MOV		ECX,[EBP+Ptr16P1]
 		MOV		[clr],EAX
@@ -353,9 +352,8 @@ ALIGN 4
 		JZ		.cas5
 		INC		ESI
 		MOV		EDI,[YP1]
-		IMUL		EDI,[_ScanLine]
+		IMUL		EDI,[_NegScanLine]
 		MOVD		mm0,[clr]
-		NEG		EDI
 		ADD		EDI,[_vlfb]
 		PUNPCKLWD	mm0,mm0
 		ADD		EDI,[XP1]
@@ -366,11 +364,10 @@ ALIGN 4
 		JMP		SHORT .FinLine
 ;********CAS 5 : (DX=0, DY=0)***********************************************
 .cas5:
-		MOV		EAX,[_ScanLine]
-		IMUL		EAX,[YP1]
+		MOV		EAX,[_NegScanLine]
+		IMUL	EAX,[YP1]
 		MOV		EDX,[XP1]
 		MOV		ECX,[clr]
-		NEG		EAX
 		ADD		EAX,[_vlfb]
 		MOV		[EAX+EDX*2],CX
 .FinLine:

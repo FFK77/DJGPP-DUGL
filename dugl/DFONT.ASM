@@ -550,7 +550,7 @@ _OutText16:
 .CharIn:
 		MOV		ECX,[_ScanLine]
 		MOV		EBP,EDX ;Largeur
-		IMUL		EDI,ECX
+		IMUL	EDI,ECX
 		LEA		ECX,[ECX+EDX*2]
 		NEG		EDI
 		MOV		[ChPlus],ECX
@@ -664,7 +664,7 @@ _OutText16:
 ;************************************************
 		MOV		ECX,[_ScanLine]
 		MOV		EBP,EDX ;Largeur
-		IMUL		EDI,ECX
+		IMUL	EDI,ECX
 		XOR		EAX,EAX
 		LEA		ECX,[ECX+EDX*2] ;
 		MOV		AL,[ChAvDecal]

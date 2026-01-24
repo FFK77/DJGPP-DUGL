@@ -24,12 +24,12 @@ unsigned char       Col15To8bpp[256*128];
 // *************
 unsigned char		CurPalette[1024];
 int			        WindowControlPMI=0,ViewAddressPMI=0,SetPalPMI=0;
-int			        CurModeVtFreq=0,NbVSurf=0,NbMode=0;
+int			        CurModeVtFreq=0,NbVSurf=0,NbDgfxModes=0;
 unsigned int 		addr;
 unsigned int     	lfb,Sizelfb,SizeVMem;
 void			    *VesaPMI=0;
 unsigned short		SizeVesaPMI=0;
-short              	mode;
+short              	dgfxMode = 0;
 unsigned short		SelMPIO,
                     SizeMPIO;
 unsigned int		AddMPIO,
@@ -37,9 +37,9 @@ unsigned int		AddMPIO,
                     EnableMPIO;
 
 Surf			    *VSurf=0;
-ModeInfo		    *TbMode;
+ModeInfo		    *TbDgfxModes = NULL;
+ModeInfo		    *CurDgfxMode = NULL;
 __dpmi_meminfo	    dpinf;
-ModeInfo		    CurMode;
 VesaIntro 		    VesaInt;
 
 char				ShiftPal=0,VesaPMIOk=0,MTRRa=0,Video=0,Buff_Accel=0;
@@ -650,7 +650,7 @@ int InitVesa()
    	__dpmi_int(0x10, &r);
 	if (r.h.al!=0x4f) return 0;
 	dosmemget(__tb,sizeof(VesaIntro),&VesaInt);
-	if ((ListMode=(short *)malloc(1024))==NULL) return 0;
+	if ((ListMode=(short *)malloc(1024*sizeof(short)))==NULL) return 0;
 
 	if ((VesaInt.VideoPtr&0xFFFF)>(0xffff-1024)) {
 	  TbMemCopy=0xffff-(VesaInt.VideoPtr&0xFFFF);
@@ -684,32 +684,32 @@ int InitVesa()
 
 	if (Error) { free(ListMode); return 0; }
 	i=0; while (ListMode[i]!=-1 && i<TbModeCopy) i++;
-	NbMode=i;
+	NbDgfxModes=i;
 	// add standard 8bpp VESA mode if they does not exist
 	CptMode=0;
 	for (j=0;j<SIZE_STD_VBE8BPP;j++) {
 	  curMode=std8bppVESAMode[j];
-	  for (i=0;i<NbMode;i++) {
+	  for (i=0;i<NbDgfxModes;i++) {
 	    if (ListMode[i]==curMode) { CptMode = curMode; }
 	  }
 	  if (CptMode!=curMode) {
-	    ListMode[NbMode]=curMode; NbMode++; }
+	    ListMode[NbDgfxModes]=curMode; NbDgfxModes++; }
 	}
 	// add standard 16bpp VESA mode if they does not exist
 	CptMode=0;
 	for (j=0;j<SIZE_STD_VBE16BPP;j++) {
 	  curMode=std16bppVESAMode[j];
-	  for (i=0;i<NbMode;i++) {
+	  for (i=0;i<NbDgfxModes;i++) {
 	    if (ListMode[i]==curMode) { CptMode = curMode; }
 	  }
 	  if (CptMode!=curMode) {
-	    ListMode[NbMode]=curMode; NbMode++; }
+	    ListMode[NbDgfxModes]=curMode; NbDgfxModes++; }
 	}
 
-	if ((TbMode=(ModeInfo *)malloc(sizeof(ModeInfo)*(NbMode+2)))==NULL)
+	if ((TbDgfxModes=(ModeInfo *)malloc(sizeof(ModeInfo)*(NbDgfxModes+2)))==NULL)
 	  return 0;
 
-	for (CptMode=i=0;i<NbMode;i++)
+	for (CptMode=i=0;i<NbDgfxModes;i++)
 	   { bzero(&r,sizeof(__dpmi_regs));
 	     r.x.ax = 0x4f01;
 	     r.x.cx = ListMode[i];
@@ -724,19 +724,20 @@ int InitVesa()
 	          (VesaInf.ModeFlag& FLAG_LFB)     &&
 	          ((VesaInf.BitPixel==8) ||       // 8 Bpp or 16bpp
 		   (VesaInf.BitPixel==16 && VesaInf.RedMaxSize==5 &&
- 		    VesaInf.GreenMaxSize==6 && VesaInf.BlueMaxSize==5)) )
-	     { TbMode[CptMode].Mode=ListMode[i];
-	       TbMode[CptMode].ResHz=VesaInf.ResX;
-	       TbMode[CptMode].ResVt=VesaInf.ResY;
-	       TbMode[CptMode].VModeFlag=VesaInf.ModeFlag;
-               TbMode[CptMode].VModeFlag^=VMODE_VGA; // reverse VGA compatible bit
-	       TbMode[CptMode].BitPixel=VesaInf.BitPixel;
-	       TbMode[CptMode].rlfb=VesaInf.PhysBasePtr;
-	       TbMode[CptMode].VtFreq = 60;
-	       CptMode++;
+ 		    VesaInf.GreenMaxSize==6 && VesaInf.BlueMaxSize==5)) ) {
+			TbDgfxModes[CptMode].Mode=ListMode[i];
+	        TbDgfxModes[CptMode].ResHz=VesaInf.ResX;
+	        TbDgfxModes[CptMode].ResVt=VesaInf.ResY;
+	        TbDgfxModes[CptMode].VModeFlag=VesaInf.ModeFlag;
+		    TbDgfxModes[CptMode].VModeFlag^=VMODE_VGA; // reverse VGA compatible bit
+	        TbDgfxModes[CptMode].BitPixel=VesaInf.BitPixel;
+	        TbDgfxModes[CptMode].rlfb=VesaInf.PhysBasePtr;
+	        TbDgfxModes[CptMode].VtFreq = 60;
+	        CptMode++;
 	     }
 	}
-	NbMode=CptMode;
+	// final count of valid gfx modes
+	NbDgfxModes=CptMode;
 	free(ListMode);
 
 	InitVesaPMI();
@@ -761,9 +762,9 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 	int pixelsize;
  	unsigned int cvlfb;
 
- 	for (i=0;i<NbMode;i++) {
+ 	for (i=0;i<NbDgfxModes;i++) {
 
-		if ( TbMode[i].ResHz==ResHz &&   TbMode[i].ResVt==ResVt && TbMode[i].BitPixel==BitPixel)  {
+		if ( TbDgfxModes[i].ResHz==ResHz &&   TbDgfxModes[i].ResVt==ResVt && TbDgfxModes[i].BitPixel==BitPixel)  {
 			pixelsize=GetPixelSize(BitPixel);
 			ScreenSize = ResHz*ResVt*pixelsize;
 			if ((ScreenSize*NbPage)>Sizelfb)
@@ -800,12 +801,12 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 			VSurf[j].ResV= 1;
 			NbVSurf= NbPage;
 			SetSurf(&VSurf[0]);
-			CurMode=TbMode[i];
-			CurModeVtFreq=TbMode[i].VtFreq;
-			mode=CurMode.Mode|VesaLFB;
+			CurDgfxMode=&TbDgfxModes[i];
+			CurModeVtFreq=TbDgfxModes[i].VtFreq;
+			dgfxMode=CurDgfxMode->Mode|VesaLFB;
 			bzero(&r,sizeof(__dpmi_regs));
 			r.x.ax = 0x4f02;
-			r.x.bx = mode;
+			r.x.bx = dgfxMode;
 			__dpmi_int(0x10, &r);
 			if ((r.x.ax&0x4f)!=0x4f) return 0;
 
@@ -815,6 +816,36 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 		}
 	}
 	return 0;
+}
+
+int dgCurDisplayMode = -1;
+
+int DgGetFirstDisplayMode(int *width, int *height, int *bpp, int *refreshRate) {
+    if (TbDgfxModes != NULL && NbDgfxModes > 0) {
+			*width = TbDgfxModes[0].ResHz;
+			*height = TbDgfxModes[0].ResVt;
+			*bpp = TbDgfxModes[0].BitPixel;
+			*refreshRate = TbDgfxModes[0].VtFreq;
+			dgCurDisplayMode = 1;
+			return NbDgfxModes;
+    }
+
+    dgCurDisplayMode = -1;
+    return 0;
+}
+
+bool DgGetNextDisplayMode(int *width, int *height, int *bpp, int *refreshRate) {
+    if (TbDgfxModes != NULL && NbDgfxModes > 0 && dgCurDisplayMode != -1 && dgCurDisplayMode < NbDgfxModes) {
+			*width = TbDgfxModes[dgCurDisplayMode].ResHz;
+			*height = TbDgfxModes[dgCurDisplayMode].ResVt;
+			*bpp = TbDgfxModes[dgCurDisplayMode].BitPixel;
+			*refreshRate = TbDgfxModes[dgCurDisplayMode].VtFreq;
+			dgCurDisplayMode++;
+			return true;
+    }
+
+    dgCurDisplayMode = -1;
+    return false;
 }
 
 void InitVesaPMI() {
@@ -931,7 +962,11 @@ void CloseVesa() {
 	  "	wrmsr \n"
 	  "	sti				\n");
    }
-   if (TbMode!=NULL) free(TbMode);
+   if (TbDgfxModes!=NULL) {
+	 free(TbDgfxModes);
+	 TbDgfxModes = NULL;
+   }
+   CurDgfxMode = NULL;
    if (VesaPMIOk) {
      free(VesaPMI); VesaPMIOk=0;
      if (EnableMPIO) {

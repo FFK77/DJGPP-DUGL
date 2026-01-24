@@ -64,9 +64,9 @@ typedef struct {
 } DFONT;
 
 // DUGL Graphics Global vars
-extern	int	      NbVSurf,NbMode;
+extern	int	      NbVSurf,NbDgfxModes;
 extern	Surf	      *VSurf;
-extern	ModeInfo      *TbMode,CurMode;
+extern	ModeInfo      *TbDgfxModes, *CurDgfxMode;
 extern	int	      CurModeVtFreq;
 extern	unsigned int  SizeVMem;
 extern  unsigned char VesaHiVers,VesaLoVers;
@@ -97,6 +97,11 @@ void ExecCPUID(unsigned int VEAX,unsigned int *PEAX, unsigned int *PEBX,
 int  DetectMMX();
 // Init Any available VESA 8bpp or 16bpp Mode
 int  InitVesaMode(int ResHz, int ResVt, char BitPixel,int NbVPage);
+// Enumerate full screen display modes
+// return count of display modes, and fill attributes of first display mode, if any
+int DgGetFirstDisplayMode(int *width, int *height, int *bpp, int *refreshRate);
+// fill next Display mode attributes if any and return true, else return false
+bool DgGetNextDisplayMode(int *width, int *height, int *bpp, int *refreshRate);
 // Init the standard mode 0x3 text mode
 void TextMode();
 // standard VGA Wait Retrace

@@ -42,11 +42,10 @@ ClipFillSOLID16:
 		MOV		EBX,[DebYPoly]
 		SUB		EBP,[_OrgY]
 		MOVD       	mm0,[clr] ; mm0 = clr16 | - | - | -
-		IMUL		EBP,[_ScanLine]
+		IMUL		EBP,[_NegScanLine]
 		LEA		EDX,[EBX*4]
 		PUNPCKLWD	mm0,mm0 ; mm0 = clr16 | clr16 | - | -
 		SUB		EBX,[FinYPoly]
-		NEG		EBP
 		PUNPCKLDQ	mm0,mm0 ; mm0 = clr16 | clr16 | clr16 | clr16
 		NEG		EBX
 		ADD		EBP,[_vlfb]
@@ -139,12 +138,11 @@ ClipFillTEXT16:
 		CopySurf  ; copy the source texture surface
 		SUB			EBP,[_OrgY]
 		MOV			EBX,[DebYPoly] ; -
-		IMUL		EBP,[_ScanLine]
+		IMUL		EBP,[_NegScanLine]
 		LEA			EDX,[EBX*4]    ; -
 		SUB			EBX,[FinYPoly] ; -
-		NEG			EBP
-		NEG			EBX	       ; -
 		ADD			EBP,[_vlfb]
+		NEG			EBX	       ; -
 		MOVD		mm3,EBP
 		MOVD		mm4,[_ScanLine]
 .BcFillText:
@@ -254,12 +252,11 @@ ClipFillMASK_TEXT16:
 		CopySurf  ; copy the source texture surface
 		SUB		EBP,[_OrgY]
 		MOV		EBX,[DebYPoly] ; -
-		IMUL		EBP,[_ScanLine]
+		IMUL		EBP,[_NegScanLine]
 		LEA		EDX,[EBX*4]    ; -
 		SUB		EBX,[FinYPoly] ; -
-		NEG		EBP
-		NEG		EBX	       ; -
 		ADD		EBP,[_vlfb]
+		NEG		EBX	       ; -
 		MOVD		mm3,EBP
 		MOVD		mm4,[_ScanLine]
 .BcFillText:	MOV		EDI,[_TPolyAdDeb+EDX+EBX*4]  ; X1

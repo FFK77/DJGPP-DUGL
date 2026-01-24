@@ -1426,9 +1426,8 @@ _LineMap:
 		CDQ
 		MOV		EDI,[YP1]
 		IDIV		ESI
-		IMUL		EDI,[_ScanLine] ; * ScanLine
+		IMUL		EDI,[_NegScanLine] ; * ScanLine
 		MOV		ECX,ESI ; ECX = deltaY = number pixels
-		NEG		EDI
 		MOV		EDX,EAX ; pente in EDX
 
 		ADD		EDI,[XP1]

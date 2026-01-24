@@ -643,12 +643,11 @@ _ProtectViewSurfWaitVR:
 _PutPixel:
 	ARG	PtrPoint, 4, col, 4
 
-		MOV		EAX,[_ResH]
 		MOV		EDX,[EBP+PtrPoint]
-		IMUL		EAX,[EDX+4]
+		MOV		CL,[EBP+col]
+		MOV		EAX,[EDX+4]
 		MOV		EDX,[EDX]
-		NEG		EAX
-		MOV		ECX,[EBP+col]
+		IMUL	EAX,[_NegScanLine]
 		ADD		EAX,[_vlfb]
 		MOV		[EAX+EDX],CL
 		RETURN
@@ -657,15 +656,14 @@ _GetPixel:
 	ARG	PtrGPoint, 4
 
 		MOV		EDX,[EBP+PtrGPoint]
-		MOV		ECX,[_ResH]
-		IMUL		ECX,[EDX+4]
+		MOV		ECX,[_NegScanLine]
+		IMUL	ECX,[EDX+4]
 		XOR		EAX,EAX
 		MOV		EDX,[EDX]
-		NEG		ECX
 		;ADD		ECX,EDX
 		ADD		ECX,[_vlfb]
 		MOV		AL,[ECX+EDX]
-		RETURN
+	RETURN
 
 _Clear:
 	ARG	clrcol, 4
@@ -708,83 +706,76 @@ _ValidSPoly:
 	ARG	VPtrListPt, 4
 		MOVD		mm7,ESI
 		MOVD		mm6,EBX
-		MOVD		mm5,EDI
 
-		MOV		ESI,[EBP+VPtrListPt]
-		XOR		EDX,EDX
-		LODSD		; MOV EAX,[ESI];  ADD ESI,4
-		OR		EDX,BYTE 2     ; == MOV EDX,2
-		MOV		[NbPPoly],EAX
-.BcGtP123:	MOV		EAX,[ESI+EDX*4]  ; lecture P1,P2,P3
-		MOV		EBX,[EAX]
-		MOV		ECX,[EAX+4]
-		MOV		[XP1+EDX*8],EBX
-		MOV		[YP1+EDX*8],ECX
-		DEC		EDX
-		JNS		.BcGtP123
-	;(XP2-XP1)*(YP3-YP2)-(XP3-XP2)*(YP2-YP1)
+		MOV			ESI,[EBP+VPtrListPt]
+
+		MOV			ECX,[ESI+8]
+		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
+		MOVQ		mm0,[EAX] ; = XP1, YP1
+		MOVQ		mm1,[EBX] ; = XP2, YP2
+		MOVQ		mm2,[ECX] ; = XP3, YP3
+		MOVQ		mm3,mm0 ; = XP1, YP1
+		MOVQ		mm4,mm1 ; = XP2, YP2
+
+;(XP2-XP1)*(YP3-YP2)-(XP3-XP2)*(YP2-YP1)
 ; s'assure que les points suive le sens inverse de l'aiguille d'une montre
-		MOV		ECX,[XP2]
-		MOV		ESI,ECX
-		MOV		EBX,[YP3]
-		SUB		ESI,[XP1]
-		SUB		EBX,[YP2]
-		MOV		EDX,[XP3]
-		MOV		EDI,[YP2]
-		IMUL		ESI,EBX
-		SUB		EDX,ECX
-		SUB		EDI,[YP1]
-		XOR		EAX,EAX
-		IMUL		EDI,EDX
-		SUB		ESI,EDI
+.verifSens:
+		PSUBD		mm1,mm0 ; = (XP2-XP1) | (YP2 - YP1)
+		PSUBD		mm2,mm4 ; = (XP3-XP2) | (YP3 - YP2)
+		MOVD		ECX,mm1 ; = (XP2-XP1)
+		MOVD		EDX,mm2 ; = (XP3-XP2)
+		PSRLQ		mm1,32
+		PSRLQ		mm2,32
+		MOVD		ESI,mm1 ; = (YP2-YP1)
+		MOVD		EBX,mm2 ; = (YP3-YP2)
+		IMUL		ESI,EDX
+		IMUL		ECX,EBX
+		XOR			EAX,EAX
+		CMP			ECX,ESI
 		SETG		AL
 
-		MOVD		ESI,mm7
 		MOVD		EBX,mm6
-		MOVD		EDI,mm5
+		MOVD		ESI,mm7
 		;EMMS
-		RETURN
+	RETURN
 
 _SensPoly:
 	ARG	VSPtrListPt, 4
+
 		MOVD		mm7,ESI
 		MOVD		mm6,EBX
-		MOVD		mm5,EDI
 
-		MOV		ESI,[EBP+VSPtrListPt]
-		XOR		EDX,EDX
-		LODSD		; MOV EAX,[ESI];  ADD ESI,4
-		OR		EDX,BYTE 2     ; == MOV EDX,2
-		MOV		[NbPPoly],EAX
-.BcGtP123:	MOV		EAX,[ESI+EDX*4]  ; lecture P1,P2,P3
-		MOV		EBX,[EAX]
-		MOV		ECX,[EAX+4]
-		MOV		[XP1+EDX*8],EBX
-		MOV		[YP1+EDX*8],ECX
-		DEC		EDX
-		JNS		.BcGtP123
-	;(XP2-XP1)*(YP3-YP2)-(XP3-XP2)*(YP2-YP1)
+		MOV			ESI,[EBP+VSPtrListPt]
+
+		MOV			ECX,[ESI+8]
+		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
+		MOVQ		mm0,[EAX] ; = XP1, YP1
+		MOVQ		mm1,[EBX] ; = XP2, YP2
+		MOVQ		mm2,[ECX] ; = XP3, YP3
+		MOVQ		mm3,mm0 ; = XP1, YP1
+		MOVQ		mm4,mm1 ; = XP2, YP2
+
+;(XP2-XP1)*(YP3-YP2)-(XP3-XP2)*(YP2-YP1)
 ; s'assure que les points suive le sens inverse de l'aiguille d'une montre
-		MOV		ECX,[XP2]
-		MOV		ESI,ECX
-		MOV		EBX,[YP3]
-		SUB		ESI,[XP1]
-		SUB		EBX,[YP2]
-		MOV		EDX,[XP3]
-		MOV		EDI,[YP2]
-		IMUL		ESI,EBX
-		SUB		EDX,ECX
-		SUB		EDI,[YP1]
-		XOR		EAX,EAX
-		IMUL		EDI,EDX
-		SUB		ESI,EDI
-		MOV		EAX,ESI
+.verifSens:
+		PSUBD		mm1,mm0 ; = (XP2-XP1) | (YP2 - YP1)
+		PSUBD		mm2,mm4 ; = (XP3-XP2) | (YP3 - YP2)
+		MOVD		EAX,mm1 ; = (XP2-XP1)
+		MOVD		EDX,mm2 ; = (XP3-XP2)
+		PSRLQ		mm1,32
+		PSRLQ		mm2,32
+		MOVD		ESI,mm1 ; = (YP2-YP1)
+		MOVD		EBX,mm2 ; = (YP3-YP2)
+		IMUL		ESI,EDX
+		IMUL		EAX,EBX
+		SUB			EAX,ESI
 
-		MOVD		ESI,mm7
 		MOVD		EBX,mm6
-		MOVD		EDI,mm5
+		MOVD		ESI,mm7
 		;EMMS
-		RETURN
+	RETURN
 
 _RePoly:
     ARG RePtrListPt, 4, ReSSurf, 4, ReTypePoly, 4, ReColPoly, 4
@@ -1031,24 +1022,22 @@ _Poly:
 _PutPixel16:
 	ARG	PtrPoint16, 4, col16, 4
 
-		MOV		EDX,[EBP+PtrPoint16]
-		MOV		EAX,[_ScanLine]
-		IMUL		EAX,[EDX+4]
-		MOV		ECX,[EDX]
-		NEG		EAX
-		MOV		EDX,[EBP+col16]
-		ADD		EAX,[_vlfb]
-		MOV		[EAX+ECX*2],DX
-		RETURN
+		MOV		EAX,[EBP+PtrPoint16]
+		MOV		EDX,[_NegScanLine]
+		MOV		ECX,[EAX]
+		IMUL	EDX,[EAX+4]
+		MOV		EAX,[EBP+col16]
+		ADD		EDX,[_vlfb]
+		MOV		[EDX+ECX*2],AX
+	RETURN
 
 _GetPixel16:
 	ARG	PtrGPoint16, 4
 
 		MOV		EDX,[EBP+PtrGPoint16]
-		MOV		ECX,[_ScanLine]
-		IMUL		ECX,[EDX+4]
-		NEG		ECX
+		MOV		ECX,[_NegScanLine]
 		XOR		EAX,EAX
+		IMUL	ECX,[EDX+4]
 		MOV		EDX,[EDX]
 		ADD		ECX,[_vlfb]
 		MOV		AX,[ECX+EDX*2]
@@ -1064,11 +1053,11 @@ _Clear16:
 		MOVD		mm5,EBX
 
 		PUNPCKLWD	mm0,mm0 ; save firt 2 bytes color 16bpp
-		MOV		ESI,[_SizeSurf]
+		MOV			ESI,[_SizeSurf]
 		PUNPCKLDQ	mm0,mm0
-		MOV		EDI,[_rlfb]
+		MOV			EDI,[_rlfb]
 		MOVD		EAX,mm0
-		SHR		ESI,1
+		SHR			ESI,1
 
 		@SolidHLine16
 
@@ -1076,7 +1065,7 @@ _Clear16:
 		MOVD		ESI,mm6
 		MOVD		EBX,mm5
 		;EMMS
-		RETURN
+	RETURN
 
 
 _RePoly16:
@@ -1113,12 +1102,14 @@ _RePoly16:
 ;0‚		  DWORD : n count of PtrPoint
 ;1‚.. n‚  DWORD : PtrP1(X1,Y1,Z1,XT1,YT1)...PtrPn(Xn,Yn,Zn,XTn,YTn)
 ;****************************************************************************
-; TypePoly POLY16_SOLID				= 0	FIELDS USED (X,Y)
-; TypePoly POLY16_TEXT				= 1	FIELDS USED (X,Y,XT,YT)
-; TypePoly POLY16_MASK_TEXT			= 2	FIELDS USED (X,Y,XT,YT)
-; TypePoly POLY16_SOLID_BLND		= 13	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_TEXT_BLND			= 14	CHAMPS UTILISER (X,Y)
-; TypePoly POLY16_MASK_TEXT_BLND	= 15	CHAMPS UTILISER (X,Y)
+; TypePoly POLY16_SOLID				= 0	 FIELDS USED (X,Y)
+; TypePoly POLY16_TEXT				= 1	 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_MASK_TEXT			= 2	 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_TEXT_TRANS		= 10 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_MASK_TEXT_TRANS	= 11 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_SOLID_BLND		= 13 FIELDS USED (X,Y)
+; TypePoly POLY16_TEXT_BLND			= 14 FIELDS USED (X,Y,XT,YT)
+; TypePoly POLY16_MASK_TEXT_BLND	= 15 FIELDS USED (X,Y,XT,YT)
 ;****************************************************************************
 ; FLAGS :
 POLY_FLAG_DBL_SIDED16		EQU	0x80000000

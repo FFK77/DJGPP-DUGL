@@ -28,7 +28,6 @@
 				<Option compiler="djgpp_gnu_gcc_compiler" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-std=gnu++11" />
 					<Add option="-m32" />
 					<Add directory="../../../dugl" />
 					<Add directory="../../../duglplus" />

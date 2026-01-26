@@ -45,14 +45,14 @@ int Pt3[] = { 639, 479,   0,   0,   0 };
 int Pt4[] = {   0, 479,   0,   0,   0 };
 int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
 
-Surf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
+DgSurf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 
 unsigned char palette[1024];
 
 // FONT
 DFONT F1;
 // mouse View
-View MsV;
+DgView MsV;
 // keyborad map
 KbMAP *KM;
 unsigned char keyCode;
@@ -78,7 +78,7 @@ MainWin *MWDViewer;
 GraphBox *GphBVideo;
 ImgButton *BtOpen,*BtBack,*BtNext,*BtFirst,*BtLast,*BtAbout,*BtExit;
 ComBox *CmbViewMode;
-Surf *ImgOpen,*ImgNext,*ImgBack,*ImgBegin,*ImgEnd,*ImgExit,*ImgAbout,*ImgPCont;
+DgSurf *ImgOpen,*ImgNext,*ImgBack,*ImgBegin,*ImgEnd,*ImgExit,*ImgAbout,*ImgPCont;
 // events
 void OnOpen(), OnNext(), OnBack(), OnFirst(), OnLast(), OnAbout(), OnExit();
 void GphBDrawVideo(GraphBox *Me),GphBScanVideo(GraphBox *Me);
@@ -97,7 +97,7 @@ void BtOkAboutClick(),GphBDrawAbout(GraphBox *Me),OnGphBScanAbout(GraphBox *Me);
 
 // glabal var
 int redrawVid=1;
-Surf *MyIMG, *MySmthIMG;
+DgSurf *MyIMG, *MySmthIMG;
 bool validMyIMG = false, redrawIMG = false;
 bool DownSize = false;
 //------
@@ -138,7 +138,7 @@ void LoadConfig();
 void DGWaitRetrace();
 //void ResizeSurf16(Surf *SDstSurf,Surf *SSrcSurf);
 bool IsFileExist(const char *fname);
-bool LoadImg(char *filename, Surf **DstSurf);
+bool LoadImg(char *filename, DgSurf **DstSurf);
 
 int main (int argc, char ** argv) {
     LoadConfig();
@@ -148,14 +148,14 @@ int main (int argc, char ** argv) {
 
     Init3DMath(); // dugl+
 
-    if (!InitVesa())
+    if (!DgInit())
       { printf("DUGL init error\n"); exit(-1); }
 
     // init video mode
     if (!InitVesaMode(screenX,screenY,16,1)) {
        screenX = 640; screenY = 480;
        if (!InitVesaMode(screenX,screenY,16,1)) {
-          printf("VESA mode error\n"); CloseVesa(); exit(-1);
+          printf("VESA mode error\n"); DgQuit(); exit(-1);
        }
     }
 
@@ -204,20 +204,20 @@ int main (int argc, char ** argv) {
     // init the lib
 
     if (!DgInstallTimer(200)) {
-       CloseVesa(); printf("Timer error\n"); exit(-1);
+       DgQuit(); printf("Timer error\n"); exit(-1);
     }
     if (!InstallKeyboard()) {
-       CloseVesa(); DgUninstallTimer();
+       DgQuit(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
     if (!SetKbMAP(KM)) {
-       DgUninstallTimer(); UninstallKeyboard(); CloseVesa();
+       DgUninstallTimer(); UninstallKeyboard(); DgQuit();
        printf("Error setting keyborad map\n");  exit(-1);
     }
     MouseSupported = (InstallMouse()!=0);
 
 
-    SetSurf(&VSurf[0]);
+    DgSetCurSurf(&VSurf[0]);
     Clear16(0); // clear by black
 
     // set font
@@ -287,7 +287,7 @@ int main (int argc, char ** argv) {
 
       if (lastFps < 0.1f)
          __dpmi_yield();
-      SetSurf(rendSurf16);
+      DgSetCurSurf(rendSurf16);
 
       // scan the GUI for events
       WH->Scan();
@@ -365,7 +365,7 @@ int main (int argc, char ** argv) {
       if(SmoothResize)
         DestroySurf(MySmthIMG);
     }
-    CloseVesa();
+    DgQuit();
     UninstallKeyboard();
     DgUninstallTimer();
     if(MouseSupported)
@@ -789,8 +789,8 @@ void FBOpenImg(String *S,int TypeSel) {
 void LoadCurImg() {
   String text;
   String *pStrImg;
-  Surf *tmpImg = NULL;
-  Surf *tmpSmthImg = NULL;
+  DgSurf *tmpImg = NULL;
+  DgSurf *tmpSmthImg = NULL;
   float   rapSize = 1.0;
   int FinalResV = 0;
   int FinalResH = 0;
@@ -923,7 +923,7 @@ void LoadCurImg() {
 void SmoothCurImg()
 {
   String text;
-  Surf *EnhSmthImg;
+  DgSurf *EnhSmthImg;
 
   FREE_MMX();
   if(SmoothResize && curZoom>=SmoothZoomLimit) {
@@ -1072,7 +1072,7 @@ void LoadConfig()
 // DUGL Util ----------------------------------------------------
 void DGWaitRetrace() {
   if (!SynchScreen) return;
-  if (CurMode.VModeFlag|VMODE_VGA)
+  if (CurDgfxMode->VModeFlag|VMODE_VGA)
      WaitRetrace(); // VGA wait retrace
   else
      ViewSurfWaitVR(0);
@@ -1110,9 +1110,9 @@ void DGWaitRetrace() {
   SetSurf(&OldSurf);
 } */
 
-bool LoadImg(char *filename, Surf **DstSurf)
+bool LoadImg(char *filename, DgSurf **DstSurf)
 {
-   Surf *Surf8bpp;
+   DgSurf *Surf8bpp;
    if(!IsFileExist(filename))
      return false;
    if (LoadBMP16(DstSurf,filename)!=0)

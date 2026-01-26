@@ -490,7 +490,7 @@ int LoadPNGFile(char *filename) {
     return resultDecode;
 }
 
-int ExtractPNG(Surf **S) {
+int ExtractPNG(DgSurf **S) {
     int irow,iscan;
     short *outScan;
     unsigned char *ScanPtr;
@@ -547,14 +547,14 @@ int ExtractPNG(Surf **S) {
 
 }
 
-int LoadMemPNG16(Surf **S, void *In, int SizeIn) {
+int LoadMemPNG16(DgSurf **S, void *In, int SizeIn) {
     if (LoadPNGMem(In, SizeIn) == 0)
         return 0;
 
     return ExtractPNG(S);
 }
 
-int LoadPNG16(Surf **S,char *filename) {
+int LoadPNG16(DgSurf **S,char *filename) {
     if (LoadPNGFile(filename) == 0)
         return 0;
 

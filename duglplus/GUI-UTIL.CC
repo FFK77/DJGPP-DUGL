@@ -45,7 +45,7 @@ void MessageBox(WinHandler *MsgBoxWH,char *NmWin, char *Msg,
    int YPosMsgBox=MsgBoxWH->S->ResV/2-FntHaut*4,XPosMsgBox;
    int XPosButton;
    int LargMsg=WidthText(Msg)+30,LargMsgBox;
-   View V1;
+   DgView V1;
    if (NmNo && (largText=WidthText(NmNo))>MaxLargButt) MaxLargButt=largText;
    if (NmNo) NbButt++;
    if (NmCancel && (largText=WidthText(NmCancel))>MaxLargButt) MaxLargButt=largText;
@@ -150,7 +150,7 @@ void FilesBox(WinHandler *FilesBoxWH,char *NmWin,
 
    int largw=420,hautw=320,i,IdxDrv,CountDrvFound,CountDrv;
    char *nmOk,*nmCancel,Drv[4]="a:/";
-   View V1;
+   DgView V1;
    bzero(&FileBox,sizeof(FilesBoxInfo));
    GetSurfView(FilesBoxWH->S,&V1);
 

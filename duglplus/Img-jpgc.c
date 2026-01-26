@@ -37,7 +37,7 @@ my_error_exit (j_common_ptr cinfo)
 }
 
 
-int GetJpegImg(Surf **S,j_decompress_ptr cinfo) {
+int GetJpegImg(DgSurf **S,j_decompress_ptr cinfo) {
    JSAMPROW row_pointer[1];
    int irow,iscan;
    short *outScan;
@@ -106,7 +106,7 @@ int GetJpegImg(Surf **S,j_decompress_ptr cinfo) {
 
 }
 
-int LoadJPG16(Surf **S,char *filename) {
+int LoadJPG16(DgSurf **S,char *filename) {
    FILE *jpgFile; // source
    int retGet;
    // init jpeg
@@ -194,7 +194,7 @@ void jpeg_memory_src(j_decompress_ptr cinfo, unsigned char const *buffer, size_t
         src->pub.bytes_in_buffer = bufsize;
 }
 
-int LoadMemJPG16(Surf **S,void *buffJpeg,int sizeBuff) {
+int LoadMemJPG16(DgSurf **S,void *buffJpeg,int sizeBuff) {
    // init jpeg
    struct jpeg_decompress_struct cinfo;
 //   struct jpeg_error_mgr jerr;
@@ -224,7 +224,7 @@ int LoadMemJPG16(Surf **S,void *buffJpeg,int sizeBuff) {
 }
 
 
-int SaveJPG16(Surf *S,char *filename,int quality) {
+int SaveJPG16(DgSurf *S,char *filename,int quality) {
    FILE *jpgFile; // destination
    int retGet;
    int irow,iscan,BfPos;
@@ -237,7 +237,7 @@ int SaveJPG16(Surf *S,char *filename,int quality) {
    unsigned char *ScanPtr;
    unsigned short *InScan;
 
-   // invalid Surf
+   // invalid DgSurf
    if (S==NULL) return 0;
 
    // alloc line data

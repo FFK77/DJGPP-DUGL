@@ -4,7 +4,7 @@
 
 #ifdef __cplusplus
 
-void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapVt = false);
+void resizeSurf16(DgSurf *SDstSurf,DgSurf *SSrcSurf, bool swapHz = false, bool swapVt = false);
 
 #endif // #ifdef __cplusplus
 

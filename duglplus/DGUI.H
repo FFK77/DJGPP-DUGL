@@ -228,13 +228,13 @@ public:
    void (*cputpixel)(int X,int Y,int Col);
    void (*rectmap)(int X1,int Y1,int X2,int Y2,int rcol,unsigned int rmap);
    void (*rect)(int X1,int Y1,int X2,int Y2,int rcol);
-   void (*PutSurf)(Surf *S,int X,int Y,int PType);
-   void (*PutMaskSurf)(Surf *S,int X,int Y,int PType);
+   void (*PutSurf)(DgSurf *S,int X,int Y,int PType);
+   void (*PutMaskSurf)(DgSurf *S,int X,int Y,int PType);
    void (*Line)(void *Point1,void *Point2,int col);
-   void (*Poly)(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+   void (*Poly)(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
    // low-level font
    void (*OutText)(const char *str);
-   int  (*ViewOutTextMode)(View *V,const char *str,int Mode);
+   int  (*ViewOutTextMode)(DgView *V,const char *str,int Mode);
    // data
    unsigned int WinNoir,WinBlanc,WinBleuF,WinGris,WinGrisF,WinGrisC,WinRougeF;
    int WinStopScan;
@@ -246,7 +246,7 @@ public:
 class WinHandler {
    friend class MainWin;
 public:
-   Surf *S;
+   DgSurf *S;
    CGraphContext *m_GraphCtxt;
    ListWin *WinList;
    ListFly *FlyList;
@@ -263,7 +263,7 @@ public:
    void Scan();
    void Draw();
    void Redraw(int x1,int y1,int x2,int y2);
-   void DrawSurf(Surf *DestSurf);
+   void DrawSurf(DgSurf *DestSurf);
    void DelAfterFlyObj(FlyObj *Fly);
    void DelAllFly();
 protected:
@@ -284,8 +284,8 @@ public:
    Node *CurFocusNode,*DefNode,*EchapNode;
    int  X,Y,X2,Y2;
    int LargHz,HautVt;
-   Surf *S;
-   View VActiv;
+   DgSurf *S;
+   DgView VActiv;
    unsigned int AsciiFLAG,KeyFLAG;
    unsigned char Ascii,Key;
    char DefaultActiv,Chgd,Visible,Focus,ValidDef,ActivMenu;
@@ -298,7 +298,7 @@ public:
    void Draw();
    void Redraw(int x1,int y1,int x2,int y2);
    void Redraw();
-   void DrawSurf(Surf *DestSurf);
+   void DrawSurf(DgSurf *DestSurf);
    void Scan();
    void SetNextFocus();
    void Enable();
@@ -326,14 +326,14 @@ public:
 protected:
    unsigned int LastMsDownTime;
    char    OldFocus,MsDownD,resv[2];
-   View	  *MyVActiv;
+   DgView	  *MyVActiv;
 public:
    Child(int x1,int y1,int x2,int y2,MainWin *Father,ContBox *CBox);
    ~Child();
    virtual void SetFocus();
    virtual void UnsetFocus();
    virtual void Draw();
-   virtual void DrawSurf(Surf *DestSurf);
+   virtual void DrawSurf(DgSurf *DestSurf);
    virtual void Redraw();
    virtual void Scan();
    virtual void Validate();
@@ -350,7 +350,7 @@ class ContBox : public Child {
 public:
    String Label;
    Node *CurFocusInNode;
-   View VActiv;
+   DgView VActiv;
 protected:
    List *SsChList;
 public:
@@ -359,7 +359,7 @@ public:
    void Draw();
    void Redraw(int x1,int y1,int x2,int y2);
    void Redraw();
-   void DrawSurf(Surf *DestSurf);
+   void DrawSurf(DgSurf *DestSurf);
    void Scan();
    void SetFocus();
    void UnsetFocus();
@@ -396,13 +396,13 @@ public:
 
 class ImgButton : public Child {
 public:
-   Surf *m_Img;
+   DgSurf *m_Img;
    void (*Click)();
    int ImgBlit;
    char Etat;
    bool DrawFocus;
 public:
-   ImgButton(int x1,int y1,int x2,int y2,MainWin *Father,Surf *Img,
+   ImgButton(int x1,int y1,int x2,int y2,MainWin *Father,DgSurf *Img,
           int btype=DGUI_IMGBUTT_CENTER|DGUI_IMGBUTT_MASK,
           char def=0,char Echap=0);
    ~ImgButton();
@@ -446,7 +446,7 @@ public:
            char textInBox=1);
    ~TextBox();
    void Draw();
-   void DrawSurf(Surf *DestSurf);
+   void DrawSurf(DgSurf *DestSurf);
    void Scan();
    void SetFocus();
    void UnsetFocus();
@@ -462,7 +462,7 @@ protected:
 class GraphBox : public Child {
 public:
    unsigned int ContCol;
-   View VGraphBox;
+   DgView VGraphBox;
    char OldMsIn,resv[3];
    int  MouseX,MouseY;
    bool DrawFocus;

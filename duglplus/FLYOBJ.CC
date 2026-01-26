@@ -270,7 +270,7 @@ FlyListBox::~FlyListBox() {
 
 void FlyListBox::Draw() {
    int i,nb=LStr->NbElement();
-   View V1,V2;
+   DgView V1,V2;
    m_GraphCtxt->bar(X1,Y1,X2,Y2,m_GraphCtxt->WinBlanc);
    m_GraphCtxt->rect(X1,Y1,X2,Y2,m_GraphCtxt->WinNoir);
    GetSurfView(&CurSurf,&V1);
@@ -653,7 +653,7 @@ ComBox::ComBox(int x,int y,int Larg,int Haut,MainWin *Father,
 ComBox::~ComBox() { delete OldString; delete LStr; }
 
 void ComBox::Draw() {
-   View V1,VS;
+   DgView V1,VS;
    m_GraphCtxt->bar(XC1,YC1,XC2,YC2,m_GraphCtxt->WinBlanc);
    m_GraphCtxt->CadBoxWin(XC1,YC1,XC2,YC2);
 

@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <dugl.h>
 
-// resize a 16bpp Surf into an another Surf
-void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapVt = false)
+// resize a 16bpp DgSurf into an another DgSurf
+void resizeSurf16(DgSurf *SDstSurf,DgSurf *SSrcSurf, bool swapHz = false, bool swapVt = false)
 {
 
   if (SDstSurf->BitsPixel != 16 || SSrcSurf->BitsPixel != 16)
@@ -15,8 +15,8 @@ void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapV
      return;
   }
 
-  Surf OldSurf,SrcSurf;
-  Surf *SSrc=SSrcSurf;
+  DgSurf OldSurf,SrcSurf;
+  DgSurf *SSrc=SSrcSurf;
 
   int srcMinX = 0;
   int srcMinY = 0;
@@ -51,21 +51,21 @@ void resizeSurf16(Surf *SDstSurf,Surf *SSrcSurf, bool swapHz = false, bool swapV
   // points List
   int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
 
-  // save the source Surf In case the CurSurf is the source
+  // save the source DgSurf In case the CurSurf is the source
   if (SSrcSurf==&CurSurf) {
      SrcSurf=*SSrcSurf;
      SSrc=&SrcSurf;
   }
 
-  // Get Current Surf
-  GetSurf(&OldSurf);
+  // Get Current DgSurf
+  DgGetCurSurf(&OldSurf);
 
-  // set dest Surf as destination
-  SetSurf(SDstSurf);
+  // set dest DgSurf as destination
+  DgSetCurSurf(SDstSurf);
 
-  // draw the resize polygone inside the dest Surf
+  // draw the resize polygone inside the dest DgSurf
   Poly16(ListPt1, SSrc, POLY16_TEXT, 0);
 
   // restore
-  SetSurf(&OldSurf);
+  DgSetCurSurf(&OldSurf);
 }

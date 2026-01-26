@@ -38,8 +38,8 @@ extern "C" {
 int  InstallMouse();
 void UninstallMouse();
 int IsMouseWheelSupported(); // return 1 if mouse wheel supported
-void SetMouseView(View *V);
-void GetMouseView(View *V);
+void SetMouseView(DgView *V);
+void GetMouseView(DgView *V);
 void SetMouseOrg(int MsOrgX,int MsOrgY);
 void SetMousePos(int MouseX,int MouseY);
 void SetMouseSpeed(int MouseHzSpeed,int MouseVtSpeed);

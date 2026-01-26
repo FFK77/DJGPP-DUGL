@@ -95,8 +95,6 @@ _PutMaskSurf:
 		MOV			EBX,[EBP+MYPSN]
 
 		CopySurf	; copy sprite Surf
-		;MOV		ECX,16
-		;REP		MOVSD
 
 		MOV			ECX,EAX
 		MOV			EDX,EBX
@@ -130,7 +128,12 @@ _PutMaskSurf:
 		CMP			EDX,[_MaxY]
 		JG			.PasPutSurf
 
+		MOVD		mm6,[SMask]
 		MOV			[PType],ESI ; save put Type
+		PUNPCKLBW	mm6,mm6
+		PUNPCKLWD	mm6,mm6
+		PUNPCKLDQ	mm6,mm6
+
 
 		; compute the clipped/unclipped put rectangle coordinaates in (PutSurfMinX, PutSurfMinY, PutSurfMaxX, PutSurfMaxY)
 		;==========================================
@@ -186,43 +189,56 @@ _PutMaskSurf:
 		MOVD		EBX,mm1
 
 ;**********************
-		TEST		EBX,0xfffffffc
-		JZ			.BcStB
-.BcStB4:
-		LODSD
-		CMP			AL,CL	 ;*******
-		JE			.PasDrB1
+.BcStBAv:
+		TEST		EDI,7
+		JZ			.FPasStBAv
+		MOV			AL,[ESI]
+		CMP			AL,[SMask]
+		JE			.MaskBAv
 		MOV			[EDI],AL
-.PasDrB1:
-		CMP			AH,CL	 ;*******
-		JE			.PasDrB2
-		MOV			[EDI+1],AH
-.PasDrB2:
-		SHR			EAX,16
-		CMP			AL,CL	 ;*******
-		JE			.PasDrB3
-		MOV			[EDI+2],AL
-.PasDrB3:
-		CMP			AH,CL	 ;*******
-		JE			.PasDrB4
-		MOV			[EDI+3],AH
-.PasDrB4:
-		SUB			EBX,BYTE 4
-		LEA			EDI,[EDI+4]
-		TEST		EBX,0xfffffffc
-		JNZ			.BcStB4
-		OR			BL,BL
-		JZ			.FinSHLine
-ALIGN 4
-.BcStB:
-		LODSB
-		CMP			AL,CL
-		JE			.PasDrB
-		MOV			[EDI],AL
-.PasDrB:
+.MaskBAv:
+		INC			ESI
 		DEC			EBX
 		LEA			EDI,[EDI+1]
-		JNZ			.BcStB
+		JZ			.FinSHLine
+		JMP			SHORT .BcStBAv
+.FPasStBAv:
+		MOV			ECX,EBX
+		SHR			ECX,3
+		;OR			ECX,ECX
+		JZ			SHORT .StBAp
+ALIGN 4
+.StoMMX:
+        MOVQ      	mm2,[ESI]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm3,[ESI]
+        MOVQ        mm0,[ESI]
+
+        PCMPEQW     mm2,mm6 ; [QSMask16]
+        PCMPEQW     mm3,mm6 ; [QSMask16]
+        PANDN       mm2,mm0
+        PAND        mm4,mm3
+        POR         mm2,mm4
+
+		DEC			ECX
+		MOVQ		[EDI],mm2
+		LEA			ESI,[ESI+8]
+		LEA			EDI,[EDI+8]
+		JNZ			.StoMMX
+.StBAp:
+		AND			EBX,BYTE 7
+		JZ			.FinSHLine
+.BcStBAp:
+		MOV			AL,[ESI]
+		CMP			AL,[SMask]
+		JE			.MaskBAp
+		MOV			[EDI],AL
+.MaskBAp:
+		INC			ESI
+		DEC			EBX
+		LEA			EDI,[EDI+1]
+		JNZ			.BcStBAp
+.PasStBAp:
 .FinSHLine:
 ;*************************************
 		MOVD		EAX,mm7
@@ -241,49 +257,62 @@ ALIGN 4
 		PADDD		mm3,mm3
 		PADDD		mm7,mm3 ; += [SResH*2]
 .IBcPutSurf:
-		MOVD		EBX,mm1 ; HLine Width
-;****************************
-		TEST		EBX,0xfffffffc
-		JZ			.IBcStB
-.IBcStB4:
-		SUB			ESI,BYTE 4
-		MOV			EAX,[ESI]
-		BSWAP		EAX
-
-		CMP			AL,CL	 ;*******
-		JE			.IPasDrB4
-		MOV			[EDI],AL
-.IPasDrB4:
-		CMP			AH,CL	 ;*******
-		JE			.IPasDrB3
-		MOV			[EDI+1],AH
-.IPasDrB3:
-		SHR			EAX,16
-		CMP			AL,CL	 ;*******
-		JE			.IPasDrB2
-		MOV			[EDI+2],AL
-.IPasDrB2:
-		CMP			AH,CL	 ;*******
-		JE			.IPasDrB1
-		MOV			[EDI+3],AH
-.IPasDrB1:
-		SUB			EBX,BYTE 4
-		LEA			EDI,[EDI+4]
-		TEST		EBX,0xfffffffc
-		JNZ			.IBcStB4
-		OR			BL,BL
-		JZ			.IFinSHLine
-ALIGN 4
-.IBcStB:
+		MOVD		ECX,mm1 ; [SResH]
+.IBcStBAv:
+		TEST		EDI,7
+		JZ			.IFPasStBAv
 		DEC			ESI
 		MOV			AL,[ESI]
-		CMP			AL,CL
-		JZ			.IPasDrB
+		CMP			AL,[SMask]
+		JE			.IMaskStBAv
 		MOV			[EDI],AL
-.IPasDrB:
-		DEC			EBX
+.IMaskStBAv:
+		DEC			ECX
 		LEA			EDI,[EDI+1]
-		JNZ			.IBcStB
+		JZ			.IFinSHLine
+		JMP			SHORT .IBcStBAv
+.IFPasStBAv:
+
+.IStoMMX:
+		TEST		ECX,0xfffffff8
+		JZ			.IStBAp
+
+		SUB			ESI,BYTE 8
+		MOV			EAX,[ESI]
+		MOV			EBX,[ESI+4]
+		BSWAP		EAX
+		BSWAP		EBX
+		MOVD		mm2,EAX
+		MOVD		mm0,EBX
+		PUNPCKLDQ	mm0,mm2
+        MOVQ        mm4,[EDI]
+        MOVQ		mm2,mm0
+        MOVQ		mm3,mm0
+
+        PCMPEQW     mm2,mm6 ; [QSMask16]
+        PCMPEQW     mm3,mm6 ; [QSMask16]
+        PANDN       mm2,mm0
+        PAND        mm4,mm3
+        POR         mm2,mm4
+
+		MOVQ		[EDI],mm2
+		SUB			ECX, BYTE 8
+		LEA			EDI,[EDI+8]
+		JMP			.IStoMMX
+
+.IStBAp:
+		JECXZ		.IPasStBAp
+.IBcStBAp:
+		DEC			ESI
+		MOV			AL,[ESI]
+		CMP			AL,[SMask]
+		JE			.IMaskStBAp
+		MOV			[EDI],AL
+.IMaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+1]
+		JNZ			.IBcStBAp
+.IPasStBAp:
 .IFinSHLine:
 ;******************************
 		MOVD		EAX,mm7

@@ -1,22 +1,24 @@
 #ifndef DGRAPH_H
 #define DGRAPH_H
 
-typedef struct
-{	int	vlfb;
-	int	ResH, ResV;
-	int	MaxX, MaxY, MinX, MinY;
-	int	OrgY, OrgX;
-	int	SizeSurf;
-	int	OffVMem;
-	int	rlfb;
-	int	BitsPixel;
-	int	ScanLine,Mask,NegScanLine;
-} Surf;
+typedef struct {
+	int ScanLine;
+    int rlfb;
+    int OrgX, OrgY;
+    int MaxX, MaxY, MinX, MinY;
+    int Mask, ResH, ResV;
+    int vlfb;
+    int NegScanLine;
+    int OffVMem;
+    int BitsPixel;
+    int SizeSurf;
 
-typedef struct
-{	int	OrgX, OrgY;
+} DgSurf;
+
+typedef struct {
+	int	OrgX, OrgY;
 	int	MaxX, MaxY, MinX, MinY;
-} View;
+} DgView;
 
 #define VMODE_SUPPORTED         1
 #define VMODE_TTY               4
@@ -64,14 +66,14 @@ typedef struct {
 } DFONT;
 
 // DUGL Graphics Global vars
-extern	int	      NbVSurf,NbDgfxModes;
-extern	Surf	      *VSurf;
+extern	int	      NbVDgSurf,NbDgfxModes;
+extern	DgSurf	      *VSurf;
 extern	ModeInfo      *TbDgfxModes, *CurDgfxMode;
 extern	int	      CurModeVtFreq;
 extern	unsigned int  SizeVMem;
 extern  unsigned char VesaHiVers,VesaLoVers;
 
-extern Surf CurSurf;
+extern DgSurf CurSurf;
 extern int  CurViewVSurf;
 extern unsigned char TbDegCol[256*64];
 extern void *PtrTbColConv;
@@ -86,10 +88,11 @@ extern "C" {
 // *NEW* DUGL 1.1+ should be called before any floating point processing
 #define FREE_MMX()  asm("EMMS\n")
 
-// Init all the ressources needed to work with a DUGL VESA LFB Surf
-int  InitVesa();
-// free all the ressources alloued for VESA LFB
-void CloseVesa();
+// init all ressources required to run DUGL
+// return 1 if success 0 if fail
+int DgInit();
+// free all ressources allocated to run DUGL
+void DgQuit();
 // CPU tools
 int  DetectCPUID();
 void ExecCPUID(unsigned int VEAX,unsigned int *PEAX, unsigned int *PEBX,
@@ -110,21 +113,24 @@ void WaitRetrace();
 // Universal 8bpp 16bpp Surf Manipulation Functions
 // ------------------------------------------------
 
-int  SetSurf(Surf *S); // set *S as the current drawing Surf
-void SetSrcSurf(Surf *S); // set *S as the current source Surf for texture or PutSurf ..
+// Set Current DgSurf for rendering
+void DgSetCurSurf(DgSurf *S);
+// Get copy of CurSurf
+void DgGetCurSurf(DgSurf *S);
+// Set Source DgSurf
+void DgSetSrcSurf(DgSurf *S);
+
 int  GetMaxResVSetSurf(); // Max Height in pixels for a surf used with SetSurf
-void GetSurf(Surf *S); // get the current surf
-void SetOrgSurf(Surf *S,int LOrgX,int LOrgY);
-void SetSurfView(Surf *S, View *V);
-void SetSurfInView(Surf *S, View *V);
-void GetSurfView(Surf *S, View *V);
+void SetOrgSurf(DgSurf *S,int LOrgX,int LOrgY);
+void SetSurfView(DgSurf *S, DgView *V);
+void SetSurfInView(DgSurf *S, DgView *V);
+void GetSurfView(DgSurf *S, DgView *V);
 void SetOrgVSurf(int OrgX,int OrgY);
-void SetVView(View *V);
-void SetVInView(View *V);
-int  CreateSurf(Surf **S, int ResHz, int ResVt, char BitPixel);
-void DestroySurf(Surf *S);
-int  CreateSurfBuff(Surf **S, int ResHz, int ResVt, char BitPixel,void *Buff);
-void SurfCopy(Surf *Sdst,Surf *Ssrc);
+void SetVView(DgView *V);
+void SetVInView(DgView *V);
+int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitPixel);
+void DestroySurf(DgSurf *S);
+int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitPixel,void *Buff);
 // ** WARNING ** should be called only after a successfull InitVESA call
 // set current visible Surf Index
 extern  void (*ViewSurf)(int NbSurf);
@@ -133,18 +139,19 @@ extern  void (*ViewSurfWaitVR)(int NbSurf);
 
 // Surf conversion Functions
 // -------------------------
-void ConvSurf16ToSurf8(Surf *S8Dst, Surf *S16Src);
-void ConvSurf8ToSurf16(Surf *S16Dst, Surf *S8Src);
-void ConvSurf8ToSurf16Pal(Surf *S16Dst, Surf *S8Src,void *PalBGR1024);
+void ConvSurf16ToSurf8(DgSurf *S8Dst, DgSurf *S16Src);
+void ConvSurf8ToSurf16(DgSurf *S16Dst, DgSurf *S8Src);
+void ConvSurf8ToSurf16Pal(DgSurf *S16Dst, DgSurf *S8Src,void *PalBGR1024);
 void Blur16(void *BuffImgDst, void *BuffImgSrc, int ImgWidth, int ImgHeight, int StartLine, int EndLine);
-void BlurSurf16(Surf *S16Dst, Surf *S16Src); // use Blur16
+void BlurSurf16(DgSurf *S16Dst, DgSurf *S16Src); // use Blur16
 
 // 16 bpp Surf Copy/Filter
 // -----------------------
-void SurfCopyBlnd16(Surf *S16Dst, Surf *S16Src,int colBlnd);
-void SurfMaskCopyBlnd16(Surf *S16Dst, Surf *S16Src,int colBlnd);
-void SurfCopyTrans16(Surf *S16Dst, Surf *S16Src,int trans);
-void SurfMaskCopyTrans16(Surf *S16Dst, Surf *S16Src,int trans);
+void SurfCopy(DgSurf *Sdst, DgSurf *Ssrc);
+void SurfCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);
+void SurfMaskCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);
+void SurfCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
+void SurfMaskCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
 
 // 8 bpp Color palette and light table helper function
 // ---------------------------------------------------
@@ -182,13 +189,13 @@ void LineMap(void *Point1,void *Point2,int col,unsigned int Map); // Mapped line
 #define POLY_EFF_COLCONV		11
 #define POLY_MAX_TYPE			11
 #define POLY_FLAG_DBL_SIDED		0x80000000
-void Poly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+void Poly(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // Redo the last rendered Poly: *ListPt is ignored in this call,
 // if the last Poly is a reversed Double sided poly and POLY_FLAG_DBL_SIDED isn't enabled the RePoly will be skipped
 // user can update *SS, TypePoly, ColPoly and texture coordinates[U,V] using the same Point List pointers the Poly was called with
 // Should be used through REPOLY else LastPolyStatus 'N' will not be ignored
 // if used after Poly16 /not Poly behavior, will be undefined
-void RePoly(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+void RePoly(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // REPOLY provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
 #define REPOLY(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly(ListPt, SS, TypePoly, ColPoly);
 
@@ -200,8 +207,8 @@ int  SensPoly(void *ListPt);
 #define NORM_PUT	0 // as it
 #define INV_HZ_PUT	1 // reversed horizontally
 #define INV_VT_PUT	2 // reversed vertically
-void PutSurf(Surf *S,int X,int Y,int PType);
-void PutMaskSurf(Surf *S,int X,int Y,int PType);
+void PutSurf(DgSurf *S,int X,int Y,int PType);
+void PutMaskSurf(DgSurf *S,int X,int Y,int PType);
 
 // 8 bpp Drawing helper functions provided for convenience
 // -------------------------------------------------------
@@ -242,13 +249,13 @@ void LineMapBlnd16(void *Point1,void *Point2,int col,unsigned int Map);
 #define POLY16_MASK_TEXT_BLND	15
 #define POLY16_MAX_TYPE			15
 #define POLY16_FLAG_DBL_SIDED	0x80000000
-void Poly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+void Poly16(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // Redo the last rendered Poly16: *ListPt is ignored in this call,
 // if the last Poly16 is a reversed Double sided poly and POLY16_FLAG_DBL_SIDED isn't enabled the RePoly16 will be skipped
 // user can update *SS, TypePoly, ColPoly and texture coordinates[U,V] using the same Point List pointers the Poly16 was called with
 // Should be used through REPOLY16 else LastPolyStatus 'N' will not be ignored
 // if used after Poly /not Poly16 behavior will be undefined
-void RePoly16(void *ListPt, Surf *SS, unsigned int TypePoly, int ColPoly);
+void RePoly16(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // REPOLY16 provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
 #define REPOLY16(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly16(ListPt, SS, TypePoly, ColPoly);
 
@@ -277,44 +284,44 @@ void rectblnd16(int x1,int y1,int x2,int y2,int rcol);
 void rectmapblnd16(int x1,int y1,int x2,int y2,int rcol,unsigned int rmap);
 
 // 16bpp Surf blitting functions
-void PutSurf16(Surf *S,int X,int Y,int PType);
-void PutMaskSurf16(Surf *S,int X,int Y,int PType);
-void PutSurfBlnd16(Surf *S,int X,int Y,int PType,int colBlnd);
-void PutMaskSurfBlnd16(Surf *S,int X,int Y,int PType,int colBlnd);
-void PutSurfTrans16(Surf *S,int X,int Y,int PType,int trans);
-void PutMaskSurfTrans16(Surf *S,int X,int Y,int PType,int trans);
+void PutSurf16(DgSurf *S,int X,int Y,int PType);
+void PutMaskSurf16(DgSurf *S,int X,int Y,int PType);
+void PutSurfBlnd16(DgSurf *S,int X,int Y,int PType,int colBlnd);
+void PutMaskSurfBlnd16(DgSurf *S,int X,int Y,int PType,int colBlnd);
+void PutSurfTrans16(DgSurf *S,int X,int Y,int PType,int trans);
+void PutMaskSurfTrans16(DgSurf *S,int X,int Y,int PType,int trans);
 
 // IMAGE Loading saving
 // --------------------
 
 // PCX
-int  LoadMemPCX(Surf **S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadPCX(Surf **S,const char *Fname,void *PalBGR1024);
-int  SaveMemPCX(Surf *S,void *Out,void *PalBGR1024);
-int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024);
-int  SizeSavePCX(Surf *S);
+int  LoadMemPCX(DgSurf **S,void *In,void *PalBGR1024,int SizeIn);
+int  LoadPCX(DgSurf **S,const char *Fname,void *PalBGR1024);
+int  SaveMemPCX(DgSurf *S,void *Out,void *PalBGR1024);
+int  SavePCX(DgSurf *S,const char *Fname,void *PalBGR1024);
+int  SizeSavePCX(DgSurf *S);
 void InRLE(void *InBuffRLE,void *Out,int LenOut);
 void OutRLE(void *OutBuffRLE,void *In,int LenIn,int ResHz);
 int  SizeOutRLE(void *In,int LenIn,int ResHz);
 
 // GIF
-int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024);
-int  LoadGIF16(Surf **S16,char *filename); // load a 8bpp gif and convert it to 16 bpp
-int  SaveMemGIF(Surf *S,void *Out,void *PalBGR1024); // NI (not implemented)
+int  LoadMemGIF(DgSurf **S,void *In,void *PalBGR1024,int SizeIn);
+int  LoadGIF(DgSurf **S,const char *Fname,void *PalBGR1024);
+int  LoadGIF16(DgSurf **S16,char *filename); // load a 8bpp gif and convert it to 16 bpp
+int  SaveMemGIF(DgSurf *S,void *Out,void *PalBGR1024); // NI (not implemented)
 void InLZW(void *InBuffLZW,void *Out);
 
 // BMP
-int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
-int  LoadBMP(Surf **S,const char *Fname,void *PalBGR1024);
-int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024);
-int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024); // save a 8bpp Surf into a 8bpp uncompressed BMP
-int  SizeSaveBMP(Surf *S); // total size in bytes of a 8bpp bmp saved Surf
-int  LoadMemBMP16(Surf **S,void *In,int SizeIn); // load a 24bpp uncompressed BMP into a 16bpp Surf
-int  LoadBMP16(Surf **S,const char *Fname);
-int  SaveMemBMP16(Surf *S,void *Out); // save  a 16bpp surf into a 24bpp uncompressed BMP
-int  SaveBMP16(Surf *S,const char *Fname);
-int  SizeSaveBMP16(Surf *S);
+int  LoadMemBMP(DgSurf **S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
+int  LoadBMP(DgSurf **S,const char *Fname,void *PalBGR1024);
+int  SaveMemBMP(DgSurf *S,void *Out,void *PalBGR1024);
+int  SaveBMP(DgSurf *S,const char *Fname,void *PalBGR1024); // save a 8bpp Surf into a 8bpp uncompressed BMP
+int  SizeSaveBMP(DgSurf *S); // total size in bytes of a 8bpp bmp saved Surf
+int  LoadMemBMP16(DgSurf **S,void *In,int SizeIn); // load a 24bpp uncompressed BMP into a 16bpp Surf
+int  LoadBMP16(DgSurf **S,const char *Fname);
+int  SaveMemBMP16(DgSurf *S,void *Out); // save  a 16bpp surf into a 24bpp uncompressed BMP
+int  SaveBMP16(DgSurf *S,const char *Fname);
+int  SizeSaveBMP16(DgSurf *S);
 
 
 #ifdef __cplusplus

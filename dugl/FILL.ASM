@@ -5,7 +5,7 @@ DegMask		EQU		0x3f
 %endmacro
 
 
-; param ESI: source Surf, EDI: Dest Surf
+; param ESI: source DgSurf, EDI: Dest DgSurf
 ; use mm0, ... , mm7
 ; return no : surf copied
 %macro	CopySurf	0

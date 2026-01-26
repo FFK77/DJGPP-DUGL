@@ -4,6 +4,7 @@
 #include <go32.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <conio.h>
 #include <crt0.h>
 #include <unistd.h>
@@ -70,8 +71,8 @@ void DestroyDFONT(DFONT *F)
 	F->FntPtr=FntCol=0;
 }
 
-void ClearText()
-{	if (FntSens) FntX=CurSurf.MaxX;
+void ClearText() {
+	if (FntSens) FntX=CurSurf.MaxX;
 	else FntX=CurSurf.MinX;
  	FntY=CurSurf.MaxY-FntHighPos;
 }
@@ -94,8 +95,8 @@ void OutTextXY(int TX,int TY,const char *str)
 }
 
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  OutTextMode(const char *str,int Mode)
-{	int L,y,x;
+int  OutTextMode(const char *str,int Mode) {
+	int L=0,x=0;
 	switch (Mode) {
 	  case 0:
 	    break;
@@ -131,8 +132,8 @@ int  OutTextMode(const char *str,int Mode)
 	return x;
 }
 
-int  GetXOutTextMode(const char *str,int Mode)
-{	int L,y,x;
+int  GetXOutTextMode(const char *str,int Mode) {
+	int L=0,x=0;
 	switch (Mode) {
 	  case 0:
   	    x=FntX; break;
@@ -175,16 +176,31 @@ int  OutTextYMode(int TY,const char *str,int Mode)
 	return OutTextMode(str,Mode);
 }
 
-void ViewClearText(View *V)
+void ViewClearText(DgView *V)
 {	if (FntSens) FntX=V->MaxX;
 	else FntX=V->MinX;
  	FntY=V->MaxY-FntHighPos;
 }
 
+void OutTextModeFormat(int Mode, char *midStr, unsigned int sizeMidStr, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(midStr, fmt, args);
+    va_end(args);
+    OutTextMode(midStr, Mode);
+}
+
+void OutTextFormat(char *midStr, unsigned int sizeMidStr, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(midStr, fmt, args);
+    va_end(args);
+    OutText(midStr);
+}
+
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  ViewOutTextMode(View *V,const char *str,int Mode)
-{
-   View saveView;
+int  ViewOutTextMode(DgView *V,const char *str,int Mode) {
+   DgView saveView;
    int x;
    GetSurfView(&CurSurf, &saveView);
    x=OutTextMode(str,Mode);
@@ -192,8 +208,8 @@ int  ViewOutTextMode(View *V,const char *str,int Mode)
    return x;
 }
 
-int  ViewGetXOutTextMode(View *V,const char *str,int Mode)
-{	int L,y,x;
+int  ViewGetXOutTextMode(DgView *V,const char *str,int Mode) {
+	int L=0,x=0;
 	switch (Mode) {
 	  case 0:
   	    x=FntX; break;
@@ -227,18 +243,18 @@ int  ViewGetXOutTextMode(View *V,const char *str,int Mode)
 	return x;
 }
 
-int  ViewOutTextYMode(View *V,int TY,const char *str,int Mode)
+int  ViewOutTextYMode(DgView *V,int TY,const char *str,int Mode)
 {	FntY=TY;
 	return ViewOutTextMode(V,str,Mode);
 }
 
-int  ViewOutTextXYMode(View *V,int TXY,int TY,const char *str)
+int  ViewOutTextXYMode(DgView *V,int TXY,int TY,const char *str)
 {	FntX=TXY; FntY=TY;
 	return ViewOutTextMode(V,str,AJ_CUR_POS);
 }
 
 
-int ViewGetFntYMID(View *V) {
+int ViewGetFntYMID(DgView *V) {
     return (V->MaxY+V->MinY)/2-FntHaut/2-FntLowPos;
 }
 
@@ -251,8 +267,8 @@ void OutText16XY(int TX,int TY,const char *str)
 }
 
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  OutText16Mode(const char *str,int Mode)
-{	int L,y,x;
+int  OutText16Mode(const char *str,int Mode) {
+	int L=0,x=0;
 	switch (Mode) {
 	  case 0:
 	    break;
@@ -294,10 +310,26 @@ int  OutText16YMode(int TY,const char *str,int Mode)
 	return OutText16Mode(str,Mode);
 }
 
+void OutText16ModeFormat(int Mode, char *midStr, unsigned int sizeMidStr, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(midStr, fmt, args);
+    va_end(args);
+    OutText16Mode(midStr, Mode);
+}
+
+void OutText16Format(char *midStr, unsigned int sizeMidStr, char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(midStr, fmt, args);
+    va_end(args);
+    OutText16(midStr);
+}
+
 // Mode : 0 CurPos, 1 mid, 2 AjusteSrc, 3 AjusteI-src, 4 AjLeft, 5 AjRight
-int  ViewOutText16Mode(View *V,const char *str,int Mode)
+int  ViewOutText16Mode(DgView *V,const char *str,int Mode)
 {
-   View saveView;
+   DgView saveView;
    int x;
    GetSurfView(&CurSurf, &saveView);
    x=OutText16Mode(str,Mode);
@@ -305,12 +337,12 @@ int  ViewOutText16Mode(View *V,const char *str,int Mode)
    return x;
 }
 
-int  ViewOutText16YMode(View *V,int TY,const char *str,int Mode)
+int  ViewOutText16YMode(DgView *V,int TY,const char *str,int Mode)
 {	FntY=TY;
 	return ViewOutText16Mode(V,str,Mode);
 }
 
-int  ViewOutText16XYMode(View *V,int TXY,int TY,const char *str)
+int  ViewOutText16XYMode(DgView *V,int TXY,int TY,const char *str)
 {	FntX=TXY; FntY=TY;
 	return ViewOutText16Mode(V,str,AJ_CUR_POS);
 }

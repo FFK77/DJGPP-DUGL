@@ -24,7 +24,7 @@ unsigned char       Col15To8bpp[256*128];
 // *************
 unsigned char		CurPalette[1024];
 int			        WindowControlPMI=0,ViewAddressPMI=0,SetPalPMI=0;
-int			        CurModeVtFreq=0,NbVSurf=0,NbDgfxModes=0;
+int			        CurModeVtFreq=0,NbVDgSurf=0,NbDgfxModes=0;
 unsigned int 		addr;
 unsigned int     	lfb,Sizelfb,SizeVMem;
 void			    *VesaPMI=0;
@@ -36,7 +36,7 @@ unsigned int		AddMPIO,
                     MAPAddMPIO,
                     EnableMPIO;
 
-Surf			    *VSurf=0;
+DgSurf			    *VSurf=0;
 ModeInfo		    *TbDgfxModes = NULL;
 ModeInfo		    *CurDgfxMode = NULL;
 __dpmi_meminfo	    dpinf;
@@ -62,7 +62,7 @@ void ProtectSetPalette(int Dbcol, int Nbcol, char* Tcol);
 void ProtectViewSurf(int NbSurf);
 void ProtectViewSurfWaitVR(int NbSurf);
 
-void BlurSurf16(Surf *S16Dst, Surf *S16Src) {
+void BlurSurf16(DgSurf *S16Dst, DgSurf *S16Src) {
     if (S16Dst==NULL || S16Src==NULL ||
             S16Dst->BitsPixel!=16 || S16Src->BitsPixel!=16 ||
             S16Dst->ResH!=S16Src->ResH ||
@@ -70,7 +70,7 @@ void BlurSurf16(Surf *S16Dst, Surf *S16Src) {
     Blur16((void*)(S16Dst->rlfb), (void*)(S16Src->rlfb), S16Src->ResH, S16Src->ResV, 0, (S16Src->ResV - 1));
 }
 
-void ConvSurf16ToSurf8(Surf *S8Dst, Surf *S16Src)
+void ConvSurf16ToSurf8(DgSurf *S8Dst, DgSurf *S16Src)
 {	if (S8Dst==NULL || S16Src==NULL ||
 	    S8Dst->BitsPixel!=8 || S16Src->BitsPixel!=16 ||
 	    S8Dst->ResH!=S16Src->ResH ||
@@ -83,7 +83,7 @@ void ConvSurf16ToSurf8(Surf *S8Dst, Surf *S16Src)
 	TransfB16ToB8();
 }
 
-void ConvSurf8ToSurf16(Surf *S16Dst, Surf *S8Src)
+void ConvSurf8ToSurf16(DgSurf *S16Dst, DgSurf *S8Src)
 {	if (S8Src==NULL || S16Dst==NULL ||
 	    S16Dst->BitsPixel!=16 || S8Src->BitsPixel!=8 ||
 	    S8Src->ResH!=S16Dst->ResH ||
@@ -96,7 +96,7 @@ void ConvSurf8ToSurf16(Surf *S16Dst, Surf *S8Src)
 	TransfB8ToB16();
 }
 
-void ConvSurf8ToSurf16Pal(Surf *S16Dst, Surf *S8Src,void *PalBGR1024)
+void ConvSurf8ToSurf16Pal(DgSurf *S16Dst, DgSurf *S8Src,void *PalBGR1024)
 {	if (S8Src==NULL || S16Dst==NULL ||
 	    S16Dst->BitsPixel!=16 || S8Src->BitsPixel!=8 ||
 	    S8Src->ResH!=S16Dst->ResH ||
@@ -193,7 +193,7 @@ void BuildTbDegCol(void *PalBGR1024)
 }
 
 void PrBuildTbDegCol(void *PalBGR1024,float PropBonus)
-{	int i,j,c,Black,White,ray,ray2,DB,DG,DR;
+{	int i,j,Black,White;
 	float sb,sg,sr,db,dg,dr,pb,pg,pr;
 	unsigned char *Pal=PalBGR1024;
 	int ND=64;
@@ -248,6 +248,24 @@ int FindCol(int DebCol,int FinCol,int B,int G,int R,void *PalBGR1024)
 	return c;
 }
 
+int Prop(int B,int G,int R) {
+	int ind=0;
+	if (B > G)
+		ind=0x1;
+	else
+		ind = (B == G) ? 0x2 : 0x3;
+	if (B > R)
+		ind |= 0x10;
+	else
+	    ind |= (B == R) ? 0x20 : 0x30;
+	if (G > R)
+		ind |= 0x100;
+	else
+	    ind |= (G == R) ? 0x200 : 0x300;
+
+	return ind;
+}
+
 int PrFindCol(int DebCol,int FinCol,int SearchB,int SearchG,int SearchR,
             void *PalBGR1024, float PropBonus)
 {	int i = 0,
@@ -287,23 +305,6 @@ int PrFindCol(int DebCol,int FinCol,int SearchB,int SearchG,int SearchR,
 	return c;
 }
 
-int Prop(int B,int G,int R) {
-	int ind=0;
-	if (B > G)
-		ind=0x1;
-	else
-		ind = (B == G) ? 0x2 : 0x3;
-	if (B > R)
-		ind |= 0x10;
-	else
-	    ind |= (B == R) ? 0x20 : 0x30;
-	if (G > R)
-		ind |= 0x100;
-	else
-	    ind |= (G == R) ? 0x200 : 0x300;
-
-	return ind;
-}
 
 
 
@@ -385,7 +386,7 @@ int GetPixelSize(int bitsPixel) {
 
 }
 
-void SetOrgSurf(Surf *S,int LOrgX,int LOrgY)
+void SetOrgSurf(DgSurf *S,int LOrgX,int LOrgY)
 {	int dx,dy;
 	int pixelsize=GetPixelSize(S->BitsPixel);
 	dx=LOrgX-S->OrgX;
@@ -404,15 +405,15 @@ void SetOrgSurf(Surf *S,int LOrgX,int LOrgY)
 
 void SetOrgVSurf(int OrgX,int OrgY)
 {	int i;
- 	for (i=0;i<NbVSurf;i++)
+ 	for (i=0;i<NbVDgSurf;i++)
 	   SetOrgSurf(&VSurf[i],OrgX,OrgY);
 }
 
-int  CreateSurf(Surf **S, int ResHz, int ResVt, char BitPixel)
+int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitPixel)
 {	int cvlfb;
     int pixelsize=GetPixelSize(BitPixel);
 	if (pixelsize==0 || ResHz<1 || ResVt<1) return 0;
-    *S = (Surf*)malloc(sizeof(Surf)+ResHz*ResVt*pixelsize);
+    *S = (DgSurf*)malloc(sizeof(DgSurf)+ResHz*ResVt*pixelsize);
     if ((*S) == NULL)
         return 0;
 	cvlfb=(void*)(&(*S)[1]);
@@ -439,18 +440,18 @@ int  CreateSurf(Surf **S, int ResHz, int ResVt, char BitPixel)
 	return 0;
 }
 
-void DestroySurf(Surf *S) {
+void DestroySurf(DgSurf *S) {
     if (S != NULL && S->OffVMem == -1) {
 	  S->vlfb=S->rlfb=S->OffVMem=0;
 	  free(S);
 	}
 }
 
-int  CreateSurfBuff(Surf **S, int ResHz, int ResVt, char BitPixel,void *Buff) {
+int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitPixel,void *Buff) {
     int pixelsize=GetPixelSize(BitPixel);
 
  	if (ResHz<1 || ResVt<1 || Buff==NULL) return 0;
-    *S = (Surf*)malloc(sizeof(Surf));
+    *S = (DgSurf*)malloc(sizeof(DgSurf));
     if ((*S) == NULL)
         return 0;
     (*S)->vlfb=(*S)->rlfb= Buff;
@@ -471,20 +472,20 @@ int  CreateSurfBuff(Surf **S, int ResHz, int ResVt, char BitPixel,void *Buff) {
     return 1;
 }
 
-void SetVView(View *V)
+void SetVView(DgView *V)
 {	int i;
- 	for (i=0;i<NbVSurf;i++)
+ 	for (i=0;i<NbVDgSurf;i++)
 	   SetSurfView(&VSurf[i],V);
 }
 
-void SetVInView(View *V)
+void SetVInView(DgView *V)
 {	int i;
- 	for (i=0;i<NbVSurf;i++)
+ 	for (i=0;i<NbVDgSurf;i++)
 	   SetSurfInView(&VSurf[i],V);
 }
 
 
-void SetSurfView(Surf *S, View *V) {
+void SetSurfView(DgSurf *S, DgView *V) {
     int pixelsize = GetPixelSize(S->BitsPixel);
     // clip if required
     int RMaxX= ((V->MaxX+V->OrgX)<S->ResH) ? V->MaxX+V->OrgX : S->ResH-1;
@@ -505,14 +506,14 @@ void SetSurfView(Surf *S, View *V) {
 }
 
 // les coordonnees des limite sont relative a l'origine de l'ecran
-void SetSurfInView(Surf *S, View *V) {
+void SetSurfInView(DgSurf *S, DgView *V) {
     int pixelsize = GetPixelSize(S->BitsPixel);
     int RMaxX= S->MaxX+S->OrgX;
     int RMaxY= S->MaxY+S->OrgY;
     int RMinX= S->MinX+S->OrgX;
     int RMinY= S->MinY+S->OrgY;
 
-    // clip View if required
+    // clip DgView if required
     if ((V->MaxX+V->OrgX)<RMaxX) {
         RMaxX = V->MaxX+V->OrgX;
     }
@@ -537,7 +538,7 @@ void SetSurfInView(Surf *S, View *V) {
         S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
 }
 
-void GetSurfView(Surf *S, View *V)
+void GetSurfView(DgSurf *S, DgView *V)
 {	V->OrgX=S->OrgX;  V->OrgY=S->OrgY;
 	V->MaxX=S->MaxX;  V->MaxY=S->MaxY;
 	V->MinX=S->MinX;  V->MinY=S->MinY;
@@ -545,7 +546,7 @@ void GetSurfView(Surf *S, View *V)
 
 void RealViewSurf(int NbSurf) {
 	__dpmi_regs r;
-	if (NbSurf>=NbVSurf) return;
+	if (NbSurf>=NbVDgSurf) return;
 	CurViewVSurf=NbSurf;
    	bzero(&r,sizeof(__dpmi_regs));
 	r.d.eax = 0x4f07;
@@ -560,7 +561,7 @@ void RealViewSurf(int NbSurf) {
 
 void RealViewSurfSched(int NbSurf) {
 	__dpmi_regs r;
-	if (NbSurf>=NbVSurf) return;
+	if (NbSurf>=NbVDgSurf) return;
 	CurViewVSurf=NbSurf;
 	addr= VSurf[NbSurf].OffVMem;
 
@@ -575,7 +576,7 @@ void RealViewSurfSched(int NbSurf) {
 
 void RealViewSurfWaitVR(int NbSurf) {
 	__dpmi_regs r;
-	if (NbSurf>=NbVSurf) return;
+	if (NbSurf>=NbVDgSurf) return;
 	CurViewVSurf=NbSurf;
    	bzero(&r,sizeof(__dpmi_regs));
 	r.d.eax = 0x4f07;
@@ -634,8 +635,8 @@ int std16bppVESAMode[SIZE_STD_VBE16BPP]=
 //320x200-640x480-800x600-1024x768-1280x1024
   { 0x10E,0x111,0x114,0x117,0x11A }; // 16bpp
 
-int InitVesa()
-{	VesaInfo VesaInf;
+int DgInit() {
+	VesaInfo VesaInf;
 	__dpmi_regs r;
 	unsigned int i,j,CptMode,curMode,LimitDS,BaseDS,TbMemCopy=1000,TbModeCopy=512;
 	char Error=0;
@@ -771,7 +772,7 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 				return 0;
 
 			if (Video==1 && VSurf!=NULL) { free(VSurf); VSurf=NULL; }
-			VSurf=(Surf *)malloc(sizeof(Surf)*(NbPage+1));
+			VSurf=(DgSurf *)malloc(sizeof(DgSurf)*(NbPage+1));
 			if (VSurf==NULL)
 				return 0;
 
@@ -799,8 +800,8 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 			VSurf[j].vlfb= cvlfb;
 			VSurf[j].ResH= lfb+Sizelfb-cvlfb;
 			VSurf[j].ResV= 1;
-			NbVSurf= NbPage;
-			SetSurf(&VSurf[0]);
+			NbVDgSurf= NbPage;
+			DgSetCurSurf(&VSurf[0]);
 			CurDgfxMode=&TbDgfxModes[i];
 			CurModeVtFreq=TbDgfxModes[i].VtFreq;
 			dgfxMode=CurDgfxMode->Mode|VesaLFB;
@@ -950,7 +951,7 @@ fin:
 	    "	pop	%ebx		");
 }*/
 
-void CloseVesa() {
+void DgQuit() {
    __dpmi_meminfo memMPIO;
    if (MTRRa) {
      MTRRa=0;
@@ -1213,7 +1214,7 @@ int cgetpixel16(int X,int Y) { // avec clip
 }
 
 //*********************** IMAGE
-int  LoadMemPCX(Surf **S,void *In,void *PalBGR1024,int SizeIn)
+int  LoadMemPCX(DgSurf **S,void *In,void *PalBGR1024,int SizeIn)
 {	HeadPCX hpcx;
 	char PalRGB[768];
 	int ResHz,ResVt,i;
@@ -1237,7 +1238,7 @@ int  LoadMemPCX(Surf **S,void *In,void *PalBGR1024,int SizeIn)
 	return 1;
 }
 
-int  LoadPCX(Surf **S,const char *Fname,void *PalBGR1024)
+int  LoadPCX(DgSurf **S,const char *Fname,void *PalBGR1024)
 {	FILE *InPCX;
 	HeadPCX hpcx;
 	void *BuffIn = NULL;
@@ -1282,7 +1283,7 @@ int  LoadPCX(Surf **S,const char *Fname,void *PalBGR1024)
 	return 1;
 }
 
-int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024)
+int  SavePCX(DgSurf *S,const char *Fname,void *PalBGR1024)
 {	FILE *OutPCX;
 	HeadPCX hpcx;
 	void *BuffOut;
@@ -1322,7 +1323,7 @@ int  SavePCX(Surf *S,const char *Fname,void *PalBGR1024)
 	return 1;
 }
 
-int  SaveMemPCX(Surf *S,void *Out,void *PalBGR1024)
+int  SaveMemPCX(DgSurf *S,void *Out,void *PalBGR1024)
 {	HeadPCX hpcx;
 	char PalRGB[768];
 	int PtrOut,ResHz,ResVt,i;
@@ -1354,13 +1355,13 @@ int  SaveMemPCX(Surf *S,void *Out,void *PalBGR1024)
 	return 1;
 }
 
-int  SizeSavePCX(Surf *S)
+int  SizeSavePCX(DgSurf *S)
 {	return (SizeOutRLE((void*)(S->rlfb),S->SizeSurf,S->ResH)+128+769);
 }
 
 // GIF
 
-int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn)
+int  LoadMemGIF(DgSurf **S,void *In,void *PalBGR1024,int SizeIn)
 {	HeadGIF hgif;
 	ExtBlock ExtBGif;
 	DescImgGIF descimg;
@@ -1428,7 +1429,7 @@ int  LoadMemGIF(Surf **S,void *In,void *PalBGR1024,int SizeIn)
 }
 
 
-int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024)
+int  LoadGIF(DgSurf **S,const char *Fname,void *PalBGR1024)
 {	FILE *InGIF;
 	HeadGIF hgif;
 	ExtBlock ExtBGif;
@@ -1506,9 +1507,9 @@ int  LoadGIF(Surf **S,const char *Fname,void *PalBGR1024)
 }
 
 
-int LoadGIF16(Surf **S16,char *filename) {
+int LoadGIF16(DgSurf **S16,char *filename) {
   char tmpBGRA[1024];
-  Surf *SGIF8bpp = NULL;
+  DgSurf *SGIF8bpp = NULL;
   if (LoadGIF(&SGIF8bpp,filename,tmpBGRA)==0) return 0;
   if (CreateSurf(S16,SGIF8bpp->ResH,SGIF8bpp->ResV,16)==0) {
     DestroySurf(SGIF8bpp);
@@ -1523,7 +1524,7 @@ int LoadGIF16(Surf **S16,char *filename) {
 
 
 // BMP
-int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn) {
+int  LoadMemBMP(DgSurf **S,void *In,void *PalBGR1024,int SizeIn) {
 	FILE *InBMP;
 	int i,j,padd,CurInBMP;
 	HeadBMP hbmp;
@@ -1573,7 +1574,7 @@ int  LoadMemBMP(Surf **S,void *In,void *PalBGR1024,int SizeIn) {
 
 	return 1;
 }
-int  LoadBMP(Surf **S,const char *Fname,void *PalBGR1024) {
+int  LoadBMP(DgSurf **S,const char *Fname,void *PalBGR1024) {
 	FILE *InBMP;
 	int i,j,padd;
 	HeadBMP hbmp;
@@ -1623,7 +1624,7 @@ int  LoadBMP(Surf **S,const char *Fname,void *PalBGR1024) {
 	fclose(InBMP);
 	return 1;
 }
-int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024) {
+int  SaveMemBMP(DgSurf *S,void *Out,void *PalBGR1024) {
 	int irow,j,padd,BfPos,sizeBMPFile,sizeline;
 	HeadBMP *hbmp;
 	InfoBMP *ibmp;
@@ -1681,7 +1682,7 @@ int  SaveMemBMP(Surf *S,void *Out,void *PalBGR1024) {
 	return 1;
 }
 
-int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024) {
+int  SaveBMP(DgSurf *S,const char *Fname,void *PalBGR1024) {
 	FILE *OutBMP;
 	int irow,j,padd,BfPos,sizeBMPFile,sizeline;
 	HeadBMP hbmp;
@@ -1736,7 +1737,7 @@ int  SaveBMP(Surf *S,const char *Fname,void *PalBGR1024) {
 	fclose(OutBMP);
 	return 1;
 }
-int  SizeSaveBMP(Surf *S) {
+int  SizeSaveBMP(DgSurf *S) {
 	int padd=0;
 	if (S->rlfb==0 || S->BitsPixel!=8 || S->ResH<=0 || S->ResV<=0)
 	  return 0;
@@ -1745,7 +1746,7 @@ int  SizeSaveBMP(Surf *S) {
 	return sizeof(HeadBMP)+sizeof(InfoBMP)+(((S->ResH)+padd)*S->ResV)+1024;
 }
 
-int  LoadMemBMP16(Surf **S,void *In,int SizeIn) {
+int  LoadMemBMP16(DgSurf **S,void *In,int SizeIn) {
 	int irow,j,padd,CurInBMP,BfPos;
 	HeadBMP hbmp;
 	InfoBMP ibmp;
@@ -1801,7 +1802,7 @@ int  LoadMemBMP16(Surf **S,void *In,int SizeIn) {
 
 	return 1;
 }
-int  LoadBMP16(Surf **S,const char *Fname) {
+int  LoadBMP16(DgSurf **S,const char *Fname) {
 	FILE *InBMP;
 	int irow,j,padd,BfPos;
 	HeadBMP hbmp;
@@ -1862,7 +1863,7 @@ int  LoadBMP16(Surf **S,const char *Fname) {
 	return 1;
 
 }
-int  SaveMemBMP16(Surf *S,void *Out) {
+int  SaveMemBMP16(DgSurf *S,void *Out) {
 	int irow,j,padd,BfPos,sizeBMPFile,sizeline;
 	HeadBMP *hbmp;
 	InfoBMP *ibmp;
@@ -1913,7 +1914,7 @@ int  SaveMemBMP16(Surf *S,void *Out) {
 	return 1;
 }
 
-int  SaveBMP16(Surf *S,const char *Fname) {
+int  SaveBMP16(DgSurf *S,const char *Fname) {
 	FILE *OutBMP;
 	int irow,j,padd,BfPos,sizeBMPFile,sizeline;
 	HeadBMP hbmp;
@@ -1973,7 +1974,7 @@ int  SaveBMP16(Surf *S,const char *Fname) {
 	return 1;
 }
 
-int  SizeSaveBMP16(Surf *S) {
+int  SizeSaveBMP16(DgSurf *S) {
 	int padd=0;
 	if (S->rlfb==0 || S->BitsPixel!=16 || S->ResH<=0 || S->ResV<=0)
 	  return 0;

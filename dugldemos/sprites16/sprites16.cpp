@@ -28,7 +28,7 @@ typedef struct {
     int     x,  // pos x
             y,  // pos y
             xspeed; // delta x
-    Surf    *sprite;
+    DgSurf  *sprite;
 } mySprite;
 
 #define MAX_SPRITES  10000
@@ -52,17 +52,17 @@ char *PutFuncNames[] = { "PUT", "MASK_PUT", "COL_BLND_PUT", "COL_BLND_MASK_PUT",
 // used view *******
 int TextViewHeight = 50;
 int rendViewHeight = ScrResV - TextViewHeight;
-View SpritesView = { 0,0,ScrResH-1,ScrResV-1,0,TextViewHeight },
+DgView SpritesView = { 0,0,ScrResH-1,ScrResV-1,0,TextViewHeight },
 // utils view
 TextView = { 0,0,ScrResH-1,49,0,0 },
 AllView = { 0,0,ScrResH-1,ScrResV-1,0,0 };
 
 // render all View, no dworker
 void RenderAllView();
-Surf *rendSurf = NULL;
+DgSurf *rendSurf = NULL;
 
 // *** memory suface of the Sprites ****************************
-Surf *sprites[3];
+DgSurf *sprites[3];
 // *** memory surf rendering
 int toggleMemRender = 1;
 // synch buffer - to compute fps
@@ -71,7 +71,7 @@ char SynchBuff[SIZE_SYNCH_BUFF];
 
 int main(int argc,char *argv[]) {
     // init the lib
-    if (!InitVesa())
+    if (!DgInit())
       { printf("DUGL init error\n"); exit(-1); }
 
     // load GFX the 3 Sprites
@@ -99,6 +99,13 @@ int main(int argc,char *argv[]) {
         exit(-1);
     }
 
+    // init video mode
+    if (!InitVesaMode(ScrResH,ScrResV,16,1))
+      {  printf("VESA mode error\n"); DgQuit(); exit(-1); }
+    DgSetCurSurf(&VSurf[0]);
+    Clear16(0); // clear by black
+
+
     DgInstallTimer(500);
     if (DgTimerFreq == 0) {
         printf("Timer error\n");
@@ -110,20 +117,13 @@ int main(int argc,char *argv[]) {
         exit(-1);
     }
 
-    // init video mode
-    if (!InitVesaMode(ScrResH,ScrResV,16,1))
-      {  printf("VESA mode error\n"); CloseVesa(); exit(-1); }
-    SetSurf(&VSurf[0]);
-    Clear16(0); // clear by black
-
-
     FREE_MMX();
     InitSynch(SynchBuff,NULL,60);
 
     NbSprites = 0;
     int randY = (ScrResV - 180);
     // set the current active surface for drawing
-    SetSurf(rendSurf);
+    DgSetCurSurf(rendSurf);
 
 
     // start the main loop
@@ -202,7 +202,7 @@ int main(int argc,char *argv[]) {
         SurfCopy(&VSurf[0], rendSurf);
     }
 
-    CloseVesa();
+    DgQuit();
     UninstallKeyboard();
     DgUninstallTimer();
     TextMode();

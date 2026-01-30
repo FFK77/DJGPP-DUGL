@@ -346,10 +346,63 @@ ALIGN 4
 %%FinSHLine:
 %endmacro
 
+; ESI: Start SrcAddr (XT1, YT1), EDI: DstAddr, EDX: Acc PntX, EBP: PntX, ECX: Hline Length
+%macro	@InFastTextHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		DEC			ECX
+		STOSW
+		JZ			%%FinSHLine
+		JMP			SHORT %%BcStBAv
+%%FPasStBAv:
+;ALIGN 4
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		ROR			EAX,16 ; right order
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+		MOVQ		[EDI],mm0 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+%%StBAp:
+		JECXZ		%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		DEC			ECX
+		STOSW
+		JNZ			%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
+%endmacro
+
 %macro  @AjAdDYZ16  0
 		MOV		EBX,EDX
 		SAR		EBX,Prec
 		ADD		EDX,EBP ;+[PntPlusX]
+%endmacro
+
+%macro  @AjFastAdDYZ16  0
+		MOV		EBX,EDX
+		SAR		EBX,Prec
+		ADD		EDX,[PntPlusX]
 %endmacro
 
 ;**Clip*TEXTure Horizontal Line***********************************************
@@ -776,6 +829,70 @@ ALIGN 4
 		DEC		ECX
 		LEA		EDI,[EDI+2]
 		JNZ		%%BcStBAv
+%endmacro
+
+%macro	@InFastMaskTextHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JZ			%%NoDW
+		MOV			[EDI],AX
+%%NoDW:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JNZ			%%BcStBAv
+		JZ			%%FinSHLine
+%%FPasStBAv:
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		ROR			EAX,16 ; right order
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+
+        MOVQ        mm6,[EDI]
+        MOVQ      	mm2,mm0
+        MOVQ        mm1,mm0
+
+        PCMPEQW     mm2,mm7; [QSMask16]
+        PCMPEQW     mm1,mm7; [QSMask16]
+        PANDN       mm2,mm0
+        PAND        mm6,mm1
+        POR         mm2,mm6
+
+		MOVQ		[EDI],mm2 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+%%StBAp:
+		JECXZ		%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JZ			%%NoApDW
+		MOV			[EDI],AX
+%%NoApDW:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JNZ			%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
 %endmacro
 
 
@@ -1650,6 +1767,103 @@ ALIGN 4
 		MOV		AX,[ESI+EBX*2]
 		DEC		ECX
 		@SolidTextBlndW
+		STOSW
+		JNZ		%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
+%endmacro
+
+
+%macro	@SolidFastTextBlndQ 0
+		MOVQ		mm1,mm0
+		MOVQ		mm2,mm0
+		PAND		mm0,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		PAND		mm2,[QRed16Mask]
+		PMULLW		mm0,mm7; [QMulSrcBlend]
+		PSRLW		mm2,5
+		PMULLW		mm1,mm7; [QMulSrcBlend]
+		PMULLW		mm2,mm7; [QMulSrcBlend]
+		PADDW		mm0,[QBlue16Blend]
+		PADDW		mm1,[QGreen16Blend]
+		PADDW		mm2,[QRed16Blend]
+		PSRLW		mm0,5
+		PSRLW		mm1,5
+		PAND		mm2,[QRed16Mask]
+		;PAND		mm0,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		POR			mm0,mm2
+		POR			mm0,mm1
+%endmacro
+
+%macro	@SolidFastTextBlndW 0
+		MOVD		mm0,EAX
+		MOVD		mm1,EAX
+		MOVD		mm2,EAX
+		PAND		mm0,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		PAND		mm2,[QRed16Mask]
+		PMULLW		mm0,mm7; [QMulSrcBlend]
+		PSRLW		mm2,5
+		PMULLW		mm1,mm7; [QMulSrcBlend]
+		PMULLW		mm2,mm7; [QMulSrcBlend]
+		PADDW		mm0,[QBlue16Blend]
+		PADDW		mm1,[QGreen16Blend]
+		PADDW		mm2,[QRed16Blend]
+		PSRLW		mm0,5
+		PSRLW		mm1,5
+		PAND		mm2,[QRed16Mask]
+		;PAND		mm0,[QBlue16Mask]
+		PAND		mm1,[QGreen16Mask]
+		POR			mm0,mm2
+		POR			mm0,mm1
+		MOVD		EAX,mm0
+%endmacro
+
+
+%macro	@InFastTextBlndHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		DEC			ECX
+		@SolidFastTextBlndW
+		STOSW
+		JNZ			%%BcStBAv
+		JZ			%%FinSHLine
+%%FPasStBAv:
+
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EAX,16 ; right order
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+		@SolidFastTextBlndQ
+		MOVQ		[EDI],mm0 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+%%StBAp:
+		JECXZ		%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		DEC			ECX
+		@SolidFastTextBlndW
 		STOSW
 		JNZ		%%BcStBAp
 %%PasStBAp:

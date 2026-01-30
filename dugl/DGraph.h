@@ -153,6 +153,15 @@ void SurfMaskCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);
 void SurfCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
 void SurfMaskCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
 
+// resize SSrcSurf into CurSurf taking account of source and destination Views
+// call to those functions will change SrcSurf, SSrcSurf could be null if there is a valid SrcSurf
+void ResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // fast resize source view => into dest view
+void MaskResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // use SrcSurf::Mask to mask pixels
+void BlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
+void MaskBlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
+void TransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // transparency 0->31 (31 completely opaq)
+void MaskTransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // Mask pixels with value Mask, transparency 0->31 (31 completely opaq)
+
 // 8 bpp Color palette and light table helper function
 // ---------------------------------------------------
 void PrBuildTbColConv(void *PalBGR1024,float PropBonus);

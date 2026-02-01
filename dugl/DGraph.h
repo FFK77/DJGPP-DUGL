@@ -122,15 +122,20 @@ void DgSetSrcSurf(DgSurf *S);
 
 int  GetMaxResVSetSurf(); // Max Height in pixels for a surf used with SetSurf
 void SetOrgSurf(DgSurf *S,int LOrgX,int LOrgY);
+// sets DgSurf View
 void SetSurfView(DgSurf *S, DgView *V);
+// sets View port clipped inside current DgSurf view port
 void SetSurfInView(DgSurf *S, DgView *V);
+// sets DgSurf View Bounds (ignoring the new View Origin)
+void SetSurfViewBounds(DgSurf *S, DgView *V);
+// sets View port Bounds clipped inside current DgSurf view port (ignoring the new View Origin)
+void SetSurfInViewBounds(DgSurf *S, DgView *V);
+// Get DgSurf View
 void GetSurfView(DgSurf *S, DgView *V);
 void SetOrgVSurf(int OrgX,int OrgY);
-void SetVView(DgView *V);
-void SetVInView(DgView *V);
-int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitPixel);
+int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel);
 void DestroySurf(DgSurf *S);
-int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitPixel,void *Buff);
+int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff);
 // ** WARNING ** should be called only after a successfull InitVESA call
 // set current visible Surf Index
 extern  void (*ViewSurf)(int NbSurf);
@@ -153,14 +158,6 @@ void SurfMaskCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);
 void SurfCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
 void SurfMaskCopyTrans16(DgSurf *S16Dst, DgSurf *S16Src,int trans);
 
-// resize SSrcSurf into CurSurf taking account of source and destination Views
-// call to those functions will change SrcSurf, SSrcSurf could be null if there is a valid SrcSurf
-void ResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // fast resize source view => into dest view
-void MaskResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // use SrcSurf::Mask to mask pixels
-void BlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
-void MaskBlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
-void TransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // transparency 0->31 (31 completely opaq)
-void MaskTransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // Mask pixels with value Mask, transparency 0->31 (31 completely opaq)
 
 // 8 bpp Color palette and light table helper function
 // ---------------------------------------------------
@@ -299,6 +296,15 @@ void PutSurfBlnd16(DgSurf *S,int X,int Y,int PType,int colBlnd);
 void PutMaskSurfBlnd16(DgSurf *S,int X,int Y,int PType,int colBlnd);
 void PutSurfTrans16(DgSurf *S,int X,int Y,int PType,int trans);
 void PutMaskSurfTrans16(DgSurf *S,int X,int Y,int PType,int trans);
+
+// resize SSrcSurf into CurSurf taking account of source and destination Views
+// call to those functions will change SrcSurf, SSrcSurf could be null if there is a valid SrcSurf
+void ResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // fast resize source view => into dest view
+void MaskResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt); // use SrcSurf::Mask to mask pixels
+void BlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
+void MaskBlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
+void TransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // transparency 0->31 (31 completely opaq)
+void MaskTransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // Mask pixels with value Mask, transparency 0->31 (31 completely opaq)
 
 // IMAGE Loading saving
 // --------------------

@@ -409,10 +409,13 @@ void SetOrgVSurf(int OrgX,int OrgY)
 	   SetOrgSurf(&VSurf[i],OrgX,OrgY);
 }
 
-int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitPixel)
+int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel)
 {	int cvlfb;
-    int pixelsize=GetPixelSize(BitPixel);
-	if (pixelsize==0 || ResHz<1 || ResVt<1) return 0;
+    int pixelsize=GetPixelSize(BitsPixel);
+    if (BitsPixel != 8 && BitsPixel != 16)
+		return 0;
+	if (pixelsize == 0 || ResHz<1 || ResVt<1)
+		return 0;
     *S = (DgSurf*)malloc(sizeof(DgSurf)+ResHz*ResVt*pixelsize);
     if ((*S) == NULL)
         return 0;
@@ -430,7 +433,7 @@ int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitPixel)
 	  (*S)->Mask= 0;
 	  (*S)->OrgX= 0;
 	  (*S)->OrgY= ResVt-1;
-      (*S)->BitsPixel= BitPixel;
+      (*S)->BitsPixel= BitsPixel;
 	  (*S)->ScanLine= ResHz *pixelsize;
 	  (*S)->NegScanLine = -((*S)->ScanLine);
 	  SetOrgSurf((*S),0,0);
@@ -447,10 +450,13 @@ void DestroySurf(DgSurf *S) {
 	}
 }
 
-int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitPixel,void *Buff) {
-    int pixelsize=GetPixelSize(BitPixel);
+int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff) {
+    int pixelsize=GetPixelSize(BitsPixel);
 
- 	if (ResHz<1 || ResVt<1 || Buff==NULL) return 0;
+    if (BitsPixel != 8 && BitsPixel != 16)
+		return 0;
+	if (pixelsize == 0 || ResHz<1 || ResVt<1)
+		return 0;
     *S = (DgSurf*)malloc(sizeof(DgSurf));
     if ((*S) == NULL)
         return 0;
@@ -465,25 +471,12 @@ int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitPixel,void *Buff) 
     (*S)->Mask= 0;
     (*S)->OrgX= 0;
     (*S)->OrgY= ResVt-1;
-    (*S)->BitsPixel= BitPixel;
+    (*S)->BitsPixel= BitsPixel;
     (*S)->ScanLine= ResHz *pixelsize;
     (*S)->NegScanLine = -((*S)->ScanLine);
     SetOrgSurf((*S),0,0);
     return 1;
 }
-
-void SetVView(DgView *V)
-{	int i;
- 	for (i=0;i<NbVDgSurf;i++)
-	   SetSurfView(&VSurf[i],V);
-}
-
-void SetVInView(DgView *V)
-{	int i;
- 	for (i=0;i<NbVDgSurf;i++)
-	   SetSurfInView(&VSurf[i],V);
-}
-
 
 void SetSurfView(DgSurf *S, DgView *V) {
     int pixelsize = GetPixelSize(S->BitsPixel);
@@ -537,6 +530,45 @@ void SetSurfInView(DgSurf *S, DgView *V) {
     else
         S->vlfb= S->rlfb+S->OrgX-(S->OrgY-(S->ResV-1))*S->ResH;
 }
+
+void SetSurfViewBounds(DgSurf *S, DgView *V) {
+    // clip if required
+    int RMaxX= ((V->MaxX+S->OrgX)<S->ResH) ? V->MaxX+S->OrgX : S->ResH-1;
+    int RMaxY= ((V->MaxY+S->OrgY)<S->ResV) ? V->MaxY+S->OrgY : S->ResV-1;
+    int RMinX= ((V->MinX+S->OrgX)>=0) ? V->MinX+S->OrgX : 0;
+    int RMinY= ((V->MinY+S->OrgY)>=0) ? V->MinY+S->OrgY : 0;
+
+    S->MaxX= RMaxX-S->OrgX;
+    S->MinX= RMinX-S->OrgX;
+    S->MaxY= RMaxY-S->OrgY;
+    S->MinY= RMinY-S->OrgY;
+}
+
+void SetSurfInViewBounds(DgSurf *S, DgView *V) {
+    int RMaxX= S->MaxX+S->OrgX;
+    int RMaxY= S->MaxY+S->OrgY;
+    int RMinX= S->MinX+S->OrgX;
+    int RMinY= S->MinY+S->OrgY;
+
+    // clip View if required
+    if ((V->MaxX+S->OrgX)<RMaxX) {
+        RMaxX = V->MaxX+S->OrgX;
+    }
+    if ((V->MaxY+S->OrgY)<RMaxY) {
+        RMaxY= V->MaxY+S->OrgY;
+    }
+    if ((V->MinX+S->OrgX)>RMinX) {
+        RMinX= V->MinX+S->OrgX;
+    }
+    if ((V->MinY+S->OrgY)>RMinY) {
+        RMinY= V->MinY+S->OrgY;
+    }
+    S->MaxX= RMaxX-S->OrgX;
+    S->MaxY= RMaxY-S->OrgY;
+    S->MinX= RMinX-S->OrgX;
+    S->MinY= RMinY-S->OrgY;
+}
+
 
 void GetSurfView(DgSurf *S, DgView *V)
 {	V->OrgX=S->OrgX;  V->OrgY=S->OrgY;

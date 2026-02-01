@@ -2487,6 +2487,75 @@ ALIGN 4
 %%FinSHLine:
 %endmacro
 
+%macro	@InFastMaskTextBlndHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JZ			%%NoAvDW
+		@SolidFastTextBlndW
+		MOV			[EDI],AX
+%%NoAvDW:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JNZ			%%BcStBAv
+		JZ			%%FinSHLine
+%%FPasStBAv:
+
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EAX,16 ; right order
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+        MOVQ      	mm3,mm0 ; mm3 save original source before blnd
+		@SolidFastTextBlndQ
+
+        MOVQ        mm6,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm6,mm1
+        POR         mm3,mm6
+
+		MOVQ		[EDI],mm3 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+%%StBAp:
+		OR			ECX,ECX
+		JZ			%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			.NoApDW
+		@SolidFastTextBlndW
+		MOV			[EDI],AX
+.NoApDW:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JNZ			%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
+%endmacro
+
 ;%macro  @AjAdDYZ16  0
 ;		MOV		EBX,EDX
 ;		SAR		EBX,Prec
@@ -3155,6 +3224,82 @@ ALIGN 4
 		JZ			%%FinSHLine
 %%BcStBAp:
 		@AjAdDYZ16
+		DEC			ECX
+		MOV			AX,[ESI+EBX*2]
+		MOV			BX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EBX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		STOSW
+		JNZ			%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
+%endmacro
+
+%macro	@InFastTransTextHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		DEC			ECX
+		MOV			AX,[ESI+EBX*2]
+		MOV			BX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EBX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		STOSW
+		JZ			%%FinSHLine
+
+		JMP			%%BcStBAv
+%%FPasStBAv:
+;ALIGN 4
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		ROR			EAX,16 ; right order
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+
+		MOVQ		mm3,[EDI] ; read destination pixels
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+
+		MOVQ		[EDI],mm0 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+
+%%StBAp:
+		OR			ECX,ECX
+		JZ			%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
 		DEC			ECX
 		MOV			AX,[ESI+EBX*2]
 		MOV			BX,[EDI]
@@ -3939,6 +4084,100 @@ ALIGN 4
 		MOVD		EAX,mm0
 		MOV			[EDI],AX
 %%MaskStBAp:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JNZ			%%BcStBAp
+%%PasStBAp:
+%%FinSHLine:
+%endmacro
+
+%macro	@InFastMaskTransTextHLineDYZ16 0
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			.NoDWAv
+		MOV			BX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EBX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOVD		EAX,mm0
+		MOV			[EDI],AX
+.NoDWAv:
+		DEC			ECX
+		LEA			EDI,[EDI+2]
+		JZ			%%FinSHLine
+
+		JMP			%%BcStBAv
+%%FPasStBAv:
+;ALIGN 4
+%%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
+
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2] ; read word 0
+		@AjFastAdDYZ16
+		ROR			EAX,16
+		MOV			BP,[ESI+EBX*2] ; read word 1
+		@AjFastAdDYZ16
+		ROR			EBP,16
+		MOV			AX,[ESI+EBX*2]  ; read word 2
+		@AjFastAdDYZ16
+		ROR			EAX,16 ; right order
+		MOV			BP,[ESI+EBX*2]  ; read word 3
+		ROR			EBP,16 ; right order
+		MOVD		mm0,EAX  ; first 4 bytes to write
+		MOVD		mm1,EBP  ; second 4 bytes to write
+		MOVQ		mm3,[EDI] ; read destination pixels
+		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
+		MOVQ		[QHLineOrg],mm0 ; save original 4 pixels before transparency
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+
+        MOVQ      	mm3,[QHLineOrg]
+        MOVQ        mm4,[EDI]
+        MOVQ        mm1,mm3
+
+        PCMPEQW     mm3,[QSMask16]
+        PCMPEQW     mm1,[QSMask16]
+        PANDN       mm3,mm0
+        PAND        mm4,mm1
+        POR         mm3,mm4
+
+		MOVQ		[EDI],mm3 ; write the 8 bytes / 4 pixels
+
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
+
+%%StBAp:
+		OR			ECX,ECX
+		JZ			%%FinSHLine
+%%BcStBAp:
+		@AjFastAdDYZ16
+		MOV			AX,[ESI+EBX*2]
+		CMP			AX,[SMask]
+		JE			.NoDWAp
+		MOV			BX,[EDI]
+		MOVD		mm0,EAX
+		MOVD		mm3,EBX
+		MOVQ		mm1,mm0
+		MOVQ		mm4,mm3
+		MOVQ		mm2,mm0
+		MOVQ		mm5,mm3
+		@TransBlndQ
+		MOV			[EDI],AX
+.NoDWAp:
 		DEC			ECX
 		LEA			EDI,[EDI+2]
 		JNZ			%%BcStBAp

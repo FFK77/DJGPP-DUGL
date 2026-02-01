@@ -214,8 +214,8 @@ ALIGN 4
         MOVQ        mm3,[ESI]
         MOVQ        mm0,[ESI]
 
-        PCMPEQW     mm2,mm6 ; [QSMask16]
-        PCMPEQW     mm3,mm6 ; [QSMask16]
+        PCMPEQB     mm2,mm6 ; [QSMask16]
+        PCMPEQB     mm3,mm6 ; [QSMask16]
         PANDN       mm2,mm0
         PAND        mm4,mm3
         POR         mm2,mm4
@@ -274,8 +274,8 @@ ALIGN 4
 .IFPasStBAv:
 
 .IStoMMX:
-		TEST		ECX,0xfffffff8
-		JZ			.IStBAp
+		CMP			ECX,BYTE 7
+		JLE			.IStBAp
 
 		SUB			ESI,BYTE 8
 		MOV			EAX,[ESI]
@@ -289,8 +289,8 @@ ALIGN 4
         MOVQ		mm2,mm0
         MOVQ		mm3,mm0
 
-        PCMPEQW     mm2,mm6 ; [QSMask16]
-        PCMPEQW     mm3,mm6 ; [QSMask16]
+        PCMPEQB     mm2,mm6 ; [QSMask16]
+        PCMPEQB     mm3,mm6 ; [QSMask16]
         PANDN       mm2,mm0
         PAND        mm4,mm3
         POR         mm2,mm4

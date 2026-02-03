@@ -13,6 +13,7 @@
 #include "DKeyb.h"
 #include "DMouse.h"
 #include "DTimer.h"
+#include "DMATH3D.h"
 #include "DIPX.h"
 
 #endif // #ifndef DUGL_H

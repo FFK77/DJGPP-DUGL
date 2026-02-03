@@ -808,7 +808,7 @@ int InitVesaMode(int ResHz, int ResVt, char BitPixel, int NbPage)
 			if (VSurf==NULL)
 				return 0;
 
-			Video==1; cvlfb=lfb;
+			Video=1; cvlfb=lfb;
 			for (j=0;j<NbPage;j++) {
 				VSurf[j].vlfb=VSurf[j].rlfb= cvlfb;
 				VSurf[j].OffVMem= cvlfb-lfb;

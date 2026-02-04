@@ -54,11 +54,14 @@ ALIGN 4
 		JZ		%%CasDYZ
 		SUB		EBP,[XT1]   ; EBP = DX
 		JZ		%%CasDXZ
-%%CasNorm:	@InTextHLineNorm16
+%%CasNorm:
+		@InTextHLineNorm16
 		JMP		%%FinInTextHLg
-%%CasDXZ:	@InTextHLineDXZ16
+%%CasDXZ:
+		@InTextHLineDXZ16
 		JMP		%%FinInTextHLg
-%%CasDYZ:	@InTextHLineDYZ16
+%%CasDYZ:
+		@InTextHLineDYZ16
 %%FinInTextHLg:
 %endmacro
 
@@ -204,9 +207,10 @@ ALIGN 4
 		XOR			EBX,EBX      ; Cpt Dbrd Y
 		ADD			ESI,[Svlfb]  ; - 5
 		OR			EAX,EAX
-		SETL		BL
-		INC			ECX
+		LEA			ECX,[ECX+1]
+		SETG		BL
 		MOV			EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
+		JMP			%%BcStBAp
 %%BcStBAv:
 		TEST		EDI,6
 		JZ			%%FPasStBAv
@@ -215,16 +219,12 @@ ALIGN 4
 		DEC			ECX
 		STOSW
 		JZ			%%FinSHLine
-
-		JMP			SHORT %%BcStBAv
 %%FPasStBAv:
-		CMP			ECX,BYTE 3
-		JLE			%%StBAp
 %%PasStDAv:
-		MOVD		mm2,ECX
-		SHR			ECX,2
 ;ALIGN 4
 %%StoMMX:
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
 		@AjAdDXZ16
         MOVD		mm3, ECX   ; save ECX
 		MOV			AX,[ESI+EBX] ; read word 0
@@ -243,16 +243,15 @@ ALIGN 4
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 		MOVD        ECX, mm3   ; restore ECX
 		MOVQ		[EDI],mm0 ; write the 8 bytes
-		DEC			ECX
+		SUB			ECX,BYTE 4
 		LEA			EDI,[EDI+8]
-		JNZ			%%StoMMX
+		JMP			%%StoMMX
 
-		MOVD		ECX,mm2
+%%StBAp:
 		AND			ECX,BYTE 3
 		JZ			%%FinSHLine
-%%StBAp:
 %%BcStBAp:
-		@AjAdDXZ
+		@AjAdDXZ16
 		MOV			AX,[ESI+EBX]
 		DEC			ECX
 		STOSW
@@ -289,8 +288,8 @@ ALIGN 4
 		ADD			ESI,[Svlfb] ; - 5
 		OR			EAX,EAX			; SAR
 		MOV			EBP,EAX  ;[PntPlusX]
+		LEA			ECX,[ECX+1]
 		SETL		BL
-		INC			ECX
 		MOV			EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
 %%BcStBAv:
 		TEST		EDI,6
@@ -426,89 +425,93 @@ ALIGN 4
 
 %macro	@ClipTextHLineNorm16 0
 		SHL 		EAX,Prec
-		MOV		ESI,[YT1]      ; - 1'
-		CMP		DWORD [Plus2],0
-		JZ		%%PDivPPlusY
+		MOV			ESI,[YT1]      ; - 1'
+		CMP			DWORD [Plus2],0
+		JZ			%%PDivPPlusY
 		CDQ
 		IDIV		DWORD [Plus2]
-		JMP		SHORT %%DivPPlusY
-%%PDivPPlusY:	XOR		EAX,EAX
+		JMP			SHORT %%DivPPlusY
+%%PDivPPlusY:
+		XOR			EAX,EAX
 %%DivPPlusY:
 		IMUL		ESI,[SScanLine]    ; - 2'
-		NEG		EAX
-		MOV		[PntPlusY],EAX  ;[PntPlusY]
+		NEG			EAX
+		MOV			[PntPlusY],EAX  ;[PntPlusY]
 
-		MOV		EAX,EBP
-		XOR		EDX,EDX
-		OR		EDX,BYTE 8
-		NEG		ESI	       ; - 3'
-		SHL		EAX,Prec
-		ADD		ESI,[XT1]      ; - 4'
-		ADD		ESI,[XT1]      ; - 4' +2*XT : 16bpp
+		MOV			EAX,EBP
+		XOR			EDX,EDX
+		OR			EDX,BYTE 8
+		NEG			ESI	       ; - 3'
+		SHL			EAX,Prec
+		ADD			ESI,[XT1]      ; - 4'
+		ADD			ESI,[XT1]      ; - 4' +2*XT : 16bpp
 		MOVD		mm5,EDX
-		ADD		ESI,[Svlfb]    ; - 5'
-		CMP		DWORD [Plus2],0
-		JZ		%%PDivPPlusX
+		ADD			ESI,[Svlfb]    ; - 5'
+		CMP			DWORD [Plus2],0
+		JZ			%%PDivPPlusX
 		CDQ
 		IDIV		DWORD [Plus2]
-		JMP		SHORT %%DivPPlusX
-%%PDivPPlusX:	XOR		EAX,EAX
+		JMP			SHORT %%DivPPlusX
+%%PDivPPlusX:
+		XOR			EAX,EAX
 %%DivPPlusX:
-		MOV		EBP,[PntPlusY] ; - 1
-		MOV		EBX,[Plus]
-		MOV		[PntPlusX],EAX
+		MOV			EBP,[PntPlusY] ; - 1
+		MOV			EBX,[Plus]
+		MOV			[PntPlusX],EAX
 		MOV 		EDX,[PntPlusX] ; - 2
 		IMUL		EBP,EBX	       ; - 3
 		IMUL		EDX,EBX        ; - 4
 		;--- ajuste Cpt Dbrd X et Y pour SAR
-		MOV		EAX,[PntPlusY]
-		OR		EAX,EAX
-		JGE		%%PosPntPlusY
-		LEA		EBP,[EBP+((1<<Prec)-1)] ; EBP += 2**N-1
+		MOV			EAX,[PntPlusY]
+		OR			EAX,EAX
+		JGE			%%PosPntPlusY
+		LEA			EBP,[EBP+((1<<Prec)-1)] ; EBP += 2**N-1
 %%PosPntPlusY:
-		MOV		EAX,[PntPlusX]
-		OR		EAX,EAX
-		JGE		%%PosPntPlusX
-		LEA		EDX,[EDX+((1<<Prec)-1)] ; EDX += 2**N-1
+		MOV			EAX,[PntPlusX]
+		OR			EAX,EAX
+		JGE			%%PosPntPlusX
+		LEA			EDX,[EDX+((1<<Prec)-1)] ; EDX += 2**N-1
 %%PosPntPlusX:	;-----------------------------------
-%%BcStBAv:	TEST		EDI,6
-		JZ		%%FPasStBAv
+%%BcStBAv:
+		TEST		EDI,6
+		JZ			%%FPasStBAv
 		@AjAdNormB16
-		MOV		AX,[ESI+EBX]
-		DEC		ECX
+		MOV			AX,[ESI+EBX]
+		DEC			ECX
 		STOSW
-		JZ		%%FinSHLine
+		JZ			%%FinSHLine
 
-		JMP		SHORT %%BcStBAv
+		JMP			SHORT %%BcStBAv
 %%FPasStBAv:
-		CMP		ECX,BYTE 3
-		JLE		%%StBAp
+		CMP			ECX,BYTE 3
+		JLE			%%StBAp
 %%PasStDAv:
 		MOVD		mm2,ECX
-		SHR		ECX,2
+		SHR			ECX,2
 ;ALIGN 4
-%%StoMMX:       MOVD		mm1,EDI  ; save EDI
+%%StoMMX:
+		MOVD		mm1,EDI  ; save EDI
 		@AjAdNormQ16
-                MOVD		mm5,ECX   ; save ECX
-		MOV		AX,[ESI+EBX] ; read word 0
+		MOVD		mm5,ECX   ; save ECX
+		MOV			AX,[ESI+EBX] ; read word 0
 		@AjAdNormQ16
-		ROR		EAX,16 ; swap words order
-		MOV		AX,[ESI+EBX] ; read word 1
+		ROR			EAX,16 ; swap words order
+		MOV			AX,[ESI+EBX] ; read word 1
 		@AjAdNormQ16
-		MOV		CX,[ESI+EBX] ; read word 2
+		MOV			CX,[ESI+EBX] ; read word 2
 		@AjAdNormQ16
-		ROR		ECX,16
-		ROR		EAX,16 ; words on the right order
-		MOV		CX,[ESI+EBX] ; read byte 3
+		ROR			ECX,16
+		ROR			EAX,16 ; words on the right order
+		MOV			CX,[ESI+EBX] ; read byte 3
 		MOVD		EDI,mm1  ; restore EDI
-		ROR		ECX,16 ; word 2,3 on the right order
-                MOVD            mm0,EAX ; first 4 bytes to write
-                MOVD            mm1,ECX ; second 4 byte to write
+		ROR			ECX,16 ; word 2,3 on the right order
+		MOVD        mm0,EAX ; first 4 bytes to write
+        MOVD        mm1,ECX ; second 4 byte to write
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
-                MOVD		ECX,mm5   ; restore ECX
+		MOVD		ECX,mm5   ; restore ECX
 		MOVQ		[EDI],mm0 ; write the 8 bytes
-		DEC		ECX
-                LEA             EDI,[EDI+8]
+		DEC			ECX
+        LEA         EDI,[EDI+8]
 		JNZ		%%StoMMX
 
 		MOVD		ECX,mm2
@@ -1678,7 +1681,7 @@ ALIGN 4
 		AND		ECX,BYTE 3
 		JZ		%%FinSHLine
 %%StBAp:
-%%BcStBAp:	@AjAdDXZ
+%%BcStBAp:	@AjAdDXZ16
 		MOV		AX,[ESI+EBX]
 		DEC		ECX
 		@SolidTextBlndW
@@ -3007,13 +3010,14 @@ ALIGN 4
 
 		SUB			ECX, BYTE 4
 		MOVQ		[EDI],mm0 ; write the 8 bytes
+		LEA			EDI,[EDI+8]
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
+		MOV			EDI,[HzLineDstAddr]  ; restore EDI dest addr
 %%BcStBAp:
 		@AjAdNormB16
 		DEC			ECX
@@ -3054,7 +3058,7 @@ ALIGN 4
 		XOR			EBX,EBX      ; Cpt Dbrd Y
 		ADD			ESI,[Svlfb]  ; - 5
 		OR			EAX,EAX
-		SETL		BL
+		SETG		BL
 		INC			ECX
 		MOV			EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
 %%BcStBAv:
@@ -3077,7 +3081,6 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
@@ -3095,11 +3098,9 @@ ALIGN 4
 		@AjAdDXZ16
 		ROR			EAX,16 ; EAX right order
 		MOV			CX,[ESI+EBX] ; read word 3
-		MOV			EDI,[HzLineDstAddr] ; restore EDI Dst Addr
 		ROR			ECX,16 ; ECX right order
 		MOVD        mm0, EAX ; first 4 bytes to write
         MOVD		mm1, ECX ; second 4 bytes to write
-        ADD			DWORD [HzLineDstAddr], BYTE 8 ; increase dest Addr by 8 (4 pixels)
 		MOV			ECX,[HzLineLength]   ; restore ECX
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 
@@ -3112,14 +3113,13 @@ ALIGN 4
 
 		SUB			ECX, BYTE 4
 		MOVQ		[EDI],mm0 ; write the 8 bytes
-		JMP			%%StoMMX
-
 		LEA			EDI,[EDI+8]
+		JMP			%%StoMMX
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
 %%BcStBAp:
-		@AjAdDXZ
+		@AjAdDXZ16
 		DEC			ECX
 		MOV			AX,[EBX+ESI]
 		MOV			BX,[EDI]
@@ -3181,7 +3181,6 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
@@ -3199,11 +3198,9 @@ ALIGN 4
 		@AjAdDYZ16
 		ROR			EAX,16 ; right order
 		MOV			CX,[ESI+EBX*2]  ; read word 3
-		MOV			EDI,[HzLineDstAddr] ; restore EDI Dst Addr
 		ROR			ECX,16 ; right order
 		MOVD		mm0,EAX  ; first 4 bytes to write
 		MOVD		mm1,ECX  ; second 4 bytes to write
-        ADD			DWORD [HzLineDstAddr], BYTE 8 ; increase dest Addr by 8 (4 pixels)
 		MOV			ECX,[HzLineLength]   ; restore ECX
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 
@@ -3214,11 +3211,11 @@ ALIGN 4
 		MOVQ		mm5,mm3
 		@TransBlndQ
 
-		SUB			ECX,BYTE 4
 		MOVQ		[EDI],mm0 ; write the 8 bytes
+		SUB			ECX,BYTE 4
+		LEA			EDI,[EDI+8]
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
@@ -3401,19 +3398,14 @@ ALIGN 4
 		MOVD		EAX,mm0
 		STOSW
 		JZ			%%FinSHLine
-
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		CMP			ECX,BYTE 3
-		JLE			%%StBAp
-%%PasStDAv:
 		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
 		JLE			%%StBAp
 
-		MOVD		mm1,EDI  ; save EDI
 		@AjAdNormQ16
 		MOV			[HzLineLength],ECX  ; save hz line remaining length in ECX
 		MOV			AX,[ESI+EBX] ; read word 0
@@ -3445,10 +3437,10 @@ ALIGN 4
 		MOVQ		[EDI],mm0 ; write the 8 bytes
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
+		MOV			EDI,[HzLineDstAddr]  ; restore EDI dest addr
 %%BcStBAp:
 		@AjAdNormB16
 		DEC			ECX
@@ -3694,10 +3686,10 @@ ALIGN 4
 		@InMaskTransTextHLineNorm16
 		JMP		%%FinInTextHLg
 %%CasDXZ:
-		;@InMaskTransTextHLineDXZ16
+		@InMaskTransTextHLineDXZ16
 		JMP		%%FinInTextHLg
 %%CasDYZ:
-		;@InMaskTransTextHLineDYZ16
+		@InMaskTransTextHLineDYZ16
 %%FinInTextHLg:
 %endmacro
 
@@ -3817,11 +3809,10 @@ ALIGN 4
 		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
-
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
+		MOV			EDI,[HzLineDstAddr]  ; restore EDI dest addr
 %%BcStBAp:
 		@AjAdNormB16
 		MOV			AX,[ESI+EBX]
@@ -3866,7 +3857,7 @@ ALIGN 4
 		XOR			EBX,EBX      ; Cpt Dbrd Y
 		ADD			ESI,[Svlfb]  ; - 5
 		OR			EAX,EAX
-		SETL		BL
+		SETG		BL
 		INC			ECX
 		MOV			EDX,[PntInitCPTDbrd+EBX*4] ; Cpt Dbr Y
 %%BcStBAv:
@@ -3946,7 +3937,7 @@ ALIGN 4
 		OR			ECX,ECX
 		JZ			%%FinSHLine
 %%BcStBAp:
-		@AjAdDXZ
+		@AjAdDXZ16
 		MOV			AX,[EBX+ESI]
 		CMP			AX,[SMask]
 		JE			%%MaskStBAp
@@ -4016,7 +4007,6 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
@@ -4034,11 +4024,9 @@ ALIGN 4
 		@AjAdDYZ16
 		ROR			EAX,16 ; right order
 		MOV			CX,[ESI+EBX*2]  ; read word 3
-		MOV			EDI,[HzLineDstAddr] ; restore EDI Dst Addr
 		ROR			ECX,16 ; right order
 		MOVD		mm0,EAX  ; first 4 bytes to write
 		MOVD		mm1,ECX  ; second 4 bytes to write
-        ADD			DWORD [HzLineDstAddr], BYTE 8 ; increase dest Addr by 8 (4 pixels)
 		MOV			ECX,[HzLineLength]   ; restore ECX
 		PUNPCKLWD	mm0,mm1 ; make the full 8 bytes to write
 
@@ -4060,11 +4048,11 @@ ALIGN 4
         PAND        mm4,mm1
         POR         mm3,mm4
 
-		SUB			ECX, BYTE 4
 		MOVQ		[EDI],mm3 ; write the 8 bytes
+		SUB			ECX, BYTE 4
+		LEA			EDI,[EDI+8]
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
@@ -4276,16 +4264,12 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		CMP			ECX,BYTE 3
-		JLE			%%StBAp
-%%PasStDAv:
 		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
 		JLE			%%StBAp
 
-		MOVD		mm1,EDI  ; save EDI
 		@AjAdNormQ16
 		MOV			[HzLineLength],ECX  ; save hz line remaining length in ECX
 		MOV			AX,[ESI+EBX] ; read word 0
@@ -4328,10 +4312,11 @@ ALIGN 4
 		MOVQ		[EDI],mm3 ; write the 8 bytes
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
+		MOV			EDI,[HzLineDstAddr]  ; restore EDI dest addr
+
 %%BcStBAp:
 		@AjAdNormB16
 		MOV			AX,[ESI+EBX]
@@ -4403,7 +4388,6 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
@@ -4421,11 +4405,9 @@ ALIGN 4
 		@AjAdDXZ16
 		ROR			EAX,16
 		MOV			CX,[ESI+EBX] ; read word 3
-		MOV			EDI,[HzLineDstAddr] ; restore EDI Dst Addr
 		ROR			ECX,16
 		MOVD        mm0, EAX ; first 4 bytes to write
         MOVD        mm1, ECX ; second 4 bytes to write
-        ADD			DWORD [HzLineDstAddr], BYTE 8 ; increase dest Addr by 8 (4 pixels)
 		MOV			ECX,[HzLineLength]   ; restore ECX
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
 
@@ -4447,11 +4429,11 @@ ALIGN 4
         PAND        mm4,mm1
         POR         mm3,mm4
 
-		SUB			ECX, BYTE 4
 		MOVQ		[EDI],mm3 ; write the 8 bytes
+		SUB			ECX, BYTE 4
+		LEA			EDI,[EDI+8]
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine
@@ -4529,7 +4511,6 @@ ALIGN 4
 
 		JMP			%%BcStBAv
 %%FPasStBAv:
-		MOV			[HzLineDstAddr],EDI  ; save EDI dest addr
 ;ALIGN 4
 %%StoMMX:
 		CMP			ECX,BYTE 3
@@ -4547,11 +4528,9 @@ ALIGN 4
 		@AjAdDYZ16
 		ROR			EAX,16 ; back to right words order
 		MOV			CX,[ESI+EBX*2]  ; read word 3
-		MOV			EDI,[HzLineDstAddr] ; restore EDI Dst Addr
 		ROR			ECX,16
 		MOVD        mm0,EAX  ; first 4 bytes to write
         MOVD        mm1,ECX  ; second 4 bytes to write
-        ADD			DWORD [HzLineDstAddr], BYTE 8 ; increase dest Addr by 8 (4 pixels)
 		MOV			ECX,[HzLineLength]   ; restore ECX
 		PUNPCKLDQ	mm0,mm1 ; make the full 8 bytes to write
 
@@ -4573,11 +4552,11 @@ ALIGN 4
         PAND        mm4,mm1
         POR         mm3,mm4
 
-		SUB			ECX, BYTE 4
 		MOVQ		[EDI],mm3 ; write the 8 bytes
+		SUB			ECX, BYTE 4
+		LEA			EDI,[EDI+8]
 		JMP			%%StoMMX
 
-		LEA			EDI,[EDI+8]
 %%StBAp:
 		OR			ECX,ECX
 		JZ			%%FinSHLine

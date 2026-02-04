@@ -842,7 +842,7 @@ DMatrix4 *DMatrix4MulDMatrix4Res(DMatrix4 *mat4x4_left, DMatrix4 *mat4x4_right, 
     mat4x4_res->raw[12] = mat4x4_left->raw[12]*mat4x4_right->raw[0] + mat4x4_left->raw[13]*mat4x4_right->raw[4] + mat4x4_left->raw[14]*mat4x4_right->raw[8] + mat4x4_left->raw[15]*mat4x4_right->raw[12];
     mat4x4_res->raw[13] = mat4x4_left->raw[12]*mat4x4_right->raw[1] + mat4x4_left->raw[13]*mat4x4_right->raw[5] + mat4x4_left->raw[14]*mat4x4_right->raw[9] + mat4x4_left->raw[15]*mat4x4_right->raw[13];
     mat4x4_res->raw[14] = mat4x4_left->raw[12]*mat4x4_right->raw[2] + mat4x4_left->raw[13]*mat4x4_right->raw[6] + mat4x4_left->raw[14]*mat4x4_right->raw[10] + mat4x4_left->raw[15]*mat4x4_right->raw[14];
-    mat4x4_left->raw[15] = mat4x4_left->raw[12]*mat4x4_right->raw[3] + mat4x4_left->raw[13]*mat4x4_right->raw[7] + mat4x4_left->raw[14]*mat4x4_right->raw[11] + mat4x4_left->raw[15]*mat4x4_right->raw[15];
+    mat4x4_res->raw[15] = mat4x4_left->raw[12]*mat4x4_right->raw[3] + mat4x4_left->raw[13]*mat4x4_right->raw[7] + mat4x4_left->raw[14]*mat4x4_right->raw[11] + mat4x4_left->raw[15]*mat4x4_right->raw[15];
 
     return mat4x4_res;
 }

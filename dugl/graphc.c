@@ -674,7 +674,10 @@ int DgInit() {
 	char Error=0;
 	short *ListMode;
 
-	if (!DetectMMX()) return 0;
+	if (!DetectMMX())
+		return 0;
+	if (!InitDWorkers(0))
+		return 0;
 
 	bzero(&r,sizeof(__dpmi_regs));
    	r.d.eax = 0x4f00;

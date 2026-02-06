@@ -33,6 +33,7 @@
 				<Option createDefFile="1" />
 				<Compiler>
 					<Add option="-march=pentium-mmx" />
+					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-m32" />
@@ -60,6 +61,7 @@
 		<Unit filename="DMouse.h" />
 		<Unit filename="DTimer.h" />
 		<Unit filename="DUGL.h" />
+		<Unit filename="DWORKER.h" />
 		<Unit filename="FILL.ASM">
 			<Option compile="0" />
 			<Option link="0" />
@@ -113,6 +115,9 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="transf.asm" />
+		<Unit filename="workerc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

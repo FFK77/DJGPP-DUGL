@@ -14,6 +14,7 @@ extern "C" {
 
 int  DgInstallTimer(unsigned int Freq);  // Min Freq 19
 void DgUninstallTimer();
+void DgDelay(unsigned int ms); // wait for ms milli seconds, if Timer not installed, exit immediately
 int  InitSynch(void *SynchBuff,int *Pos,float Freq); // init Synch buffer and start synching
 void StartSynch(void *SynchBuff,int *Pos); // Restart Synching
 int  Synch(void *SynchBuff,int *Pos); // synch

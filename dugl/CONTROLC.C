@@ -231,6 +231,15 @@ int  WaitSynch(void *SynchBuff,int *Pos) {
    return 1;
 }
 
+void DgDelay(unsigned int ms) {
+    unsigned int timeout = DgTime + ((ms * DgTimerFreq) / 1000);
+
+    while (DgTime < timeout) {
+        sched_yield();
+    }
+}
+
+
 
 
 

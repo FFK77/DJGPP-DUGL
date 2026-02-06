@@ -220,15 +220,25 @@ void ReverseBuffBytes(void *BuffPtr, unsigned int BuffSize);
            }
 #endif
 
-// MGraph.h ------------------------------------------------
+// DWorker ------------------------------------------------
+
+#define DWORKERS_DEFAULT_MAX_COUNT  128
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void MSetDeltaOrgX(int IdMSurf, int DeltaOrgX);
+bool InitDWorkers(unsigned int MAX_DWorker);
+void DestroyDWorkers();
 
 #ifdef __cplusplus
            }
 #endif
+
+typedef struct
+{   int         	Sign;       // = "DMTX"
+    pthread_mutex_t mutex;
+} DMutex;
+
+
 

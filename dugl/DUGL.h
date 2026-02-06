@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <pthread.h>
 
 #include "DGraph.h"
 #include "DFONT.h"
@@ -14,6 +15,7 @@
 #include "DMouse.h"
 #include "DTimer.h"
 #include "DMATH3D.h"
+#include "DWORKER.h"
 #include "DIPX.h"
 
 #endif // #ifndef DUGL_H

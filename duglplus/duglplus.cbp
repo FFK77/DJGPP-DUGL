@@ -51,7 +51,6 @@
 		</Compiler>
 		<Unit filename="DGUI.H" />
 		<Unit filename="DIMAGE.H" />
-		<Unit filename="DMATH3D.H" />
 		<Unit filename="DSOUND.H" />
 		<Unit filename="DUGLPLUS.H" />
 		<Unit filename="FLYOBJ.CC" />
@@ -63,9 +62,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="Img-pngc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="MATH3DC.C">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="SOUNDC.C">

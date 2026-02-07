@@ -49,6 +49,7 @@
 		<Unit filename="CONTROLC.C">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="DCONTAIN.h" />
 		<Unit filename="DFONT.ASM" />
 		<Unit filename="DFONT.h" />
 		<Unit filename="DFONTC.C">
@@ -81,6 +82,9 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="TIMER.ASM" />
+		<Unit filename="containc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="cpuid.asm" />
 		<Unit filename="fill16.asm">
 			<Option compile="0" />

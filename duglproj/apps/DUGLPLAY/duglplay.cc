@@ -66,6 +66,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dir.h>
+#include <math.h>
 #include <dpmi.h>
 
 #include <dugl.h>
@@ -90,19 +91,15 @@ void Scan422YUV2RGB16(void *YSrcPtr, void *USrcPtr, void *VSrcPtr, void *RGB16Ds
 bool BlurDisplay=true, SynchScreen=false, DropFrames=false, FitVideo = false,
      FullScrShowTime=true,FullScrShowFps=false, InterpolateUV=false;
 bool MouseSupported;
+char keybMapFileName[256] = "qwerteng.map";
 
 unsigned int screenX = 640, screenY = 480;
 //unsigned int screenX = 320, screenY = 240;
 //unsigned int screenX = 1024, screenY = 768;
 // full screen frame - quad drawing
 float DefMsPosX = 0.5, DefMsPosY = 0.5;
-int Pt1[] = {   0,   0,   0,   0,   0 };
-int Pt2[] = { 639,   0,   0,   0,   0 };
-int Pt3[] = { 639, 479,   0,   0,   0 };
-int Pt4[] = {   0, 479,   0,   0,   0 };
-int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
 
-Surf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
+DgSurf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 
 unsigned char palette[1024];
 String CurVidFile;
@@ -119,9 +116,9 @@ typedef struct {
   int   height;
 } SYUVData;
 
-void YUV2RGB_F420(Surf *S, SYUVData *pYUVDATA);
-void YUV2RGB_F422(Surf *S, SYUVData *pYUVDATA);
-void YUV2RGB_F444(Surf *S, SYUVData *pYUVDATA);
+void YUV2RGB_F420(DgSurf *S, SYUVData *pYUVDATA);
+void YUV2RGB_F422(DgSurf *S, SYUVData *pYUVDATA);
+void YUV2RGB_F444(DgSurf *S, SYUVData *pYUVDATA);
 
 #define BUFFER_SIZE 1024*8
 FILE * vidfile;
@@ -137,7 +134,7 @@ int framenum,
     frameskipped=0;
 int DefTypeOpen=0;
 
-Surf *Sframe16; // Surf where the 16bpp video frame will be stored
+DgSurf *Sframe16; // Surf where the 16bpp video frame will be stored
 
 
 unsigned char *uFinal = NULL;
@@ -149,7 +146,7 @@ SMpegInfo  curMpegInf;
 // return 0 if success, code error if failed
 int OpenVidMPEG(char *FileName);
 // return 1 if new frame found, 0 else
-int GetNextFrameMPEG(Surf *S16, unsigned int nFramesToDrop);
+int GetNextFrameMPEG(DgSurf *S16, unsigned int nFramesToDrop);
 // close an opened video
 void CloseVidMPEG();
 
@@ -173,13 +170,13 @@ unsigned int countBufferReads = 0;
 
 int ogg_buffer_data(FILE *fIn, ogg_sync_state *oy);
 int ogg_queue_page(ogg_page *page);
-void OGG_YUV2RGB_F420(Surf *S, th_ycbcr_buffer &ycbcr);
-void OGG_YUV2RGB_F422(Surf *S, th_ycbcr_buffer &ycbcr);
-void OGG_YUV2RGB_F444(Surf *S, th_ycbcr_buffer &ycbcr);
+void OGG_YUV2RGB_F420(DgSurf *S, th_ycbcr_buffer &ycbcr);
+void OGG_YUV2RGB_F422(DgSurf *S, th_ycbcr_buffer &ycbcr);
+void OGG_YUV2RGB_F444(DgSurf *S, th_ycbcr_buffer &ycbcr);
 // return 0 if success, code error if failed
 int OpenVidOGG(char *FileName);
 // return 1 if new frame found, 0 else
-int GetNextFrameOGG(Surf *S16, unsigned int nFramesToDrop);
+int GetNextFrameOGG(DgSurf *S16, unsigned int nFramesToDrop);
 // close an opened video
 void CloseVidOGG();
 
@@ -196,7 +193,7 @@ SYUVData  yuvDataYUV4MPEG;
 // return 0 if success, code error if failed
 int OpenVidYUV4MPEG(char *FileName);
 // return 1 if new frame found, 0 else
-int GetNextFrameYUV4MPEG(Surf *S16, unsigned int nFramesToDrop);
+int GetNextFrameYUV4MPEG(DgSurf *S16, unsigned int nFramesToDrop);
 // close an opened video
 void CloseVidYUV4MPEG();
 
@@ -204,9 +201,9 @@ void CloseVidYUV4MPEG();
 
 //******************
 // FONT
-FONT F1;
+DFONT F1;
 // mouse View
-View MsV;
+DgView MsV;
 // keyborad map
 KbMAP *KM;
 unsigned char keyCode;
@@ -228,7 +225,7 @@ ImgButton *BtPlay,*BtPauseCont,*BtExit;
 Label *LbTime;
 HzSlider *HSldAdv;
 CocheBox *CBxLoop;
-Surf *ImgPlay,*ImgExit,*ImgPCont;
+DgSurf *ImgPlay,*ImgExit,*ImgPCont;
 
 // glabal var
 int redrawVid=1;
@@ -283,7 +280,7 @@ GraphBox *GphBAbout;
 Button *BtOkAbout;
 // events
 void BtOkAboutClick(),GphBDrawAbout(GraphBox *Me),OnGphBScanAbout(GraphBox *Me);
-Surf *ImgLicense;
+DgSurf *ImgLicense;
 // data
 int  RotPosSynch;
 char RotSynchBuff[SIZE_SYNCH_BUFF];
@@ -291,7 +288,7 @@ char RotSynchBuff[SIZE_SYNCH_BUFF];
 // return 0 if success, code error if failed
 int OpenVid(char *FileName);
 // return 1 if new frame found, 0 else
-int GetNextFrame(Surf *S16, unsigned int nFramesToDrop);
+int GetNextFrame(DgSurf *S16, unsigned int nFramesToDrop);
 // close an opened video
 void CloseVid();
 // utils
@@ -301,18 +298,18 @@ bool IsFileExist(const char *fname);
 void LoadConfig();
 
 int main (int argc, char ** argv) {
-    LoadConfig();
-    Init3DMath(); // dugl+
-
-    if (!InitVesa())
+    if (!DgInit())
       { printf("DUGL init error\n"); exit(-1); }
+
+    LoadConfig();
+
 
     // init video mode
     if (!InitVesaMode(screenX,screenY,16,1)) {
        if(screenX!=640 || screenY!=480) {
          screenX=640; screenY=480;
          if (!InitVesaMode(screenX,screenY,16,1)) {
-            printf("VESA mode error\n"); CloseVesa(); exit(-1);
+            printf("VESA mode error\n"); DgQuit(); exit(-1);
          }
        }
     }
@@ -354,34 +351,34 @@ int main (int argc, char ** argv) {
     else
       EnableGUI = 1; // enable GUI if no param
 
-    if (!LoadKbMAP(&KM,"azertfr.map")) {
-      printf("Error loading azertfr.map\n"); exit(-1); }
+    if (!LoadKbMAP(&KM,keybMapFileName)) {
+      printf("Error loading keyboard map '%s'\n", keybMapFileName); exit(-1); }
 
     // load font
-    if (!LoadFONT(&F1,"hello.chr")) {
-      printf("Error loading hello.chr\n"); exit(-1); }
+    if (!LoadDFONT(&F1,"helloc.chr")) {
+      printf("Error loading helloc.chr\n"); exit(-1); }
 
     // init the lib
 
     if (!DgInstallTimer(100)) {
-       CloseVesa(); printf("Timer error\n"); exit(-1);
+       DgQuit(); printf("Timer error\n"); exit(-1);
     }
     if (!InstallKeyboard()) {
-       CloseVesa(); DgUninstallTimer();
+       DgQuit(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
     }
     if (!SetKbMAP(KM)) {
-       DgUninstallTimer(); UninstallKeyboard(); CloseVesa();
+       DgUninstallTimer(); UninstallKeyboard(); DgQuit();
        printf("Error setting keyborad map\n");  exit(-1);
     }
     MouseSupported = (InstallMouse()!=0);
 
 
-    SetSurf(&VSurf[0]);
+    DgSetCurSurf(&VSurf[0]);
     Clear16(0); // clear by black
 
     // set font
-    SetFONT(&F1);
+    SetDFONT(&F1);
     // mouse
     if (MouseSupported) {
        // set mouse pointer Orig to the upper left corner
@@ -446,11 +443,11 @@ int main (int argc, char ** argv) {
       // synch screen display
       float avgFps=SynchAverageTime(SynchBuff),
             lastFps=SynchLastTime(SynchBuff);
-      if (lastFps <= 0.1f)
-        __dpmi_yield();
+      //if (lastFps <= 0.1f)
+      //  __dpmi_yield();
 
 
-      SetSurf(rendSurf16);
+      DgSetCurSurf(rendSurf16);
       FREE_MMX();
       // get next frame if it's time
       if (VidOpen) {
@@ -521,25 +518,20 @@ int main (int argc, char ** argv) {
           OnBtPlayClick();
         if (WH->CurWinNode->Item==MWDPlayer) {
           switch (WH->Key) {
-            case 60 : OnMenuInterpolateUV(); break; // F2
-            case 61 : OnMenuOpenVid(); break; // F3
-            case 62 : OnMenuCloseVid(); break; // F4
-            case 67 : CBxLoop->SetTrue(!CBxLoop->True); break; // F9
-            case 68 : DropFrames = !DropFrames; break; // F10
-            case 0x57 : FitVideo = !FitVideo; redrawVid=1; break; // F11
-            case 66 : OnMenuVSynch(); break; // F8
-            case 63 : OnMenuSmoothFS(); break; // F5
-            case 64 : OnMenuFSFps(); break; // F6
-            case 65 : OnMenuFSTime(); break; // F7
+            case KB_KEY_F2 : OnMenuInterpolateUV(); break; // F2
+            case KB_KEY_F3 : OnMenuOpenVid(); break; // F3
+            case KB_KEY_F4 : OnMenuCloseVid(); break; // F4
+            case KB_KEY_F9 : CBxLoop->SetTrue(!CBxLoop->True); break; // F9
+            case KB_KEY_F10 : DropFrames = !DropFrames; break; // F10
+            case KB_KEY_F11 : FitVideo = !FitVideo; redrawVid=1; break; // F11
+            case KB_KEY_F8 : OnMenuVSynch(); break; // F8
+            case KB_KEY_F5 : OnMenuSmoothFS(); break; // F5
+            case KB_KEY_F6 : OnMenuFSFps(); break; // F6
+            case KB_KEY_F7 : OnMenuFSTime(); break; // F7
           }
         }
       }
       else {
-        // set poly coord for full screen
-        Pt1[0]=CurSurf.MinX;    Pt1[1]=CurSurf.MinY;
-        Pt2[0]=CurSurf.MaxX;    Pt2[1]=CurSurf.MinY;
-        Pt3[0]=CurSurf.MaxX;    Pt3[1]=CurSurf.MaxY;
-        Pt4[0]=CurSurf.MinX;    Pt4[1]=CurSurf.MaxY;
         // get key
         GetKey(&keyCode, &keyFLAG);
         // space + enter : toogle full screen or back to gui if space+enter
@@ -551,39 +543,38 @@ int main (int argc, char ** argv) {
         if (keyCode==0x19 &&  (keyFLAG&KB_ALT_PR))
           OnBtPlayClick();
 
-        if (keyCode==67) CBxLoop->SetTrue(!CBxLoop->True);
-        if (keyCode==0x57) { FitVideo = !FitVideo; redrawVid=1; }// F11
-        if (keyCode==68) DropFrames = !DropFrames; // F10
-        if (keyCode==66) OnMenuVSynch();
-        if (keyCode==63) OnMenuSmoothFS();
-        if (keyCode==64) OnMenuFSFps();
-        if (keyCode==65) OnMenuFSTime();
-        if (keyCode==60) OnMenuInterpolateUV(); // F2
+        if (keyCode==KB_KEY_F9) CBxLoop->SetTrue(!CBxLoop->True);
+        if (keyCode==KB_KEY_F11) { FitVideo = !FitVideo; redrawVid=1; }// F11
+        if (keyCode==KB_KEY_F10) DropFrames = !DropFrames; // F10
+        if (keyCode==KB_KEY_F8) OnMenuVSynch();
+        if (keyCode==KB_KEY_F5) OnMenuSmoothFS();
+        if (keyCode==KB_KEY_F6) OnMenuFSFps();
+        if (keyCode==KB_KEY_F7) OnMenuFSTime();
+        if (keyCode==KB_KEY_F2) OnMenuInterpolateUV(); // F2
 
         // FULL screen
         if (VidOpen)
         {
+            FREE_MMX();
+
           if(FitVideo)
           {
-            Poly16(&ListPt1,Sframe16,POLY16_TEXT,0);
+            ResizeViewSurf16(Sframe16, 0, 0);
           }
           else {
             Clear16(0); // clear by black
+//            //PutSurf16(Sframe16, (CurSurf.MaxX+CurSurf.MinX-Sframe16->ResH)/2,
             PutSurf16(Sframe16, (CurSurf.MaxX+CurSurf.MinX-Sframe16->ResH)/2,
                 (CurSurf.MaxY+CurSurf.MinY-Sframe16->ResV)/2, 0);
           }
-          FREE_MMX();
-          //PutSurf16(&Sframe16,0,0,0);
         }
       }
-
-
 
       // display
       if (EnableGUI) { // GUI
         keyCode = WH->Key;
         keyFLAG = WH->KeyFLAG;
-        SetSurf(rendSurf16);
+        DgSetCurSurf(rendSurf16);
         FREE_MMX();
         // draw the GUI
         WH->DrawSurf(&CurSurf);
@@ -591,55 +582,57 @@ int main (int argc, char ** argv) {
         if(MouseSupported)
            PutMaskSurf16(MsPtr16,MsX,MsY,0);
         // draw the GUI
-        DGWaitRetrace();
+        //DGWaitRetrace();
         SurfCopy(&VSurf[0], rendSurf16);
         FREE_MMX();
       } else { // full screen
          if (BlurDisplay) {
             BlurSurf16(blurSurf16,rendSurf16);
-            SetSurf(blurSurf16);
+            DgSetCurSurf(blurSurf16);
          }
          else
-           SetSurf(rendSurf16);
-         FREE_MMX();
+           DgSetCurSurf(rendSurf16);
          // display AVG FPS
 
-         int Xtext,Ytext,WidthText;
+         int Xtext,Ytext,widthText;
          if (FullScrShowFps) {
+           FREE_MMX();
            ClearText();
            char text[100];
            SetTextCol(0xffff);
            sprintf(text,"%03i fps",(int)(1.0/avgFps));
+           FREE_MMX();
            Xtext=GetXOutTextMode(text,AJ_RIGHT);
            Ytext=FntY+FntLowPos-1;
-           WidthText=LargText(text);
-           barblnd16(Xtext,Ytext,Xtext+WidthText,Ytext+FntHaut,0|(5<<24));
+           widthText=WidthText(text);
+           barblnd16(Xtext,Ytext,Xtext+widthText,Ytext+FntHaut,0|(5<<24));
 
            OutText16Mode(text,AJ_RIGHT);
            FREE_MMX();
          }
          if (FullScrShowTime) {
+           FREE_MMX();
            ClearText();
            SetTextCol(0xffff);
            Xtext=GetXOutTextMode(playTime,AJ_LEFT);
            Ytext=FntY+FntLowPos-1;
-           WidthText=LargText(playTime);
-           barblnd16(Xtext,Ytext,Xtext+WidthText,Ytext+FntHaut,0|(5<<24));
+           widthText=WidthText(playTime);
+           barblnd16(Xtext,Ytext,Xtext+widthText,Ytext+FntHaut,RGB16(0,0,255)|(5<<24));
            OutText16Mode(playTime,AJ_LEFT);
          }
+         FREE_MMX();
          DGWaitRetrace();
          if (BlurDisplay)
            SurfCopy(&VSurf[0], blurSurf16);
          else
            SurfCopy(&VSurf[0], rendSurf16);
-         FREE_MMX();
       }
 
       // alt+ X : exit
-      if (keyCode==45 && /* 'X'|'x' */ (keyFLAG&KB_ALT_PR))
+      if (keyCode==KB_KEY_QWERTY_X && /* 'X'|'x' */ (keyFLAG&KB_ALT_PR))
          OnMenuExit();
       // Alt + S  = bmp screen shot
-      if (keyCode == 0x1f && (keyFLAG&KB_ALT_PR)) {
+      if (keyCode == KB_KEY_QWERTY_S && (keyFLAG&KB_ALT_PR)) {
          bool bSucc = false;
          for (unsigned int ci='R';ci<='Z';ci++) {
             scrFileName[7]=(char)(ci);
@@ -656,7 +649,7 @@ int main (int argc, char ** argv) {
     }
 
 
-    CloseVesa();
+    DgQuit();
     UninstallKeyboard();
     DgUninstallTimer();
     if(MouseSupported)
@@ -668,7 +661,7 @@ int main (int argc, char ** argv) {
 // DUGL Util waitRetrace
 void DGWaitRetrace() {
   if (!SynchScreen) return;
-  if (CurMode.VModeFlag|VMODE_VGA)
+  if (CurDgfxMode->VModeFlag|VMODE_VGA)
      WaitRetrace(); // VGA wait retrace
   else
      ViewSurfWaitVR(0);
@@ -727,7 +720,7 @@ void OnMenuCloseVid() {
 
 void OnMenuExit() {
   CloseVid();
-  CloseVesa();
+  DgQuit();
   UninstallKeyboard();
   DgUninstallTimer();
   if(MouseSupported)
@@ -761,16 +754,12 @@ void GphBDrawVideo(GraphBox *Me) {
 
    // opened video ?
    if (VidOpen==1 &&  FrameAvlbl==1 && (!VidEnded)) {
-      ClearSurf16(WH->m_GraphCtxt->WinGrisF);
       if(FitVideo)
       {
-        Pt1[0]=GphBVideo->VGraphBox.MinX;      Pt1[1]=GphBVideo->VGraphBox.MinY;
-        Pt2[0]=GphBVideo->VGraphBox.MaxX;      Pt2[1]=GphBVideo->VGraphBox.MinY;
-        Pt3[0]=GphBVideo->VGraphBox.MaxX;      Pt3[1]=GphBVideo->VGraphBox.MaxY;
-        Pt4[0]=GphBVideo->VGraphBox.MinX;      Pt4[1]=GphBVideo->VGraphBox.MaxY;
-        Poly16(&ListPt1,Sframe16,POLY16_TEXT,0);
+        ResizeViewSurf16(Sframe16, 0, 0);
       }
       else {
+        ClearSurf16(WH->m_GraphCtxt->WinGrisF);
         PutSurf16(Sframe16,
                   (GphBVideo->VGraphBox.MaxX+GphBVideo->VGraphBox.MinX-Sframe16->ResH)/2,
                   (GphBVideo->VGraphBox.MaxY+GphBVideo->VGraphBox.MinY-Sframe16->ResV)/2,
@@ -884,83 +873,99 @@ void GphBDrawAbout(GraphBox *Me) {
    OutText16Mode(text.StrPtr, AJ_MID);
    FREE_MMX();
 
-   xImgLic=((Me->XC2+Me->XC1)-ImgLicense->ResH)/2+5+ftcos[RotPosSynch&255]*5.0;
-   yImgLic=10+ftsin[RotPosSynch&255]*5.0;
+   xImgLic=((Me->XC2+Me->XC1)-ImgLicense->ResH)/2+5+cosf(RotPosSynch&255)*5.0;
+   yImgLic=10+sinf(RotPosSynch&255)*5.0;
    PutMaskSurf16(ImgLicense,xImgLic,yImgLic,0);
    FREE_MMX();
 }
 
 void LoadConfig()
 {
-  FILE *fConfig = fopen("DUGLPLAY.CFG","rt");
-  String lineID(1024);
-  String lineInfo(1024);
-  String *sInfoName;
-  ListString *LSParams;
-  ListString *LSTmp;
-  int i;
+    char infoName[256]="";
+    DFileBuffer *fileBuffer = CreateDFileBuffer(0);
 
-  if(fConfig == NULL)
-    return;
-  for(;;) {
-    if(fgets(lineID.StrPtr, 1024, fConfig) == NULL) break;
-    if(fgets(lineInfo.StrPtr, 1024, fConfig) == NULL) break;
-    lineID.Del13_10();
-    lineInfo.Del13_10();
-    // remove comments
-    LSTmp = lineID.Split(';');
-    if(LSTmp != NULL) {
-      lineID = *(*LSTmp)[0];
-      delete LSTmp;
+    DSplitString *ListInfoLine = CreateDSplitString(0, 0);
+    DSplitString *ListInfoIndex = CreateDSplitString(0, 0);
+    if (fileBuffer == NULL || ListInfoLine == NULL || ListInfoIndex == NULL) {
+        return;
     }
-    LSTmp = lineInfo.Split(';');
-    if(LSTmp != NULL) {
-      lineInfo = *(*LSTmp)[0];
-      delete LSTmp;
+    if (!OpenFileDFileBuffer(fileBuffer, "DUGLPLAY.CFG", "rt"))
+    {
+        DestroyDFileBuffer(fileBuffer);
+        DestroyDSplitString(ListInfoLine);
+        DestroyDSplitString(ListInfoIndex);
+        return;
     }
-    //---
-    if(lineID.Length()==0) break;
-    if(lineInfo.Length()==0) break;
-    // extract config
-    sInfoName = lineID.SubString(0, '[', ']');
-    LSParams = lineInfo.Split(',');
+	for(;!IsEndOfFileDFileBuffer(fileBuffer);) {
+		if ((ListInfoLine->globLen = GetLineDFileBuffer(fileBuffer, ListInfoLine->globStr, ListInfoLine->maxGlobLength)) == 0 &&
+            IsEndOfFileDFileBuffer(fileBuffer)) {
+                break;
+		}
+		TrimGlobStringDSplitString(ListInfoLine);
+		// ignore if empty or contain comments only
+		if (ListInfoLine->globStr[0] == '\0' || ListInfoLine->globStr[0] == ';')
+			continue;
+        // remove any middle comment
+		if (splitDSplitString(ListInfoLine, NULL, ';', false) > 0) {
+		    TrimStringsDSplitString(ListInfoLine);
+		    unsigned int lenInfo = strlen(ListInfoLine->ListStrings[0]);
+		    // check if it start with '[' and end with ']'
+		    if (lenInfo <=2 || ListInfoLine->ListStrings[0][0]!='[' || ListInfoLine->ListStrings[0][lenInfo-1]!=']') {
+                break; // failure
+		    }
+		    strncpy(infoName, &ListInfoLine->ListStrings[0][1], lenInfo-2);
+		    infoName[lenInfo-2] = '\0';
+		    // search for informations
+            if ((ListInfoIndex->globLen = GetLineDFileBuffer(fileBuffer, ListInfoIndex->globStr, ListInfoIndex->maxGlobLength)) == 0 && IsEndOfFileDFileBuffer(fileBuffer)) break;
+            TrimGlobStringDSplitString(ListInfoIndex);
+            if (ListInfoIndex->globStr[0] == '\0' || ListInfoIndex->globStr[0] == ';')
+                break;
+            if (splitDSplitString(ListInfoIndex, NULL, ',', false) > 0) {
+                TrimStringsDSplitString(ListInfoIndex);
 
-    if(*sInfoName == "VideoMode" && LSParams->NbElement() >= 2) {
-      screenX = (*LSParams)[0]->GetInt();
-      screenY = (*LSParams)[1]->GetInt();
-    }
-    else if(*sInfoName == "MousePosition" && LSParams->NbElement() >= 2) {
-      DefMsPosX = (float)((*LSParams)[0]->GetDouble());
-      if(DefMsPosX<0.0 || DefMsPosX>1.0) DefMsPosX = 0.5;
-      DefMsPosY = (float)((*LSParams)[1]->GetDouble());
-      if(DefMsPosY<0.0 || DefMsPosY>1.0) DefMsPosY = 0.5;
-    }
-    else if(*sInfoName == "VerticalSynch" && LSParams->NbElement() >= 1) {
-      SynchScreen = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "DropFrames" && LSParams->NbElement() >= 1) {
-      DropFrames = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "InterpolateUV" && LSParams->NbElement() >= 1) {
-      InterpolateUV = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "FitScreen" && LSParams->NbElement() >= 1) {
-      FitVideo = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "FullScrSmooth" && LSParams->NbElement() >= 1) {
-      BlurDisplay = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "FullScrShowTime" && LSParams->NbElement() >= 1) {
-      FullScrShowTime = (bool)((*LSParams)[0]->GetInt());
-    }
-    else if(*sInfoName == "FullScrShowFps" && LSParams->NbElement() >= 1) {
-      FullScrShowFps = (bool)((*LSParams)[0]->GetInt());
-    }
-
-    delete sInfoName;
-    delete LSParams;
-  }
-  fclose(fConfig);
+                if(strcmp(infoName,"VideoMode") == 0 && ListInfoIndex->countStrings >= 2) {
+                  screenX = atoi(ListInfoIndex->ListStrings[0]);
+                  screenY = atoi(ListInfoIndex->ListStrings[1]);
+                }
+                else if(strcmp(infoName,"KeyboardMap") == 0  && ListInfoIndex->countStrings >= 1) {
+                  if (IsFileExist(ListInfoIndex->ListStrings[0])) {
+                    strcpy(keybMapFileName, ListInfoIndex->ListStrings[0]);
+                  }
+                }
+                else if(strcmp(infoName,"MousePosition") == 0  && ListInfoIndex->countStrings >= 2) {
+                  DefMsPosX = atof(ListInfoIndex->ListStrings[0]);
+                  if(DefMsPosX<0.0 || DefMsPosX>1.0) DefMsPosX = 0.5;
+                  DefMsPosY = atof(ListInfoIndex->ListStrings[1]);
+                  if(DefMsPosY<0.0 || DefMsPosY>1.0) DefMsPosY = 0.5;
+                }
+                else if(strcmp(infoName,"VerticalSynch") == 0  && ListInfoIndex->countStrings >= 1) {
+                  SynchScreen = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"DropFrames") == 0  && ListInfoIndex->countStrings >= 1) {
+                  DropFrames = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"InterpolateUV") == 0  && ListInfoIndex->countStrings >= 1) {
+                  InterpolateUV = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"FitScreen") == 0  && ListInfoIndex->countStrings >= 1) {
+                  FitVideo = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"FullScrSmooth") == 0  && ListInfoIndex->countStrings >= 1) {
+                  BlurDisplay = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"FullScrShowTime") == 0  && ListInfoIndex->countStrings >= 1) {
+                  FullScrShowTime = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+                else if(strcmp(infoName,"FullScrShowFps") == 0  && ListInfoIndex->countStrings >= 1) {
+                  FullScrShowFps = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                }
+            }
+		}
+	}
+	CloseFileDFileBuffer(fileBuffer);
+	DestroyDFileBuffer(fileBuffer);
+	DestroyDSplitString(ListInfoLine);
+	DestroyDSplitString(ListInfoIndex);
 }
 
 
@@ -992,12 +997,6 @@ int OpenVidMPEG(char *FileName)
     else
        VideoFps = 25.0f;
 
-    // texture pos for poly
-    Pt1[3]=0;                  Pt1[4]=0;
-    Pt2[3]=curMpegInf.width-1; Pt2[4]=0;
-    Pt3[3]=curMpegInf.width-1; Pt3[4]=curMpegInf.height-1;
-    Pt4[3]=0;	               Pt4[4]=curMpegInf.height-1;
-
     if (CreateSurf(&Sframe16, curMpegInf.width, curMpegInf.height, 16)==0)
         return 2; // no mem
 
@@ -1022,7 +1021,7 @@ int OpenVidMPEG(char *FileName)
     return 0; // success
 }
 // return 1 if new frame found, 0 else
-int GetNextFrameMPEG(Surf *S16, unsigned int nFramesToDrop)
+int GetNextFrameMPEG(DgSurf *S16, unsigned int nFramesToDrop)
 {   SYUVData  yuvData;
 
     if (DecodeNextMpegFrame(nFramesToDrop)) {
@@ -1188,11 +1187,6 @@ int OpenVidOGG(char *FileName) {
       VideoFps = (float)(ti.fps_numerator)/(float)(ti.fps_denominator);
     else
       VideoFps = 25;
-    // texture pos for poly
-    Pt1[3]=ti.pic_x;                Pt1[4]=ti.frame_height-(ti.pic_height-1)-ti.pic_y;
-    Pt2[3]=ti.pic_width-1+ti.pic_x; Pt2[4]=ti.frame_height-(ti.pic_height-1)-ti.pic_y;
-    Pt3[3]=ti.pic_width-1+ti.pic_x; Pt3[4]=ti.frame_height-ti.pic_y-1;
-    Pt4[3]=ti.pic_x;	            Pt4[4]=ti.frame_height-ti.pic_y-1;
 
     if (ti.pixel_fmt>=4 || ti.pixel_fmt==TH_PF_RSVD)
         failed=4; // invalid pixel format
@@ -1235,9 +1229,9 @@ int OpenVidOGG(char *FileName) {
     return 0; // success
 }
 
-int GetNextFrameOGG(Surf *S16,unsigned int nFramesToDrop) {
+int GetNextFrameOGG(DgSurf *S16,unsigned int nFramesToDrop) {
     String text;
-    Surf OldSurf;
+    DgSurf OldSurf;
     th_ycbcr_buffer ycbcr;
     int idx,iw;
     int th_decode_res       = -1;
@@ -1349,7 +1343,7 @@ int ogg_queue_page(ogg_page *page) {
 }
 
 
-void OGG_YUV2RGB_F420(Surf *S, th_ycbcr_buffer &ycbcr) {
+void OGG_YUV2RGB_F420(DgSurf *S, th_ycbcr_buffer &ycbcr) {
     SYUVData  yuvData = { ycbcr[0].data, ycbcr[1].data, ycbcr[2].data,
                           ycbcr[0].stride, ycbcr[1].stride, ycbcr[2].stride,
                           ycbcr[0].width, ycbcr[0].height };
@@ -1357,7 +1351,7 @@ void OGG_YUV2RGB_F420(Surf *S, th_ycbcr_buffer &ycbcr) {
     YUV2RGB_F420(S, &yuvData);
 }
 
-void OGG_YUV2RGB_F422(Surf *S, th_ycbcr_buffer &ycbcr) {
+void OGG_YUV2RGB_F422(DgSurf *S, th_ycbcr_buffer &ycbcr) {
     SYUVData  yuvData = { ycbcr[0].data, ycbcr[1].data, ycbcr[2].data,
                           ycbcr[0].stride, ycbcr[1].stride, ycbcr[2].stride,
                           ycbcr[0].width, ycbcr[0].height };
@@ -1366,7 +1360,7 @@ void OGG_YUV2RGB_F422(Surf *S, th_ycbcr_buffer &ycbcr) {
 
 }
 
-void OGG_YUV2RGB_F444(Surf *S, th_ycbcr_buffer &ycbcr) {
+void OGG_YUV2RGB_F444(DgSurf *S, th_ycbcr_buffer &ycbcr) {
     SYUVData  yuvData = { ycbcr[0].data, ycbcr[1].data, ycbcr[2].data,
                           ycbcr[0].stride, ycbcr[1].stride, ycbcr[2].stride,
                           ycbcr[0].width, ycbcr[0].height };
@@ -1512,12 +1506,6 @@ int OpenVidYUV4MPEG(char *FileName)
        break;
    }
 
-    // texture pos for poly
-    Pt1[3]=0;               Pt1[4]=0;
-    Pt2[3]=nWithYUV4MPEG-1; Pt2[4]=0;
-    Pt3[3]=nWithYUV4MPEG-1; Pt3[4]=nHeightYUV4MPEG-1;
-    Pt4[3]=0;	            Pt4[4]=nHeightYUV4MPEG-1;
-
     if (CreateSurf(&Sframe16, nWithYUV4MPEG, nHeightYUV4MPEG, 16)==0) {
       free(BuffReadDATAYUV4MPEG);
       BuffReadDATAYUV4MPEG = BuffY = BuffU = BuffV = NULL;
@@ -1555,7 +1543,7 @@ int OpenVidYUV4MPEG(char *FileName)
     return 0; // success
 }
 // return 1 if new frame found, 0 else
-int GetNextFrameYUV4MPEG(Surf *S16, unsigned int nFramesToDrop)
+int GetNextFrameYUV4MPEG(DgSurf *S16, unsigned int nFramesToDrop)
 {
    String strHeader(1024);
    String strSubFrame(1024);
@@ -1700,7 +1688,7 @@ int OpenVid(char *FileName)
     return ret;
 }
 // return 1 if new frame found, 0 else
-int GetNextFrame(Surf *S16, unsigned int nFramesToDrop)
+int GetNextFrame(DgSurf *S16, unsigned int nFramesToDrop)
 {
    switch(kindVidOpened) {
      case 1:
@@ -1735,7 +1723,7 @@ void CloseVid() {
 // general YUV 2 RGB conversion routine
 ///////////////////////////////////////
 
-void YUV2RGB_F420(Surf *S, SYUVData *pYUVDATA) {
+void YUV2RGB_F420(DgSurf *S, SYUVData *pYUVDATA) {
     unsigned char *yFrm    =NULL;
     unsigned char *uFrm    =NULL;
     unsigned char *vFrm    =NULL;
@@ -1796,7 +1784,7 @@ void YUV2RGB_F420(Surf *S, SYUVData *pYUVDATA) {
 
 }
 
-void YUV2RGB_F422(Surf *S, SYUVData *pYUVDATA) {
+void YUV2RGB_F422(DgSurf *S, SYUVData *pYUVDATA) {
     unsigned char *yFrm    =NULL;
     unsigned char *uFrm    =NULL;
     unsigned char *vFrm    =NULL;
@@ -1834,7 +1822,7 @@ void YUV2RGB_F422(Surf *S, SYUVData *pYUVDATA) {
 }
 
 
-void YUV2RGB_F444(Surf *S, SYUVData *pYUVDATA) {
+void YUV2RGB_F444(DgSurf *S, SYUVData *pYUVDATA) {
     unsigned int width       = pYUVDATA->width;
     unsigned int scanlinePtr = S->rlfb;
     unsigned int strides     = 0;

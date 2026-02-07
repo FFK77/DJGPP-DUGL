@@ -47,6 +47,7 @@
 		</Compiler>
 		<Linker>
 			<Add library="dugl" />
+			<Add library="gthreads" />
 			<Add library="duglplus" />
 			<Add library="z" />
 			<Add library="bmpeg" />

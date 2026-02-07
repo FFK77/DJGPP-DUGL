@@ -39,11 +39,11 @@ char *scrFileName="DUGLVEWR.BMP";
 
 //unsigned int screenX = 320, screenY = 400;
 // full screen frame - quad drawing
-int Pt1[] = {   0,   0,   0,   0,   0 };
+/*int Pt1[] = {   0,   0,   0,   0,   0 };
 int Pt2[] = { 639,   0,   0,   0,   0 };
 int Pt3[] = { 639, 479,   0,   0,   0 };
 int Pt4[] = {   0, 479,   0,   0,   0 };
-int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
+int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };*/
 
 DgSurf *MsPtr,*MsPtr16,*rendSurf16,*blurSurf16;
 
@@ -141,23 +141,12 @@ bool IsFileExist(const char *fname);
 bool LoadImg(char *filename, DgSurf **DstSurf);
 
 int main (int argc, char ** argv) {
-    LoadConfig();
-
-    if(CheckWinNT && _os_trueversion==0x532) {
-       printf("WinNT/2k/XP/Vista/7 not supported!\n"); exit(-1); }
-
-    Init3DMath(); // dugl+
-
     if (!DgInit())
       { printf("DUGL init error\n"); exit(-1); }
 
-    // init video mode
-    if (!InitVesaMode(screenX,screenY,16,1)) {
-       screenX = 640; screenY = 480;
-       if (!InitVesaMode(screenX,screenY,16,1)) {
-          printf("VESA mode error\n"); DgQuit(); exit(-1);
-       }
-    }
+    LoadConfig();
+    if(CheckWinNT && _os_trueversion==0x532) {
+       printf("WinNT/2k/XP/Vista/7 not supported!\n"); exit(-1); }
 
     if (CreateSurf(&rendSurf16, screenX, screenY, 16)==0) {
       printf("no mem\n"); exit(-1);
@@ -198,14 +187,23 @@ int main (int argc, char ** argv) {
       printf("Error loading keyboardmap '%s'\n", keybMapFileName); exit(-1); }
 
     // load font
-    if (!LoadDFONT(&F1,"hello.chr")) {
-      printf("Error loading hello.chr\n"); exit(-1); }
+    if (!LoadDFONT(&F1,"helloc.chr")) {
+      printf("Error loading helloc.chr\n"); exit(-1); }
 
-    // init the lib
+
+
+    // init video mode
+    if (!InitVesaMode(screenX,screenY,16,1)) {
+       screenX = 640; screenY = 480;
+       if (!InitVesaMode(screenX,screenY,16,1)) {
+          printf("VESA mode error\n"); DgQuit(); exit(-1);
+       }
+    }
 
     if (!DgInstallTimer(200)) {
        DgQuit(); printf("Timer error\n"); exit(-1);
     }
+
     if (!InstallKeyboard()) {
        DgQuit(); DgUninstallTimer();
        printf("Keyboard error\n");  exit(-1);
@@ -957,117 +955,129 @@ void SmoothCurImg()
 
 void LoadConfig()
 {
-  FILE *fConfig = fopen("DUGLVIEW.CFG","rt");
-  String lineID(1024);
-  String lineInfo(1024);
-  String *sInfoName;
-  ListString *LSParams;
-  ListString *LSTmp;
-  int i;
+    char infoName[256]="";
+    DFileBuffer *fileBuffer = CreateDFileBuffer(0);
 
-  if(fConfig == NULL)
-    return;
-  for(;;) {
-    if(fgets(lineID.StrPtr, 1024, fConfig) == NULL) break;
-    if(fgets(lineInfo.StrPtr, 1024, fConfig) == NULL) break;
-    lineID.Del13_10();
-    lineInfo.Del13_10();
-    // remove comments
-    LSTmp = lineID.Split(';');
-    if(LSTmp != NULL) {
-      lineID = *(*LSTmp)[0];
-      delete LSTmp;
+    DSplitString *ListInfoLine = CreateDSplitString(0, 0);
+    DSplitString *ListInfoIndex = CreateDSplitString(0, 0);
+    if (fileBuffer == NULL || ListInfoLine == NULL || ListInfoIndex == NULL) {
+        return;
     }
-    LSTmp = lineInfo.Split(';');
-    if(LSTmp != NULL) {
-      lineInfo = *(*LSTmp)[0];
-      delete LSTmp;
+    if (!OpenFileDFileBuffer(fileBuffer, "DUGLVIEW.CFG", "rt"))
+    {
+        if (fileBuffer != NULL)
+            DestroyDFileBuffer(fileBuffer);
+        if (ListInfoLine != NULL)
+            DestroyDSplitString(ListInfoLine);
+        if (ListInfoIndex != NULL)
+            DestroyDSplitString(ListInfoIndex);
+        return;
     }
-    //---
-    if(lineID.Length()==0) break;
-    if(lineInfo.Length()==0) break;
-    // extract config
-    sInfoName = lineID.SubString(0, '[', ']');
-    LSParams = lineInfo.Split(',');
+	for(;!IsEndOfFileDFileBuffer(fileBuffer);) {
+		if ((ListInfoLine->globLen = GetLineDFileBuffer(fileBuffer, ListInfoLine->globStr, ListInfoLine->maxGlobLength)) == 0 &&
+            IsEndOfFileDFileBuffer(fileBuffer)) {
+                break;
+		}
+		TrimGlobStringDSplitString(ListInfoLine);
+		// ignore if empty or contain comments only
+		if (ListInfoLine->globStr[0] == '\0' || ListInfoLine->globStr[0] == ';')
+			continue;
+        // remove any middle comment
+		if (splitDSplitString(ListInfoLine, NULL, ';', false) > 0) {
+		    TrimStringsDSplitString(ListInfoLine);
+		    unsigned int lenInfo = strlen(ListInfoLine->ListStrings[0]);
+		    // check if it start with '[' and end with ']'
+		    if (lenInfo <=2 || ListInfoLine->ListStrings[0][0]!='[' || ListInfoLine->ListStrings[0][lenInfo-1]!=']') {
+                break; // failure
+		    }
+		    strncpy(infoName, &ListInfoLine->ListStrings[0][1], lenInfo-2);
+		    infoName[lenInfo-2] = '\0';
+		    // search for informations
+            if ((ListInfoIndex->globLen = GetLineDFileBuffer(fileBuffer, ListInfoIndex->globStr, ListInfoIndex->maxGlobLength)) == 0 && IsEndOfFileDFileBuffer(fileBuffer)) break;
+            TrimGlobStringDSplitString(ListInfoIndex);
+            if (ListInfoIndex->globStr[0] == '\0' || ListInfoIndex->globStr[0] == ';')
+                break;
+            if (splitDSplitString(ListInfoIndex, NULL, ',', false) > 0) {
+                TrimStringsDSplitString(ListInfoIndex);
 
-    if(*sInfoName == "VideoMode" && LSParams->NbElement() >= 2) {
-      screenX = (*LSParams)[0]->GetInt();
-      screenY = (*LSParams)[1]->GetInt();
-    }
-    else if(*sInfoName == "MousePosition" && LSParams->NbElement() >= 2) {
-      DefMsPosX = (float)((*LSParams)[0]->GetDouble());
-      if(DefMsPosX<0.0 || DefMsPosX>1.0) DefMsPosX = 0.5;
-      DefMsPosY = (float)((*LSParams)[1]->GetDouble());
-      if(DefMsPosY<0.0 || DefMsPosY>1.0) DefMsPosY = 0.5;
-    }
-    else if(*sInfoName == "KeyboardMap" && LSParams->NbElement() >= 1) {
-      // keep default keyboard map if filename oversized
-      if ((*LSParams)[0]->Length() <= 255 && IsFileExist((*LSParams)[0]->StrPtr)) {
-        strcpy(keybMapFileName, (*LSParams)[0]->StrPtr);
-      }
-    }
-    else if(*sInfoName == "KeyBWaitPageUP" && LSParams->NbElement() >= 2) {
-      EnableKeyUpPrevPage = (bool)((*LSParams)[0]->GetInt());
-      KeybWaitPrevPage = (float)((*LSParams)[1]->GetDouble());
-      if(KeybWaitPrevPage<0.0) KeybWaitPrevPage = 0.5;
-    }
-    else if(*sInfoName == "KeyBWaitPageDOWN" && LSParams->NbElement() >= 2) {
-      EnableKeyDownNextPage = (bool)((*LSParams)[0]->GetInt());
-      KeybWaitNextPage = (float)((*LSParams)[1]->GetDouble());
-      if(KeybWaitNextPage<0.0) KeybWaitNextPage = 0.25;
-    }
-    else if(*sInfoName == "KeyBWaitStartScroll" && LSParams->NbElement() >= 1) {
-      KeyBWaitStartScroll = (float)((*LSParams)[0]->GetDouble());
-      if(KeyBWaitStartScroll<0.0) KeybWaitNextPage = 0.25;
-    }
-    else if(*sInfoName == "SmoothDownSize" && LSParams->NbElement() >= 3) {
-      EnableSmoothDownSize = (bool)((*LSParams)[0]->GetInt());
-      SmoothDownSizeLevel = (float)((*LSParams)[1]->GetDouble());
-      EnhSmoothDownSizeLowLevel = (float)((*LSParams)[2]->GetDouble());
-      if(SmoothDownSizeLevel<=0.0 || SmoothDownSizeLevel>=1.0)
-        SmoothDownSizeLevel = 0.7; // revert to default value
-      if(EnhSmoothDownSizeLowLevel <0.0 || EnhSmoothDownSizeLowLevel>=SmoothDownSizeLevel)
-        EnhSmoothDownSizeLowLevel = SmoothDownSizeLevel/3.0;
-    }
-    else if(*sInfoName == "SmoothZoom" && LSParams->NbElement() >= 3) {
-      SmoothResize = (bool)((*LSParams)[0]->GetInt());
-      SmoothZoomLimit = (float)((*LSParams)[1]->GetDouble());
-      EnhSmoothZoomLimit = (float)((*LSParams)[2]->GetDouble());
-      if(SmoothZoomLimit<=1.0)
-        SmoothDownSizeLevel = 1.6; // revert to default value
-      if(EnhSmoothZoomLimit <=SmoothZoomLimit)
-        EnhSmoothDownSizeLowLevel = SmoothDownSizeLevel*2.0;
-    }
-    else if(*sInfoName == "MsWheelScrollDir" && LSParams->NbElement() >= 1) {
-      MsWheelScrollDir = (*LSParams)[0]->GetInt();
-      if(MsWheelScrollDir!=1 && MsWheelScrollDir!=-1)
-        MsWheelScrollDir = 1;
-    }
-    else if(*sInfoName == "DefaultTypeOpen" && LSParams->NbElement() >= 1) {
-      iDefTypeOpen = (*LSParams)[0]->GetInt();
-      if(iDefTypeOpen<0 || iDefTypeOpen>7)
-        iDefTypeOpen = 0;
-    }
-    else if(*sInfoName == "EnableDefaultMultiLoad" && LSParams->NbElement() >= 1) {
-      EnableDefaultMultiLoad = (*LSParams)[0]->GetInt();
-      if(EnableDefaultMultiLoad<0 || EnableDefaultMultiLoad>1)
-        EnableDefaultMultiLoad = 0;
-    }
-    else if(*sInfoName == "ImageDisplayMode" && LSParams->NbElement() >= 1) {
-      iDisplayMode = (*LSParams)[0]->GetInt();
-      if(iDisplayMode<0 || iDisplayMode>2)
-        iDisplayMode = 0;
-    }
-    else if(*sInfoName == "CheckWinNT" && LSParams->NbElement() >= 1) {
-      CheckWinNT = (*LSParams)[0]->GetInt();
-    }
+                if(strcmp(infoName,"VideoMode") == 0 && ListInfoIndex->countStrings >= 2) {
+                  screenX = atoi(ListInfoIndex->ListStrings[0]);
+                  screenY = atoi(ListInfoIndex->ListStrings[1]);
+                }
+                else if(strcmp(infoName,"KeyboardMap") == 0  && ListInfoIndex->countStrings >= 1) {
+                  if (IsFileExist(ListInfoIndex->ListStrings[0])) {
+                    strcpy(keybMapFileName, ListInfoIndex->ListStrings[0]);
+                  }
+                }
+                else if(strcmp(infoName,"MousePosition") == 0  && ListInfoIndex->countStrings >= 2) {
+                  DefMsPosX = atof(ListInfoIndex->ListStrings[0]);
+                  if(DefMsPosX<0.0 || DefMsPosX>1.0) DefMsPosX = 0.5;
+                  DefMsPosY = atof(ListInfoIndex->ListStrings[1]);
+                  if(DefMsPosY<0.0 || DefMsPosY>1.0) DefMsPosY = 0.5;
+                }
+                else if(strcmp(infoName,"KeyBWaitPageUP") == 0 && ListInfoIndex->countStrings >= 2) {
+                  EnableKeyUpPrevPage = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                  KeybWaitPrevPage = (float)(atof(ListInfoIndex->ListStrings[1]));
+                  if(KeybWaitPrevPage<0.0) KeybWaitPrevPage = 0.5;
+                }
+                else if(strcmp(infoName,"KeyBWaitPageDOWN") == 0 && ListInfoIndex->countStrings >= 2) {
+                  EnableKeyDownNextPage = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                  KeybWaitNextPage = (float)(atof(ListInfoIndex->ListStrings[1]));
+                  if(KeybWaitNextPage<0.0) KeybWaitNextPage = 0.25;
+                }
+                else if(strcmp(infoName,"KeyBWaitStartScroll") == 0 && ListInfoIndex->countStrings >= 1) {
+                  KeyBWaitStartScroll = (float)(atof(ListInfoIndex->ListStrings[0]));
+                  if(KeyBWaitStartScroll<0.0) KeybWaitNextPage = 0.25;
+                }
+                else if(strcmp(infoName,"SmoothDownSize") == 0 && ListInfoIndex->countStrings >= 3) {
+                  EnableSmoothDownSize = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                  SmoothDownSizeLevel = (float)(atof(ListInfoIndex->ListStrings[1]));
+                  EnhSmoothDownSizeLowLevel = (float)(atof(ListInfoIndex->ListStrings[2]));
+                  if(SmoothDownSizeLevel<=0.0 || SmoothDownSizeLevel>=1.0)
+                    SmoothDownSizeLevel = 0.7; // revert to default value
+                  if(EnhSmoothDownSizeLowLevel <0.0 || EnhSmoothDownSizeLowLevel>=SmoothDownSizeLevel)
+                    EnhSmoothDownSizeLowLevel = SmoothDownSizeLevel/3.0;
+                }
+                else if(strcmp(infoName,"SmoothZoom") == 0 && ListInfoIndex->countStrings >= 3) {
+                  SmoothResize = (bool)(atoi(ListInfoIndex->ListStrings[0]));
+                  SmoothZoomLimit = (float)(atof(ListInfoIndex->ListStrings[1]));
+                  EnhSmoothZoomLimit = (float)(atof(ListInfoIndex->ListStrings[2]));
+                  if(SmoothZoomLimit<=1.0)
+                    SmoothDownSizeLevel = 1.6; // revert to default value
+                  if(EnhSmoothZoomLimit <=SmoothZoomLimit)
+                    EnhSmoothDownSizeLowLevel = SmoothDownSizeLevel*2.0;
+                }
+                else if(strcmp(infoName,"MsWheelScrollDir") == 0 && ListInfoIndex->countStrings >= 1) {
+                  MsWheelScrollDir = atoi(ListInfoIndex->ListStrings[0]);
+                  if(MsWheelScrollDir!=1 && MsWheelScrollDir!=-1)
+                    MsWheelScrollDir = 1;
+                }
+                else if(strcmp(infoName,"DefaultTypeOpen") == 0 && ListInfoIndex->countStrings >= 1) {
+                  iDefTypeOpen = atoi(ListInfoIndex->ListStrings[0]);
+                  if(iDefTypeOpen<0 || iDefTypeOpen>7)
+                    iDefTypeOpen = 0;
+                }
+                else if(strcmp(infoName,"EnableDefaultMultiLoad") == 0 && ListInfoIndex->countStrings >= 1) {
+                  EnableDefaultMultiLoad = (bool)atoi(ListInfoIndex->ListStrings[0]);
+                  if(EnableDefaultMultiLoad<0 || EnableDefaultMultiLoad>1)
+                    EnableDefaultMultiLoad = 0;
+                }
+                else if(strcmp(infoName,"ImageDisplayMode") == 0 && ListInfoIndex->countStrings >= 1) {
+                  iDisplayMode = atoi(ListInfoIndex->ListStrings[0]);
+                  if(iDisplayMode<0 || iDisplayMode>2)
+                    iDisplayMode = 0;
+                }
+                else if(strcmp(infoName,"CheckWinNT") == 0 && ListInfoIndex->countStrings >= 1) {
+                  CheckWinNT = atoi(ListInfoIndex->ListStrings[0]);
+                }
+            }
+		}
+	}
+	CloseFileDFileBuffer(fileBuffer);
+	DestroyDFileBuffer(fileBuffer);
+	DestroyDSplitString(ListInfoLine);
+	DestroyDSplitString(ListInfoIndex);
 
-
-
-    delete sInfoName;
-    delete LSParams;
-  }
-  fclose(fConfig);
 }
 // DUGL Util ----------------------------------------------------
 void DGWaitRetrace() {
@@ -1077,38 +1087,6 @@ void DGWaitRetrace() {
   else
      ViewSurfWaitVR(0);
 }
-
-// resize a 16bpp Surf into an another Surf
-/*void ResizeSurf16(Surf *SDstSurf,Surf *SSrcSurf) {
-  Surf OldSurf,SrcSurf;
-  Surf *SSrc=SSrcSurf;
-  // textured poly points
-  //                 X              Y              Z       XT = U           YT = V
-  int Pt1[5] = { SDstSurf->MinX, SDstSurf->MinY,   0,   SSrcSurf->MinX, SSrcSurf->MinY };
-  int Pt2[5] = { SDstSurf->MaxX, SDstSurf->MinY,   0,   SSrcSurf->MaxX, SSrcSurf->MinY };
-  int Pt3[5] = { SDstSurf->MaxX, SDstSurf->MaxY,   0,   SSrcSurf->MaxX, SSrcSurf->MaxY };
-  int Pt4[5] = { SDstSurf->MinX, SDstSurf->MaxY,   0,   SSrcSurf->MinX, SSrcSurf->MaxY };
-  // points List
-  int ListPt1[] = {  4,  (int)&Pt1, (int)&Pt2, (int)&Pt3, (int)&Pt4 };
-
-  // save the source Surf In case the CurSurf is the source
-  if (SSrcSurf==&CurSurf) {
-     SrcSurf=*SSrcSurf;
-     SSrc=&SrcSurf;
-  }
-
-  // Get Current Surf
-  GetSurf(&OldSurf);
-
-  // set dest Surf as destination
-  SetSurf(SDstSurf);
-
-  // draw the resize polygone inside the dest Surf
-  Poly16(ListPt1, SSrc, POLY16_TEXT, 0);
-
-  // restore
-  SetSurf(&OldSurf);
-} */
 
 bool LoadImg(char *filename, DgSurf **DstSurf)
 {
@@ -1169,7 +1147,6 @@ void OnGphBScanAbout(GraphBox *Me) {
 
 void GphBDrawAbout(GraphBox *Me) {
    String text;
-   int xImgLic,yImgLic;
    ClearSurf16(WH->m_GraphCtxt->WinNoir);
    ClearText();
    SetTextCol(WH->m_GraphCtxt->WinBlanc);
@@ -1183,7 +1160,7 @@ void GphBDrawAbout(GraphBox *Me) {
    sprintf(text.StrPtr,"DUGL %s & DUGL+ %s \n",DUGL_VERSION,DUGLP_VERSION);
    OutText16Mode(text.StrPtr, AJ_MID);
    FntCol=0xFFFF; // white
-   OutText16Mode("dugl.50webs.com\n", AJ_MID);
+   OutText16Mode("https://github.com/FFK77/DJGPP-DUGL\n", AJ_MID);
    FntCol=0x1F; // green
    OutText16Mode("DJGPP C/C++ complier \n", AJ_MID);
    FntCol=0xFFFF; // white

@@ -891,9 +891,12 @@ void LoadConfig()
     }
     if (!OpenFileDFileBuffer(fileBuffer, "DUGLPLAY.CFG", "rt"))
     {
-        DestroyDFileBuffer(fileBuffer);
-        DestroyDSplitString(ListInfoLine);
-        DestroyDSplitString(ListInfoIndex);
+        if (fileBuffer != NULL)
+            DestroyDFileBuffer(fileBuffer);
+        if (ListInfoLine != NULL)
+            DestroyDSplitString(ListInfoLine);
+        if (ListInfoIndex != NULL)
+            DestroyDSplitString(ListInfoIndex);
         return;
     }
 	for(;!IsEndOfFileDFileBuffer(fileBuffer);) {

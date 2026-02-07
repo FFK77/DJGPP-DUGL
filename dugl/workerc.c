@@ -1,21 +1,3 @@
-/*  Dust Ultimate Game Library (DUGL)
-    Copyright (C) 2025  Fakhri Feki
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-    contact: libdugl(at)hotmail.com    */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -162,13 +144,10 @@ unsigned int findFirstFreeDWorkerID() {
 
 unsigned int CreateDWorker(dworkerFunctionPointer workerFunction, void *workerData) {
     unsigned int newWorkerIdx = 0;
-    char nameWorker[12];
-    if (countDWorker >= MaxDWorkersCount)
+    if (countDWorker >= MaxDWorkersCount) {
         return 0;
+    }
     newWorkerIdx = FirstFreeDWorkerID;
-    sprintf(nameWorker, "DWorker%d", newWorkerIdx);
-    funcsDWorker[newWorkerIdx] = workerFunction;
-    paramsDWorker[newWorkerIdx] = workerData;
     conditionsDWorker[newWorkerIdx] = false;
     locksDworker[newWorkerIdx] = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
     condsDworker[newWorkerIdx] = (pthread_cond_t*)malloc(sizeof(pthread_cond_t));
@@ -183,23 +162,31 @@ unsigned int CreateDWorker(dworkerFunctionPointer workerFunction, void *workerDa
 
         return 0;
     }
-    int retCond = 0;
-    int retCreate = 0;
     pthread_mutex_init(locksDworker[newWorkerIdx], NULL);
-    retCond = pthread_cond_init(condsDworker[newWorkerIdx],NULL);
-    retCreate = pthread_create(*threadsDWorker[newWorkerIdx], NULL, WorkerThreadFunction, &dataThreadsID[newWorkerIdx]);
-    if (retCond || retCreate) {
-        if (!retCreate)
-            pthread_detach(*threadsDWorker[newWorkerIdx]);
+    if (pthread_cond_init(condsDworker[newWorkerIdx],NULL)!=0) {
         pthread_mutex_destroy(locksDworker[newWorkerIdx]);
         free(locksDworker[newWorkerIdx]);
         locksDworker[newWorkerIdx] = NULL;
-        if (!retCond)
-            pthread_cond_destroy(condsDworker[newWorkerIdx]);
         free(condsDworker[newWorkerIdx]);
         condsDworker[newWorkerIdx] = NULL;
         free(threadsDWorker[newWorkerIdx]);
         threadsDWorker[newWorkerIdx] = NULL;
+        return 0;
+    }
+    funcsDWorker[newWorkerIdx] = workerFunction;
+    paramsDWorker[newWorkerIdx] = workerData;
+    if (pthread_create(threadsDWorker[newWorkerIdx], NULL, WorkerThreadFunction, &dataThreadsID[newWorkerIdx])!=0) {
+        pthread_mutex_destroy(locksDworker[newWorkerIdx]);
+        pthread_cond_destroy(condsDworker[newWorkerIdx]);
+        free(locksDworker[newWorkerIdx]);
+        locksDworker[newWorkerIdx] = NULL;
+        free(condsDworker[newWorkerIdx]);
+        condsDworker[newWorkerIdx] = NULL;
+        free(threadsDWorker[newWorkerIdx]);
+        threadsDWorker[newWorkerIdx] = NULL;
+        funcsDWorker[newWorkerIdx] = NULL;
+        paramsDWorker[newWorkerIdx] = NULL;
+
         return 0;
     }
 
@@ -223,7 +210,6 @@ void RunDWorker(unsigned int dworkerID, bool WaitIfBusy) {
     pthread_mutex_lock(locksDworker[idx]);
     conditionsDWorker[idx] = true;
     pthread_cond_signal(condsDworker[idx]);
-    DWorkerYield();
     pthread_mutex_unlock(locksDworker[idx]);
 }
 
@@ -276,6 +262,7 @@ void DestroyDWorker(unsigned int dworkerID) {
         killsDWorker[idx] = true;
         RunDWorker(dworkerID, true);
         // wait until kill thread is set to false by thread loop
+        pthread_join(*threadsDWorker[idx], NULL);
         while(killsDWorker[idx]) {
             if (DgTimerFreq<500)
                 DgDelay(4);

@@ -232,9 +232,9 @@ _PutSurf16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -572,9 +572,9 @@ _PutMaskSurf16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -923,9 +923,9 @@ _PutSurfBlnd16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -1420,9 +1420,9 @@ _PutMaskSurfBlnd16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -1934,9 +1934,9 @@ _PutSurfTrans16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -2432,9 +2432,9 @@ _PutMaskSurfTrans16:
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV			[XP1],EBP    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:

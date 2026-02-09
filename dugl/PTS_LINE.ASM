@@ -340,9 +340,9 @@ ALIGN 4
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
         JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],ESI    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:
@@ -671,9 +671,9 @@ ALIGN 4
 		JGE			.PsInfMinX   ; XP1<_MinX
 		TEST		BYTE [PType],1
 		JNZ			.InvHzCalcDX
-		MOV			ESI,EBP
-		;MOV		[XP1],ESI    ; XP1 = _MinX
-		SUB			ESI,ECX	; ESI = _MinX - XP2
+		MOV         ESI,EBP
+		SUB         ESI,ECX ; ESI = MinX - XP2
+		MOV         ECX,EBP
 .InvHzCalcDX:
 		MOV			ECX,EBP
 .PsInfMinX:

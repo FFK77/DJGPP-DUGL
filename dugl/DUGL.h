@@ -17,6 +17,8 @@
 #include "DMATH3D.h"
 #include "DWORKER.h"
 #include "DCONTAIN.h"
+#include "DBMFONT.h"
+#include "DIMAGE.H"
 #include "DIPX.h"
 
 #endif // #ifndef DUGL_H

@@ -302,7 +302,6 @@ int  OutText16Mode(const char *str,int Mode) {
 	x=FntX;
 	OutText16(str);
 	return x;
-
 }
 
 int  OutText16YMode(int TY,const char *str,int Mode)

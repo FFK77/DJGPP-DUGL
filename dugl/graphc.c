@@ -414,7 +414,7 @@ int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel)
     int pixelsize=GetPixelSize(BitsPixel);
     if (BitsPixel != 8 && BitsPixel != 16)
 		return 0;
-	if (pixelsize == 0 || ResHz<1 || ResVt<1)
+	if (pixelsize == 0 || ResHz<MIN_DGSURF_WIDTH || ResVt<MIN_DGSURF_HEIGHT)
 		return 0;
     *S = (DgSurf*)malloc(sizeof(DgSurf)+ResHz*ResVt*pixelsize);
     if ((*S) == NULL)
@@ -443,20 +443,14 @@ int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel)
 	return 0;
 }
 
-void DestroySurf(DgSurf *S) {
-    if (S != NULL && S->OffVMem == -1) {
-	  S->vlfb=S->rlfb=S->OffVMem=0;
-	  free(S);
-	}
-}
-
 int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff) {
     int pixelsize=GetPixelSize(BitsPixel);
 
     if (BitsPixel != 8 && BitsPixel != 16)
 		return 0;
-	if (pixelsize == 0 || ResHz<1 || ResVt<1)
+	if (pixelsize == 0 || ResHz<MIN_DGSURF_WIDTH || ResVt<MIN_DGSURF_HEIGHT || Buff == NULL) {
 		return 0;
+	}
     *S = (DgSurf*)malloc(sizeof(DgSurf));
     if ((*S) == NULL)
         return 0;
@@ -476,6 +470,45 @@ int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff)
     (*S)->NegScanLine = -((*S)->ScanLine);
     SetOrgSurf((*S),0,0);
     return 1;
+}
+
+int CreateSurfBuffView(DgSurf **S, int ResHz, int ResVt, char BitsPixel, void *Buff, DgView *V) {
+    if ((*S = (DgSurf*)malloc(sizeof(DgSurf))) == NULL) {
+        //dgLastErrID = DG_ERSS_NO_MEM;
+        return 0;
+    }
+    int pixelsize=GetPixelSize(BitsPixel);
+
+    memset(*S, 0, sizeof(DgSurf));
+    if (pixelsize == 0 || ResHz<MIN_DGSURF_WIDTH || ResVt<MIN_DGSURF_HEIGHT || Buff == NULL) {
+        free(*S);
+        *S = NULL;
+        //dgLastErrID = DG_ERSS_INVALID_DGSURF_FORMAT;
+        return 0;
+    }
+    (*S)->ResH= ResHz;
+    (*S)->ResV= ResVt;
+    (*S)->MaxX= V->MaxX;
+    (*S)->MaxY= V->MaxY;
+    (*S)->MinX= V->MinX;
+    (*S)->MinY= V->MinX;
+    (*S)->SizeSurf= ResHz*ResVt*pixelsize;
+    (*S)->OrgX= V->OrgX;
+    (*S)->OrgY= V->OrgY;
+    (*S)->BitsPixel= BitsPixel;
+    (*S)->ScanLine= ResHz *pixelsize;
+    (*S)->Mask= 0;
+    (*S)->NegScanLine = -((*S)->ScanLine);
+    (*S)->rlfb = (int)(Buff);
+    (*S)->vlfb = (int)(Buff)+(V->OrgX*pixelsize)-((V->OrgY-(ResVt-1))*ResHz*pixelsize);
+    return 1;
+}
+
+void DestroySurf(DgSurf *S) {
+    if (S != NULL && S->OffVMem == -1) {
+	  S->vlfb=S->rlfb=S->OffVMem=0;
+	  free(S);
+	}
 }
 
 void SetSurfView(DgSurf *S, DgView *V) {
@@ -1016,6 +1049,7 @@ void DgQuit() {
    __djgpp_nearptr_disable();
    __dpmi_free_physical_address_mapping(&dpinf);
    ShiftPal=0;
+   DestroyDWorkers();
    TextMode();
 }
 

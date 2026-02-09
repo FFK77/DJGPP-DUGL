@@ -17,10 +17,13 @@ GLOBAL	_line16,_Line16,_linemap16,_LineMap16,_lineblnd16,_LineBlnd16
 GLOBAL	_linemapblnd16,_LineMapBlnd16,_Poly16, _RePoly16, _Clear16
 GLOBAL	_ResizeViewSurf16,_MaskResizeViewSurf16,_BlndResizeViewSurf16,_MaskBlndResizeViewSurf16
 GLOBAL  _TransResizeViewSurf16,_MaskTransResizeViewSurf16
+GLOBAL  _OutTextBM16, _SetCurBMFont
 
 ; GLOBAL DATA
 GLOBAL	_CurViewVSurf, _CurSurf, _SrcSurf
 GLOBAL	_PtrTbColConv, _LastPolyStatus
+GLOBAL  _DgNanoSurf, _dummyDBMFONT, _CurDBMFONT
+
 ; intern global DATA
 ; _CurSurf
 GLOBAL	_vlfb,_ResH,_ResV,_MaxX,_MaxY,_MinX, _MinY, _OrgY, _OrgX, _SizeSurf
@@ -54,9 +57,10 @@ ALIGN 32
 %include "pts_line.asm"
 %include "poly16.asm"
 %include "hzline16.asm"
-%include "line16.asm"
 %include "pts16.asm"
+%include "bmfont.asm"
 %include "fill16.asm"
+%include "line16.asm"
 
 ;*********** DEF LZW*****************************
 ;************************************************
@@ -2155,6 +2159,24 @@ _TexYFin 			RESD	MaxResV
 _PColDeb 			RESD	MaxResV
 _PColFin 			RESD	MaxResV
 
+; bitmap fonts data
+_CurDBMFONT:
+BMCharsSSurfs      RESD    256
+BMCharsPlusX       RESD    256
+BMCharsWidth       RESD    256
+BMCharsHeight      RESD    256
+BMCharsXOffset     RESD    256
+BMCharsYOffset     RESD    256
+BMCharsGHeight     RESD    1
+BMCharsGLineHeight RESD    1
+BMCharX            RESD    1
+BMCharY            RESD    1
+BMCharCurChar      RESD    1
+BMCharsMainSurf    RESD    1
+BMCharsRendX       RESD    1
+BMCharsRendY       RESD    1;--------------
+
+
 ; reversed PPtrListPt pointer
 ReversedPtrListPt   RESD  MaxDblSidePolyPts
 
@@ -2177,6 +2199,39 @@ _LastPolyStatus 	RESD  	1
 ChPlus				RESD	1
 
 SECTION .data   ALIGN=32
+
+_DgNanoSurf:
+NScanLine           DD      2
+Nrlfb               DD      NOffVMem
+NOrgX               DD      0
+NOrgY               DD      0
+NMaxX               DD      0
+NMaxY               DD      0
+NMinX               DD      0
+NMinY               DD      0;-----------------------
+NMask               DD      0
+NResH               DD      1
+NResV               DD      1
+Nvlfb               DD      NOffVMem
+NNegScanLine        DD      -2
+NOffVMem            DD      0
+NBitsPixel          DD      16
+NSizeSurf           DD      2;-----------------------
+_dummyDBMFONT:
+dBMCharsSSurfs      DD    256 dup (_DgNanoSurf)
+dBMCharsPlusX       DD    256 dup (0)
+dBMCharsWidth       DD    256 dup (1)
+dBMCharsHeight      DD    256 dup (1)
+dBMCharsXOffset     DD    256 dup (0)
+dBMCharsYOffset     DD    256 dup (0)
+dBMCharsGHeight     DD    1
+dBMCharsGLineHeight DD    1
+dBMCharX            DD    0
+dBMCharY            DD    0
+dBMCharCurChar      DD    0
+dBMCharsMainSurf    DD    0
+dBMCharsRendX       DD    0
+dBMCharsRendY       DD    0;--------------
 
 
 PntInitCPTDbrd		DD	0,((1<<Prec)-1)

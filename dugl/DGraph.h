@@ -133,9 +133,10 @@ void SetSurfInViewBounds(DgSurf *S, DgView *V);
 // Get DgSurf View
 void GetSurfView(DgSurf *S, DgView *V);
 void SetOrgVSurf(int OrgX,int OrgY);
-int  CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel);
+int CreateSurf(DgSurf **S, int ResHz, int ResVt, char BitsPixel);
+int CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff);
+int CreateSurfBuffView(DgSurf **S, int ResHz, int ResVt, char BitsPixel, void *Buff, DgView *V);
 void DestroySurf(DgSurf *S);
-int  CreateSurfBuff(DgSurf **S, int ResHz, int ResVt, char BitsPixel,void *Buff);
 // ** WARNING ** should be called only after a successfull InitVESA call
 // set current visible Surf Index
 extern  void (*ViewSurf)(int NbSurf);
@@ -305,39 +306,6 @@ void BlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd)
 void MaskBlndResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int colBlnd); // ColBnd =  color16 | (blend << 24),  blend 0->31 (31 color16)
 void TransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // transparency 0->31 (31 completely opaq)
 void MaskTransResizeViewSurf16(DgSurf *SSrcSurf, int swapHz, int swapVt, int transparency); // Mask pixels with value Mask, transparency 0->31 (31 completely opaq)
-
-// IMAGE Loading saving
-// --------------------
-
-// PCX
-int  LoadMemPCX(DgSurf **S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadPCX(DgSurf **S,const char *Fname,void *PalBGR1024);
-int  SaveMemPCX(DgSurf *S,void *Out,void *PalBGR1024);
-int  SavePCX(DgSurf *S,const char *Fname,void *PalBGR1024);
-int  SizeSavePCX(DgSurf *S);
-void InRLE(void *InBuffRLE,void *Out,int LenOut);
-void OutRLE(void *OutBuffRLE,void *In,int LenIn,int ResHz);
-int  SizeOutRLE(void *In,int LenIn,int ResHz);
-
-// GIF
-int  LoadMemGIF(DgSurf **S,void *In,void *PalBGR1024,int SizeIn);
-int  LoadGIF(DgSurf **S,const char *Fname,void *PalBGR1024);
-int  LoadGIF16(DgSurf **S16,char *filename); // load a 8bpp gif and convert it to 16 bpp
-int  SaveMemGIF(DgSurf *S,void *Out,void *PalBGR1024); // NI (not implemented)
-void InLZW(void *InBuffLZW,void *Out);
-
-// BMP
-int  LoadMemBMP(DgSurf **S,void *In,void *PalBGR1024,int SizeIn); // load a 8bpp uncompressed BMP into a 8bpp Surf
-int  LoadBMP(DgSurf **S,const char *Fname,void *PalBGR1024);
-int  SaveMemBMP(DgSurf *S,void *Out,void *PalBGR1024);
-int  SaveBMP(DgSurf *S,const char *Fname,void *PalBGR1024); // save a 8bpp Surf into a 8bpp uncompressed BMP
-int  SizeSaveBMP(DgSurf *S); // total size in bytes of a 8bpp bmp saved Surf
-int  LoadMemBMP16(DgSurf **S,void *In,int SizeIn); // load a 24bpp uncompressed BMP into a 16bpp Surf
-int  LoadBMP16(DgSurf **S,const char *Fname);
-int  SaveMemBMP16(DgSurf *S,void *Out); // save  a 16bpp surf into a 24bpp uncompressed BMP
-int  SaveBMP16(DgSurf *S,const char *Fname);
-int  SizeSaveBMP16(DgSurf *S);
-
 
 #ifdef __cplusplus
            }

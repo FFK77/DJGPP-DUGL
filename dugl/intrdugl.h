@@ -240,5 +240,15 @@ typedef struct
     pthread_mutex_t mutex;
 } DMutex;
 
+// utils
+
+#define DMAX(a,b) ((a) > (b) ? a : b)
+#define DMIN(a,b) ((a) < (b) ? a : b)
+
+// DgSurf
+#define MIN_DGSURF_WIDTH    1
+#define MIN_DGSURF_HEIGHT   1
+
+
 
 

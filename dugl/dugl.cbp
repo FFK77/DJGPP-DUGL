@@ -49,6 +49,7 @@
 		<Unit filename="CONTROLC.C">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="DBMFONT.h" />
 		<Unit filename="DCONTAIN.h" />
 		<Unit filename="DFONT.ASM" />
 		<Unit filename="DFONT.h" />
@@ -56,6 +57,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="DGraph.h" />
+		<Unit filename="DIMAGE.H" />
 		<Unit filename="DIPX.H" />
 		<Unit filename="DKeyb.h" />
 		<Unit filename="DMATH3D.h" />
@@ -73,6 +75,7 @@
 		</Unit>
 		<Unit filename="KEYBOARD.ASM" />
 		<Unit filename="MOUSE.ASM" />
+		<Unit filename="PARAM.MAC" />
 		<Unit filename="PTS_LINE.ASM">
 			<Option compile="0" />
 			<Option link="0" />
@@ -82,6 +85,14 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="TIMER.ASM" />
+		<Unit filename="bmfont.asm">
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="bmfontc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="containc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -103,11 +114,17 @@
 		<Unit filename="ipxc.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="jpgc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="line16.asm">
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
 		<Unit filename="math3dc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="pngc.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="poly16.asm">

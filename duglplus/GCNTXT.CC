@@ -88,7 +88,6 @@ void CGraphContext::CadWin(int x1,int y1,int x2,int y2) {
     line(x1+1,y2-1,x2-2,y2-1,WinGrisC);
     line(x1,y1+1,x1,y2,WinGris);
     line(x1,y2,x2-1,y2,WinGris);
-    FREE_MMX();
 }
 
 void CGraphContext::CadAppWin(int x1,int y1,int x2,int y2) {
@@ -100,7 +99,6 @@ void CGraphContext::CadAppWin(int x1,int y1,int x2,int y2) {
     line(x1+1,y2-1,x2-2,y2-1,WinGrisF);
     line(x1,y1+1,x1,y2,WinNoir);
     line(x1,y2,x2-1,y2,WinNoir);
-    FREE_MMX();
 }
 
 void CGraphContext::CadBoxWin(int x1,int y1,int x2,int y2) {
@@ -112,37 +110,31 @@ void CGraphContext::CadBoxWin(int x1,int y1,int x2,int y2) {
     line(x1+1,y2-1,x2-2,y2-1,WinNoir);
     line(x1,y1+1,x1,y2,WinGrisF);
     line(x1,y2,x2-1,y2,WinGrisF);
-    FREE_MMX();
 }
 
 void CGraphContext::DrawCoche(int x,int y) {
    line(x,y+2,x+2,y,WinNoir); line(x,y+3,x+2,y+1,WinNoir); line(x,y+4,x+2,y+2,WinNoir);
    line(x+2,y,x+6,y+4,WinNoir); line(x+2,y+1,x+6,y+5,WinNoir); line(x+2,y+2,x+6,y+6,WinNoir);
-   FREE_MMX();
 }
 
 void CGraphContext::DrawFHaut(int x,int y,int fcol) {
    line(x,y,x+4,y,fcol); line(x+1,y+1,x+3,y+1,fcol);
    cputpixel(x+2,y+2,fcol);
-   FREE_MMX();
 }
 
 void CGraphContext::DrawFBas(int x,int y,int fcol) {
    line(x,y+2,x+4,y+2,fcol); line(x+1,y+1,x+3,y+1,fcol);
    cputpixel(x+2,y,fcol);
-   FREE_MMX();
 }
 
 void CGraphContext::DrawFDroit(int x,int y,int fcol) {
    line(x,y,x,y+4,fcol); line(x+1,y+1,x+1,y+3,fcol);
    cputpixel(x+2,y+2,fcol);
-   FREE_MMX();
 }
 
 void CGraphContext::DrawFGauche(int x,int y,int fcol) {
    line(x+2,y,x+2,y+4,fcol); line(x+1,y+1,x+1,y+3,fcol);
    cputpixel(x,y+2,fcol);
-   FREE_MMX();
 }
 
 void CGraphContext::DrawButtFHaut(int x,int y,int etat) {
@@ -150,7 +142,6 @@ void CGraphContext::DrawButtFHaut(int x,int y,int etat) {
   if (etat) {
     CadAppWin(x,y,x+12,y+12); DrawFHaut(x+5,y+4,WinNoir);
   } else { CadWin(x,y,x+12,y+12); DrawFHaut(x+4,y+5,WinNoir); }
-  FREE_MMX();
 }
 
 void CGraphContext::DrawButtFBas(int x,int y,int etat) {
@@ -158,7 +149,6 @@ void CGraphContext::DrawButtFBas(int x,int y,int etat) {
   if (etat) {
     CadAppWin(x,y,x+12,y+12); DrawFBas(x+5,y+4,WinNoir);
   } else { CadWin(x,y,x+12,y+12); DrawFBas(x+4,y+5,WinNoir); }
-  FREE_MMX();
 }
 
 void CGraphContext::DrawButtFDroit(int x,int y,int etat) {
@@ -166,7 +156,6 @@ void CGraphContext::DrawButtFDroit(int x,int y,int etat) {
   if (etat) {
     CadAppWin(x,y,x+12,y+12); DrawFDroit(x+6,y+3,WinNoir);
   } else { CadWin(x,y,x+12,y+12); DrawFDroit(x+5,y+4,WinNoir); }
-  FREE_MMX();
 }
 
 void CGraphContext::DrawButtFGauche(int x,int y,int etat) {
@@ -174,7 +163,6 @@ void CGraphContext::DrawButtFGauche(int x,int y,int etat) {
   if (etat) {
     CadAppWin(x,y,x+12,y+12); DrawFGauche(x+6,y+3,WinNoir);
   } else { CadWin(x,y,x+12,y+12); DrawFGauche(x+5,y+4,WinNoir); }
-  FREE_MMX();
 }
 
 int CGraphContext::In(int x1,int y1,int x2,int y2, int PosX, int PosY) {
@@ -185,12 +173,10 @@ int CGraphContext::In(int x1,int y1,int x2,int y2, int PosX, int PosY) {
 void CGraphContext::GHline(int x1, int x2, int y1) {
    line(x1,y1,x2,y1,WinGrisF);
    line(x1,y1-1,x2,y1-1,WinGrisC);
-   FREE_MMX();
 }
 
 void CGraphContext::GVline(int x, int y1, int y2) {
    line(x,y1,x,y2,WinGrisF);
    line(x+1,y1,x+1,y2,WinGrisC);
-   FREE_MMX();
 }
 

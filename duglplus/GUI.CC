@@ -100,7 +100,6 @@ void WinHandler::Draw() {
    DgSetCurSurf(S);
    m_GraphCtxt->Clear(BackCol);
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
@@ -117,7 +116,6 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
    V1.MaxX=x2; V1.MaxY=y2;
    SetSurfInView(&CurSurf,&V1);
    GetSurfView(&CurSurf,&V1);
-   FREE_MMX();
    m_GraphCtxt->bar(x1,y1,x2,y2,BackCol);
    ParcNode=WinList->FirstNode;
    if (ParcNode!=NULL) {
@@ -148,14 +146,12 @@ void WinHandler::Redraw(int x1,int y1,int x2,int y2) {
         if (!( FlyParcNode->Item->X2<x1 || FlyParcNode->Item->X1>x2 ||
 	       FlyParcNode->Item->Y2<y1 || FlyParcNode->Item->Y1>y2 )) {
 	  SetSurfView(&CurSurf,&V1);
-          FREE_MMX();
 	  FlyParcNode->Item->Draw();
 	}
         FlyParcNode=FlyParcNode->Next;
       } while (FlyParcNode!=NULL);
    }
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void WinHandler::DrawSurf(DgSurf *DestSurf) {
@@ -165,7 +161,6 @@ void WinHandler::DrawSurf(DgSurf *DestSurf) {
    m_GraphCtxt->PutSurf(S,0,0,NORM_PUT);
    if (CurWinNode) CurWinNode->Item->DrawSurf(DestSurf);
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 NodeWin * WinHandler::AddMainWin(MainWin *MainW) {
@@ -223,7 +218,6 @@ Node * MainWin::AddChild(Child *child) {
    return (ChList->Add(child)); }
 
 void MainWin::Scan() {
-   FREE_MMX();
    Node *ParcNode;
 
    Ascii= MWWinHand->Ascii;
@@ -303,13 +297,11 @@ void MainWin::Draw() {
    SetSurfView(&CurSurf,&V1);
    ClearText();
    m_GraphCtxt->OutText(Label.StrPtr);
-   FREE_MMX();
 
    ParcNode=ChList->Nodes;  //Last Node
    if (ParcNode!=NULL) {
       do {
         SetSurfView(&CurSurf,&VActiv);
-         FREE_MMX();
          if (ParcNode!=CurFocusNode && ParcNode->Item->Visible)
          ParcNode->Item->Draw();
          ParcNode=ParcNode->Prev;
@@ -317,16 +309,13 @@ void MainWin::Draw() {
      }
    if ((ParcNode=CurFocusNode)) {
      SetSurfView(&CurSurf,&VActiv);
-     FREE_MMX();
      if (ParcNode->Item->Visible) ParcNode->Item->Draw();
    }
    if (MyMenu) {
      SetSurfView(&CurSurf,&VActiv);
      MyMenu->Draw();
-     FREE_MMX();
    }
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void MainWin::Redraw(int x1,int y1,int x2,int y2) {
@@ -355,7 +344,6 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
 	         ParcNode->Item->YC2<y1 || ParcNode->Item->YC1>y2 ))
 	    if (ParcNode->Item->Visible) {
 	      SetSurfView(&CurSurf,&V1);
-              FREE_MMX();
 	      ParcNode->Item->Draw();
 	    }
         ParcNode=ParcNode->Prev;
@@ -366,7 +354,6 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
             ParcNode->Item->YC2<y1 || ParcNode->Item->YC1>y2 ))
        if (ParcNode->Item->Visible) {
          SetSurfView(&CurSurf,&V1);
-         FREE_MMX();
          ParcNode->Item->Draw();
        }
    }
@@ -374,13 +361,11 @@ void MainWin::Redraw(int x1,int y1,int x2,int y2) {
      if (!( MyMenu->XC2<x1 || MyMenu->XC1>x2 ||
             MyMenu->YC2<y1 || MyMenu->YC1>y2 )) {
          SetSurfView(&CurSurf,&V1);
-         FREE_MMX();
          MyMenu->Draw();
        }
    }
    MWWinHand->Redraw(V1.MinX+PlusX,V1.MinY+PlusY,V1.MaxX+PlusX,V1.MaxY+PlusY);
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void MainWin::Redraw() {
@@ -396,7 +381,6 @@ void MainWin::DrawSurf(DgSurf *DestSurf) {
    DgGetCurSurf(&SaveSurf);
    DgSetCurSurf(DestSurf);
    GetSurfView(DestSurf,&SaveView);
-   FREE_MMX();
    ParcNode=ChList->Nodes;  // last node
    if (ParcNode!=NULL) {
       do {
@@ -409,7 +393,6 @@ void MainWin::DrawSurf(DgSurf *DestSurf) {
      }
    SetSurfView(DestSurf,&SaveView);
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void MainWin::SetNextFocus() {
@@ -698,7 +681,6 @@ void ContBox::Draw() {
 
    SetSurfInView(&CurSurf,&VActiv);
    GetSurfView(&CurSurf,&V1);
-   FREE_MMX();
 
    ParcNode=SsChList->Nodes;  //Last Node
    if (ParcNode!=NULL) {
@@ -711,12 +693,10 @@ void ContBox::Draw() {
      }
    if ((ParcNode=CurFocusInNode)) {
      SetSurfView(&CurSurf,&V1);
-     FREE_MMX();
      if (ParcNode->Item->Visible) ParcNode->Item->Draw();
    }
 
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void ContBox::Redraw(int x1,int y1,int x2,int y2) {
@@ -1438,7 +1418,6 @@ void GraphBox::Scan() {
      ScanGraphBox(this);
    }
    DgSetCurSurf(&SaveSurf);
-   FREE_MMX();
 }
 
 void GraphBox::SetFocus() {
@@ -1457,7 +1436,6 @@ void GraphBox::SetView() {
    DgSetCurSurf(Main->S);
    SetSurfView(&CurSurf,MyVActiv);
    SetSurfInView(&CurSurf,&VGraphBox);
-   FREE_MMX();
 }
 
 int GraphBox::GetWidth() {

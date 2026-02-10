@@ -46,6 +46,7 @@
 		</Compiler>
 		<Linker>
 			<Add library="dugl" />
+			<Add library="gthreads" />
 			<Add library="duglplus" />
 			<Add library="jpeg" />
 			<Add library="png" />

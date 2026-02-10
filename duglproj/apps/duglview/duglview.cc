@@ -227,7 +227,6 @@ int main (int argc, char ** argv) {
        // set mouse view
        GetSurfView(&VSurf[0],&MsV);
        SetMouseView(&MsV);
-       FREE_MMX();
        SetMousePos(DefMsPosX*VSurf[0].ResH, DefMsPosY*VSurf[0].ResV);
     }
     else {
@@ -272,11 +271,9 @@ int main (int argc, char ** argv) {
 
     // init synch for synching the screen
     PosSynch=0;
-    FREE_MMX();
     InitSynch(SynchBuff,&PosSynch,30);
     // main loop
     for (int j=0;;j++) {
-      FREE_MMX();
       // synchronise
       Synch(SynchBuff,&PosSynch);
       // synch screen display
@@ -354,7 +351,6 @@ int main (int argc, char ** argv) {
          }
          if(!bSucc)
             SaveBMP16(rendSurf16,scrFileName);
-        FREE_MMX();
       }
     }
 
@@ -382,7 +378,6 @@ void GphBDrawVideo(GraphBox *Me) {
     // loaded image ?
    if(validMyIMG)
    {
-      FREE_MMX();
       if(SmoothResize && curZoom>=SmoothZoomLimit)
         SetOrgSurf(MySmthIMG,MyIMG->OrgX,MyIMG->OrgY);
       PutSurf16((SmoothResize && curZoom>=SmoothZoomLimit)?(MySmthIMG):(MyIMG),
@@ -394,7 +389,6 @@ void GphBDrawVideo(GraphBox *Me) {
 void GphBScanVideo(GraphBox *Me) {
    if(validMyIMG)
    {
-     FREE_MMX();
      int gphBoxWidth = Me->VGraphBox.MaxX-Me->VGraphBox.MinX+1;
      int gphBoxHeight = Me->VGraphBox.MaxY-Me->VGraphBox.MinY+1;
      int speedImg = gphBoxHeight / 25;
@@ -824,8 +818,6 @@ void LoadCurImg() {
     tmpImg = MyIMG;
   }
 
-
-  FREE_MMX();
   if (iDisplayMode==2) {
     MyIMG = tmpImg;
     rapSize = 1.0;
@@ -870,7 +862,6 @@ void LoadCurImg() {
     if(DownSize && EnableSmoothDownSize &&
       (CreateSurf(&tmpSmthImg, tmpImg->ResH, tmpImg->ResV, 16) != 0)) {
       BlurSurf16(tmpSmthImg,tmpImg);
-      FREE_MMX();
       if(rapSize<=EnhSmoothDownSizeLowLevel)
       {
         BlurSurf16(tmpImg,tmpSmthImg);
@@ -891,7 +882,6 @@ void LoadCurImg() {
   }
   SetOrgSurf(MyIMG,FinalOrgX,FinalOrgY);
 
-  FREE_MMX();
   curZoom = rapSize;
   UseCurImg = false;
   validMyIMG = true;
@@ -901,7 +891,6 @@ void LoadCurImg() {
   initialIMGPlusDown=0; initialIMGPlusUp=0;
   MyIMGPlus =0;
   SmoothCurImg();
-  FREE_MMX();
   curZoom = rapSize;
   if(LSFiles.NbElement()>1)
     sprintf(InfImg.StrPtr,"Img %i/%i - %ix%i %i%%",CurImgNum+1,LSFiles.NbElement(),
@@ -915,7 +904,6 @@ void LoadCurImg() {
   MWDViewer->Label = MainWinName + '<' + tfile + te + '>'+ InfImg;
   MWDViewer->Redraw();
   GphBVideo->SetFocus();
-  FREE_MMX();
 }
 
 void SmoothCurImg()
@@ -923,7 +911,6 @@ void SmoothCurImg()
   String text;
   DgSurf *EnhSmthImg;
 
-  FREE_MMX();
   if(SmoothResize && curZoom>=SmoothZoomLimit) {
     if((CreateSurf(&MySmthIMG, MyIMG->ResH, MyIMG->ResV, 16)) == 0) {
       sprintf(text.StrPtr,"Not enough memory to smooth!\n");
@@ -1058,9 +1045,11 @@ void LoadConfig()
                     iDefTypeOpen = 0;
                 }
                 else if(strcmp(infoName,"EnableDefaultMultiLoad") == 0 && ListInfoIndex->countStrings >= 1) {
-                  EnableDefaultMultiLoad = (bool)atoi(ListInfoIndex->ListStrings[0]);
-                  if(EnableDefaultMultiLoad<0 || EnableDefaultMultiLoad>1)
-                    EnableDefaultMultiLoad = 0;
+                  int enableMultiLoad = atoi(ListInfoIndex->ListStrings[0]);
+                  if(enableMultiLoad<0 || enableMultiLoad>1)
+                    EnableDefaultMultiLoad = false;
+                  else
+                    EnableDefaultMultiLoad = (bool)enableMultiLoad;
                 }
                 else if(strcmp(infoName,"ImageDisplayMode") == 0 && ListInfoIndex->countStrings >= 1) {
                   iDisplayMode = atoi(ListInfoIndex->ListStrings[0]);
@@ -1173,7 +1162,6 @@ void GphBDrawAbout(GraphBox *Me) {
      FntCol=0xFFFF; // white
      OutText16Mode(text.StrPtr, AJ_MID);
    }
-   FREE_MMX();
 
 }
 

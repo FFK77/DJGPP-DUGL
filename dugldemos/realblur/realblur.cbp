@@ -17,8 +17,6 @@
 					<Add directory="../../duglplus" />
 				</Compiler>
 				<Linker>
-					<Add library="dugl" />
-					<Add library="duglplus" />
 					<Add directory="../../dugl/bin/Debug" />
 					<Add directory="../../duglplus/bin/Debug" />
 				</Linker>
@@ -35,8 +33,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="dugl" />
-					<Add library="duglplus" />
 					<Add directory="../../dugl/bin/Release" />
 					<Add directory="../../duglplus/bin/Release" />
 				</Linker>
@@ -47,6 +43,7 @@
 		</Compiler>
 		<Linker>
 			<Add library="dugl" />
+			<Add library="gthreads" />
 		</Linker>
 		<Unit filename="realblur.cc" />
 		<Extensions>

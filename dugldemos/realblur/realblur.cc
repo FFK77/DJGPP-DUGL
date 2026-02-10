@@ -1,21 +1,11 @@
-/*  DUGL Dos Ultimate Game Library -  version 1.10+ */
 /*  Real-time bluring and rendering on DUGL */
 /*  History :
     2 march 2008 : first release
-    3 december 2025: update to synch with DUGL changes */
+    10 february 2026: updates to synch with DUGL changes */
 
-#include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
-#include <unistd.h>
-#include <bios.h>
-#include <math.h>
-#include <string.h>
-#include <sys/movedata.h>
-#include <sys/segments.h>
 #include <dugl.h>
-#include <duglplus.h>
 
 typedef struct {
   int x,  // pos x
@@ -35,19 +25,21 @@ typedef struct {
 int ScrResH = 640, ScrResV = 480;
 
 #define MAX_FPOINT 100
-F3DPoint ListFPt[MAX_FPOINT] =
-{ { -150.0, -150.0 , 150.0, 0.0 },
-  { -150.0,  150.0 , 150.0, 0.0 },
-  {  50.0,  150.0 , 150.0, 0.0 },
-  {  50.0, -150.0 , 150.0, 0.0 },
+DVEC4 ListFPt[MAX_FPOINT] =
+{ { -150.0f, -150.0f , 150.0f, 0.0f },
+  { -150.0f,  150.0f , 150.0f, 0.0f },
+  {  50.0f,  150.0f , 150.0f, 0.0f },
+  {  50.0f, -150.0f , 150.0f, 0.0f },
 
-  { -150.0, -150.0 , -150.0, 0.0 },
-  { -150.0,  150.0 , -150.0, 0.0 },
-  {  150.0,  150.0 , -150.0, 0.0 },
-  {  150.0, -150.0 , -150.0, 0.0 }
+  { -150.0f, -150.0f , -150.0f, 0.0f },
+  { -150.0f,  150.0f , -150.0f, 0.0f },
+  {  150.0f,  150.0f , -150.0f, 0.0f },
+  {  150.0f, -150.0f , -150.0f, 0.0f }
 };
 
-F3DPoint ListRFPt[MAX_FPOINT];
+DVEC4 ListRFPt[MAX_FPOINT], ListProjFPt[MAX_FPOINT], ListCamProj[MAX_FPOINT];
+DVEC2i ListPtFinal[MAX_FPOINT];
+
 
 PolyPt ListObjPts[8]= {
   { 0, 0, 0,  30,   0, 0 },
@@ -83,7 +75,7 @@ QuadPoly ListObjPolysRGB[1] = {
   { 3, &ListObjRGB[0], &ListObjRGB[1], &ListObjRGB[2], &ListObjRGB[3] } };
 
 int RotX=40,RotY=0,RotZ=0;
-FMatrix MatTr;
+DMatrix4 MatTr;
 void DGWaitRetrace();
 
 // synch buffer
@@ -93,71 +85,103 @@ DFONT F1;
 
 int i,j; // counters
 
-Surf *JpegIMG,*convSurf16,*rendSurf16;
+DgSurf *JpegIMG,*convSurf16,*rendSurf16;
 bool bPaused = false, bExitApp = false, bBlur = true;
 
 int main(int argc,char *argv[])
 {
-   if (CreateSurf(&convSurf16,ScrResH,ScrResV,16)==0) {
-     printf("no mem\n"); exit(-1); }
-   if (CreateSurf(&rendSurf16,ScrResH,ScrResV,16)==0) {
-     printf("no mem\n"); exit(-1); }
 
+   // init the lib
+   if (!DgInit())
+   { printf("DUGL Init error\n"); exit(-1); }
+
+   if (CreateSurf(&convSurf16,ScrResH,ScrResV,16)==0) {
+     printf("no mem\n");
+     DgQuit();
+     exit(-1);
+   }
+   if (CreateSurf(&rendSurf16,ScrResH,ScrResV,16)==0) {
+     printf("no mem\n");
+     DgQuit();
+     exit(-1);
+   }
    // load GFX
    if (LoadBMP16(&JpegIMG,"player.bmp")==0) {
-     printf("player.bmp not found or invalid\n"); exit(-1); }
+     printf("player.bmp not found or invalid\n");
+     DgQuit();
+     exit(-1);
+   }
 
    // load the font
    if (!LoadDFONT(&F1,"hello.chr")) {
-     printf("hello.chr not found\n"); exit(-1); }
-
-
-   Init3DMath(); // init cos sin tables
-
-   // init the lib
-   if (!InitVesa())
-   { printf("VESA error\n"); exit(-1); }
-
+     printf("hello.chr not found\n");
+     DgQuit();
+     exit(-1);
+   }
 
    // Inits
    if (!DgInstallTimer(500)) {
-     CloseVesa(); printf("Timer error\n"); exit(-1);
+     DgQuit();
+     printf("Timer error\n");
+     exit(-1);
    }
    if (!InstallKeyboard()) {
-     CloseVesa(); DgUninstallTimer(); //UninstallMouse();
+     DgQuit(); DgUninstallTimer(); //UninstallMouse();
      printf("Keyboard error\n");  exit(-1);
    }
 
    // init the video mode
-   if (!InitVesaMode(ScrResH,ScrResV,16,1))
-       { DgUninstallTimer(); UninstallKeyboard();
-         printf("VESA mode error\n"); exit(-1); }
+   if (!InitVesaMode(ScrResH,ScrResV,16,1)) {
+        DgUninstallTimer();
+        UninstallKeyboard();
+        DgQuit();
+        printf("VESA mode error\n");
+        exit(-1);
+   }
 
    // set the used FONT
    SetDFONT(&F1);
 
-   Surf *pSurfRend=rendSurf16,
+   DgSurf *pSurfRend=rendSurf16,
         *pSurfBlur=convSurf16,*pSurfTemp;
 
    int PosSynch;
    InitSynch(SynchBuff,&PosSynch,60);
-   char text[100];
+   char text[128];
    text[0]=0;
+
+   if (bBlur)
+      DgSetCurSurf(pSurfRend);
+   else
+      DgSetCurSurf(&VSurf[0]);
+
+   DMatrix4 m_matProject, matView, lookAtMat;
+
+   DVEC4 m_eyePosition={0.0f, 0.0f,1000.0f, 0.0f};
+   DVEC4 m_target={0.0f,10.0f,0.0f, 0.0f};
+   DVEC4 m_up={0.0f, 1.0f, 0.0f, 0.0f};
+   GetLookAtDMatrix4(&lookAtMat, &m_eyePosition, &m_target, &m_up);
+
+   DgView m_3dView;
+   GetSurfView(&CurSurf, &m_3dView);
+   GetViewDMatrix4(&matView, &m_3dView, 0.0f, 1.0f, 0.0f, 1.0f);
+
+   float m_fov = 60.0f, m_aspect = 1.33f, m_znear = 1.0f, m_zfar = 1000.0f; // frustum
+   GetPerspectiveDMatrix4(&m_matProject, m_fov, m_aspect, m_znear, m_zfar);
 
    // start the main loop
    for (j=0;;j++) {
 
-     FREE_MMX();
      // synchronise
-     Synch(SynchBuff,NULL);
+     Synch(SynchBuff,&PosSynch);
      // average time
      float avgFps=SynchAverageTime(SynchBuff),
            lastFps=SynchLastTime(SynchBuff);
 
      if (bBlur)
-        SetSurf(pSurfRend);
+        DgSetCurSurf(pSurfRend);
      else
-        SetSurf(&VSurf[0]);
+        DgSetCurSurf(&VSurf[0]);
 
 
     // get key
@@ -184,17 +208,15 @@ int main(int argc,char *argv[])
 
     }
 
-
      // render a moving text
      ClearText(); // clear test position to upper left
      SetTextCol(0xff00);
      FntY=FntY-((RotX*3)&255);
      OutText16("Esc: Exit, Space: Pause, F2:Toggle Blur");
 
-     FREE_MMX();
-
      ClearText(); // clear test position to upper left
      SetTextCol(0xffff);
+
      sprintf(text,"Last fps %03i, avg fps %03i, Esc to exit",
             (int)((lastFps>0.0)?(1.0/(lastFps)):-1),
             (int)((avgFps>0.0)?(1.0/(avgFps)):-1));
@@ -212,29 +234,31 @@ int main(int argc,char *argv[])
      if (bPaused) continue;
 
      // 3D **********
-     // get transformation matrix
-     FREE_MMX();
-     GetGRotTransFMatrix(&MatTr, 0.0f /*(float)(j%600)*/, 0.0f, 700.0f, RotX, RotY, RotZ);
-     //ReverseFMatrix(&MatTr,&MatTr);
-     // rotate points
-     FMatrixRotTransF(&MatTr, (float *)ListFPt, (float *)ListRFPt, 8);
+     // get cube transformation matrix
+     GetRotDMatrix4(&MatTr, RotX, RotY, RotZ);
+     // transform
+     // rotate/move the cube
+     DMatrix4MulDVEC4ArrayRes(&MatTr, ListFPt, 8, ListRFPt);
+     // rotate/move according to camera position/orientation
+     DMatrix4MulDVEC4ArrayRes(&lookAtMat, ListRFPt, 8, ListCamProj);
+     // project into camera plane (x and y) [-1.0 to 1.0]
+     DMatrix4MulDVEC4ArrayPerspRes(&m_matProject, ListCamProj, 8, ListProjFPt);
+     // projection to screen coordinates/pixels
+     DMatrix4MulDVEC4ArrayResDVec2i(&matView, ListProjFPt, 8, ListPtFinal);
+
      // inc rot
      RotX+=1; RotY+=1; RotZ+=1;
      // copy rotated coordinate
      for (i=0;i<8;i++) {
-       ListObjPts[i].x=(((int)ListRFPt[i].x)*(CurSurf.ResH/2))/((int)ListRFPt[i].z);
-       ListObjPts[i].y=(((int)ListRFPt[i].y)*(CurSurf.ResV/2))/((int)ListRFPt[i].z);
+        ListObjPts[i].x=ListPtFinal[i].x;
+        ListObjPts[i].y=ListPtFinal[i].y;
      }
-     FREE_MMX();
      // set origin to the center
      SetOrgSurf(&CurSurf,CurSurf.ResH/2,CurSurf.ResV/2);
      for (i=0;i<6;i++) {
-        Poly16(&ListObjPolys[i], JpegIMG, POLY16_MASK_TEXT_TRANS | POLY16_FLAG_DBL_SIDED, 15);
-        //Poly16(&ListObjPolys[i], JpegIMG, POLY16_TEXT_BLND|POLY16_FLAG_DBL_SIDED, RGB16(0,0,255) | (15<<24));
-        //Poly16(&ListObjPolys[i], NULL, POLY16_SOLID_BLND, RGB16(0,0,255) | (3<<24));
+        Poly16(&ListObjPolys[i], JpegIMG, POLY16_MASK_TEXT_TRANS | POLY16_FLAG_DBL_SIDED, 18);
         if (i==5)
             REPOLY16(NULL, NULL, POLY16_SOLID_BLND, RGB16(255,255,255) | (3<<24));
-            //Poly16(&ListObjPolys[i], NULL, POLY16_SOLID_BLND, RGB16(255,255,255) | (3<<24));
      }
      SetOrgSurf(&CurSurf,0,0);
 
@@ -260,7 +284,7 @@ int main(int argc,char *argv[])
          BlurSurf16(pSurfBlur,&CurSurf);
 
          // display fps
-         SetSurf(pSurfBlur);
+         DgSetCurSurf(pSurfBlur);
 
          ClearText(); // clear test position to upper left
          SetTextCol(0x0);
@@ -284,7 +308,7 @@ int main(int argc,char *argv[])
 
    }
 
-   CloseVesa();
+   DgQuit();
    UninstallKeyboard();
    DgUninstallTimer();
    TextMode();
@@ -294,7 +318,7 @@ int main(int argc,char *argv[])
 // DUGL Util waitRetrace
 void DGWaitRetrace() {
   //if (!SynchScreen) return;
-  if (CurMode.VModeFlag|VMODE_VGA)
+  if (CurDgfxMode->VModeFlag|VMODE_VGA)
      WaitRetrace(); // VGA wait retrace
   else
      ViewSurfWaitVR(0);

@@ -2,7 +2,7 @@
 DUGL is a super fast, 32bits/DOS only/ C, Assembly Game library using software rasterizer.
 Started on 1999 as a **DOS** (https://en.wikipedia.org/wiki/DOS) game library, using **DJGPP** (https://delorie.com/djgpp/) as gcc C/C++ compiler and **NASM** (https://nasm.us/) as the assembly compiler and targeting Intel **MMX+** CPU and DOS compatible OS and VESA 2.0 for graphic initialization.
 
-This is an attempt to Create a new version of DOS DUGL that provide as much as possible functionalities that  Modern DUGL (Dust Ultimate Game library) https://github.com/FFK77/DUGL
+This is an attempt to Create a new version of DOS DUGL that provide as much as possible functionalities of  Modern DUGL (Dust Ultimate Game library) https://github.com/FFK77/DUGL
 
 ### Target platform ###
 
@@ -10,8 +10,9 @@ DOS and compatible OS, intel x86 MMX+ compatible CPU.
 
 ### why and Goals ###
 
-As a DOS port of SDL2 was not going to happen soon. The modern DUGL as an SSE4.1+ wipe out about 10 years of legacy/old computer that could benefit from a fast/modern Graphic/game Library.
-On the best world, any project built with modern DUGL should be able to build without source changes.
+As a viable DOS port of SDL2 isn't going to happen soon or at all. The modern DUGL as an SSE4.1+ wipe out about 10 years of legacy/old computer that could benefit from a fast/modern Graphic/game Library.
+The Old DJGPP/DOS DUGL provide a good starting point to create a new DOS port/SDL free.
+Goal is to allow any project built with modern DUGL to build on this DOS/DJGPP version without source changes.
 How ever, according to tests that confirm theory, the usage of only MMX assembly, the lack of multi-core/multi-thread support of DOS make this version Up to 6-7 times slower.
 
 ### Features ###

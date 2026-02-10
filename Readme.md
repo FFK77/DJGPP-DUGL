@@ -40,7 +40,7 @@ Requirement:
 - **CodeBlocks IDE** (https://www.codeblocks.org) as a very convenient IDE to use for development.
 - **Mingw/djgpp** cross compiler (https://github.com/andrewwutw/build-djgpp)
 - **Nasm** (https://nasm.us/)
-- **LibJpeg**, **LibPNG** and **ZLib** from https://www.delorie.com/pub/djgpp/current/v2tk/
+- **DJGPP Pthreads** port (FSU Pthreads (POSIX Threads) 3.14), **LibJpeg**, **LibPNG** and **ZLib** from https://www.delorie.com/pub/djgpp/current/v2tk/
 
 Compiling asm sources:
 

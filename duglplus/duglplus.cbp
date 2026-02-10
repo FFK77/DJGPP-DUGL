@@ -50,7 +50,6 @@
 			<Add directory="../dugl" />
 		</Compiler>
 		<Unit filename="DGUI.H" />
-		<Unit filename="DIMAGE.H" />
 		<Unit filename="DSOUND.H" />
 		<Unit filename="DUGLPLUS.H" />
 		<Unit filename="FLYOBJ.CC" />
@@ -58,12 +57,6 @@
 		<Unit filename="GUI-UTIL.CC" />
 		<Unit filename="GUI.CC" />
 		<Unit filename="INTRDUGL.H" />
-		<Unit filename="Img-jpgc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="Img-pngc.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="SOUNDC.C">
 			<Option compilerVar="CC" />
 		</Unit>

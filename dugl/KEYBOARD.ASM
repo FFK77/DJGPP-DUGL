@@ -101,7 +101,7 @@ _InstallKeyboard:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RET
+		FRETURN
 
 
 _UninstallKeyboard:
@@ -160,7 +160,7 @@ _UninstallKeyboard:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RET
+		FRETURN
 
 _IsKeyDown:
 	ARG	NumKey, 4
@@ -194,7 +194,7 @@ _PauseKeyPressed:
 		MOV		[PausePressed],AH
 		STI
 
-		RET
+		FRETURN
 
 _WaitKeyPressed:
 		XOR		EAX,EAX
@@ -203,7 +203,7 @@ _WaitKeyPressed:
 		JZ		.BcWKP
 		MOV		[_LastKey],AH
 
-		RET
+		FRETURN
 
 ;		MOV		DWORD [KeyFrstDownTime+EAX*4],ESI
 ;		MOV		[KeyTimeEvents+ECX*4],ESI
@@ -212,7 +212,7 @@ _WaitKeyPressed:
 
 _GetTimedKeyNbElt:
 		MOV		EAX,[KeyTimeNbElt]
-		RET
+		FRETURN
 
 _ClearTimedKeyCircBuff:
 		XOR		EAX,EAX
@@ -221,7 +221,7 @@ _ClearTimedKeyCircBuff:
 		MOV		[KeyTimeCBFin],EAX
 		MOV		[KeyTimeNbElt],EAX
 		STI
-		RET
+	FRETURN
 
 _GetCurrTimeKeyDown:
 	ARG	TmNumKey, 4
@@ -237,11 +237,13 @@ _GetCurrTimeKeyDown:
 		JC		.KeyDown
 		SETC		AL
 		JMP		SHORT .End
-.KeyDown:	MOV		EBX,[KeyFrstDownTime+EAX*4]
+.KeyDown:
+		MOV		EBX,[KeyFrstDownTime+EAX*4]
 		MOV		EAX,[_DgTime]
 		SUB		EAX,EBX
-.End:		STI
-		RETURN
+.End:
+		STI
+	RETURN
 
 _GetTimedKeyDown:
 	ARG	PTmKey, 4, PKeyTIME, 4
@@ -272,7 +274,7 @@ _GetTimedKeyDown:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _GetKey:
 	ARG	PKey, 4, PKeyFLAG, 4
@@ -303,7 +305,7 @@ _GetKey:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _WaitGetKey:
 	ARG	WPKey, 4, WPKeyFLAG, 4
@@ -333,11 +335,11 @@ _WaitGetKey:
 		POP		EDI
 		POP		ESI
 
-		RETURN
+	RETURN
 
 _GetKeyNbElt:
 		MOV		EAX,[KeyNbElt]
-		RET
+	FRETURN
 
 _ClearKeyCircBuff:
 		CLI
@@ -347,7 +349,7 @@ _ClearKeyCircBuff:
 		MOV		[KeyNbElt],EAX
 		MOV		[_LastKey],AL
 		STI
-		RET
+	FRETURN
 
 ;-------------------------------------
 _SetKbMAP:
@@ -364,20 +366,20 @@ _SetKbMAP:
 		MOV		[_LastAscii],AL
 		CMP		DWORD [ValidCurKbMAP],EAX
 		JE		.PasExistOthMp
-		CALL		UnlockCurKbMAP
+		CALL	UnlockCurKbMAP
 .PasExistOthMp:
 		MOV		ESI,[EBP+PSetKM]
 		MOV		EDI,_CurKbMAP
 		MOV		ECX,16
 		REP		MOVSD
-		CALL		LockCurKbMAP
+		CALL	LockCurKbMAP
 		MOV		[ValidCurKbMAP],EAX
 		STI
 
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _GetKbMAP:
 	ARG	PGetKM, 4
@@ -391,7 +393,7 @@ _GetKbMAP:
 
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _DisableCurKbMAP:
 		PUSH		ESI
@@ -414,7 +416,7 @@ _DisableCurKbMAP:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RET
+	FRETURN
 
 _GetAscii:
 	ARG	PAscii, 4, PAsciiFLAG, 4
@@ -425,7 +427,7 @@ _GetAscii:
 		MOV		[EAX],DL
 		MOV		EAX,[EBP+PAsciiFLAG]
 		MOV		[EAX],EDX
-		RETURN
+	RETURN
 .KbMapActv:
 		PUSH		ESI
 		PUSH		EDI
@@ -456,7 +458,7 @@ _GetAscii:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 
 _WaitGetAscii:
@@ -469,9 +471,10 @@ _WaitGetAscii:
 		MOV		[EAX],DL
 		MOV		EAX,[EBP+PAsciiFLAG]
 		MOV		[EAX],EDX
-		RETURN
+	RETURN
 
-.KbMapActv:	PUSH		ESI
+.KbMapActv:
+		PUSH		ESI
 		PUSH		EDI
 		PUSH		EBX
 		MOV		ESI,[EBP+WPAscii]
@@ -495,11 +498,11 @@ _WaitGetAscii:
 		STI
 		POP		EBX
 
-		RETURN
+	RETURN
 
 _GetAsciiNbElt:
 		MOV		EAX,[AsciiNbElt]
-		RET
+	FRETURN
 
 _ClearAsciiCircBuff:
 		CLI
@@ -509,7 +512,7 @@ _ClearAsciiCircBuff:
 		MOV		[AsciiNbElt],EAX
 		MOV		[_LastAscii],AL
 		STI
-		RET
+	FRETURN
 
 LockCurKbMAP:
 		MOV		AX,0x600

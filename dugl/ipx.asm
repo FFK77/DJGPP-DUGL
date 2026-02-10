@@ -38,8 +38,8 @@ _ReverseBuffBytes:
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
-		EMMS
-		RETURN
+
+	MMX_RETURN
 
 ALIGN 32
 SECTION	.data

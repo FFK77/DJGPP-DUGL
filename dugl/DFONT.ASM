@@ -32,8 +32,8 @@ _SetDFONT:
 
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
-		;EMMS
-		RETURN
+
+	MMX_RETURN
 
 _GetDFONT:
 	ARG	CF, 4
@@ -47,8 +47,9 @@ _GetDFONT:
 
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
-		;EMMS
-		RETURN
+
+	MMX_RETURN
+
 ALIGN 32
 _OutText:
 	ARG	Str, 4
@@ -322,8 +323,8 @@ _OutText:
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
-		;EMMS
-		RETURN
+
+	MMX_RETURN
 
 _WidthText:
 	ARG	LStr, 4
@@ -368,8 +369,8 @@ _WidthText:
 .ZeroRien:
 		MOVD		ESI,mm0
 		MOVD		EBX,mm2
-		;EMMS
-		RETURN
+
+	MMX_RETURN
 
 _WidthPosText:
 	ARG	LPStr, 4, LPPos, 4
@@ -423,7 +424,7 @@ _WidthPosText:
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
 		;EMMS
-		RETURN
+		MMX_RETURN
 
 _PosWidthText:
 	ARG	PLStr, 4, PLLarg, 4
@@ -480,8 +481,8 @@ _PosWidthText:
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
-		;EMMS
-		RETURN
+
+		MMX_RETURN
 
 
 ;------------------------------------------------
@@ -763,8 +764,8 @@ _OutText16:
 		MOVD		ESI,mm0
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
-		;EMMS
-		RETURN
+
+		MMX_RETURN
 
 SECTION .bss   ALIGN=32
 _CurFONT:

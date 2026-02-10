@@ -160,8 +160,8 @@ _InLZW:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		;EMMS
-		RETURN
+
+	MMX_RETURN
 
 GetLZWCode:
 		MOV		ECX,[UtlBitCurAdd]
@@ -196,26 +196,29 @@ _InRLE:
 		PUSH		EDI
 		PUSH		ESI
 
-		MOV		EDX,[EBP+LenOutRLE]
-		MOV		EDI,[EBP+OutRLE]
-		MOV		ESI,[EBP+InBuffRLE]
-		ADD		EDX,EDI
-.BcInRLE:	LODSB
-		CMP		AL,0xC0
-		JB		.Isole
-		MOV		CL,AL
-		AND		CL,0x3f
+		MOV		    EDX,[EBP+LenOutRLE]
+		MOV		    EDI,[EBP+OutRLE]
+		MOV		    ESI,[EBP+InBuffRLE]
+		ADD		    EDX,EDI
+.BcInRLE:
+        LODSB
+		CMP		    AL,0xC0
+		JB		    .Isole
+		MOV		    CL,AL
+		AND		    CL,0x3f
 		LODSB
 		MOVZX		ECX,CL
-		REP		STOSB
-		JMP		SHORT .PasIsoleRLE
-.Isole:		STOSB
-.PasIsoleRLE:	CMP		EDI,EDX
-		JB 		.BcInRLE
+		REP		    STOSB
+		JMP		    SHORT .PasIsoleRLE
+.Isole:
+        STOSB
+.PasIsoleRLE:
+        CMP		    EDI,EDX
+		JB 		    .BcInRLE
 
-		POP		ESI
-		POP		EDI
-		RETURN
+		POP		    ESI
+		POP		    EDI
+	RETURN
 
 _OutRLE:
 	ARG	OutBuffRLE, 4, InRLE, 4, LenInRLE, 4, ResHzRLE, 4
@@ -289,7 +292,7 @@ _OutRLE:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		RETURN
+	RETURN
 
 _SizeOutRLE:
 	ARG    SzInRLE, 4, SzLenInRLE, 4, SzResHzRLE, 4
@@ -356,7 +359,7 @@ _SizeOutRLE:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		RETURN
+	RETURN
 
 ;**********Fin PCX*********************************
 
@@ -380,7 +383,7 @@ _DgSetCurSurf:
 		POP		ESI
 		POP     EDI
 
-	RETURN
+	MMX_RETURN
 
 ALIGN 32
 _DgSetSrcSurf:
@@ -394,7 +397,7 @@ _DgSetSrcSurf:
 
 		POP		ESI
 		POP		EDI
-		RETURN
+    MMX_RETURN
 
 ALIGN 32
 _SurfCopy:
@@ -489,11 +492,11 @@ _SurfCopy:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		RETURN
+    MMX_RETURN
 
 _GetMaxResVSetSurf:
 		MOV		EAX,MaxResV
-		RET
+		FRETURN
 
 _DgGetCurSurf:
 	ARG	S2, 4
@@ -506,8 +509,8 @@ _DgGetCurSurf:
 
         POP             ESI
         POP             EDI
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 _ProtectSetPalette:
 	ARG	Dbcol, 4, Nbcol, 4, Tcol, 4
@@ -567,8 +570,8 @@ _ProtectSetPalette:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		;EMMS
-		RETURN
+
+	MMX_RETURN
 
 _ProtectViewSurf:
 	ARG	NbSurf, 4
@@ -639,8 +642,8 @@ _ProtectViewSurfWaitVR:
 .FInNbSurf:	POP		ES
 		MOVD		EBX,mm0
 		MOVD		ESI,mm2
-		;EMMS
-		RETURN
+
+    MMX_RETURN
 
 ; structure point { DWORD X, DWORD Y }
 _PutPixel:
@@ -653,7 +656,7 @@ _PutPixel:
 		IMUL	EAX,[_NegScanLine]
 		ADD		EAX,[_vlfb]
 		MOV		[EAX+EDX],CL
-		RETURN
+    RETURN
 
 _GetPixel:
 	ARG	PtrGPoint, 4
@@ -688,8 +691,7 @@ _Clear:
 		POP		ESI
 		POP		EDI
 
-		;EMMS
-		RETURN
+    MMX_RETURN
 
 
 _WaitRetrace:
@@ -700,7 +702,7 @@ _WaitRetrace:
 .wait2:		IN		AL,DX
 		TEST		AL,0x08
 		JZ		.wait2
-		RET
+		FRETURN
 
 
 
@@ -740,8 +742,8 @@ _ValidSPoly:
 
 		MOVD		EBX,mm6
 		MOVD		ESI,mm7
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 _SensPoly:
 	ARG	VSPtrListPt, 4
@@ -777,8 +779,8 @@ _SensPoly:
 
 		MOVD		EBX,mm6
 		MOVD		ESI,mm7
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 _RePoly:
     ARG RePtrListPt, 4, ReSSurf, 4, ReTypePoly, 4, ReColPoly, 4
@@ -995,8 +997,8 @@ _Poly:
 		POP         EDI
 		POP         EBX
         POP         ESI
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 .TstSiDblSide:
 		TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED >> 24
@@ -1067,8 +1069,8 @@ _Clear16:
 		MOVD		EDI,mm7
 		MOVD		ESI,mm6
 		MOVD		EBX,mm5
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 ; == xxxResizeViewSurf16 =====================================
 
 _ResizeViewSurf16:
@@ -1165,11 +1167,10 @@ _ResizeViewSurf16:
             MOV			EDX,DWORD [HzPntInit]
             JNZ         .BcResize
 
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+    MMX_RETURN
 
 _MaskResizeViewSurf16:
     ARG SrcMResizeSurf16, 4, MResizeRevertHz, 4, MResizeRevertVt, 4
@@ -1270,11 +1271,11 @@ _MaskResizeViewSurf16:
             MOV			EDX,[HzPntInit]
             JNZ         .BcResize
 
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+
+    MMX_RETURN
 
 _BlndResizeViewSurf16:
     ARG SrcBResizeSurf16, 4, BResizeRevertHz, 4, BResizeRevertVt, 4, BResizeColBlnd, 4
@@ -1410,11 +1411,10 @@ _BlndResizeViewSurf16:
             MOV			EDX,[HzPntInit]
             JNZ         .BcResize
 
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+    MMX_RETURN
 
 _MaskBlndResizeViewSurf16:
     ARG SrcMBResizeSurf16, 4, MBResizeRevertHz, 4, MBResizeRevertVt, 4, MBResizeColBlnd, 4
@@ -1554,11 +1554,10 @@ _MaskBlndResizeViewSurf16:
             MOV			EDX,[HzPntInit]
             JNZ         .BcResize
 
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+    MMX_RETURN
 
 _TransResizeViewSurf16:
     ARG SrcTResizeSurf16, 4, TResizeRevertHz, 4, TResizeRevertVt, 4, TResizeTrans, 4
@@ -1673,11 +1672,10 @@ _TransResizeViewSurf16:
             JNZ         .BcResize
 
 .EndResizeView:
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+    MMX_RETURN
 
 _MaskTransResizeViewSurf16:
     ARG SrcMTResizeSurf16, 4, MTResizeRevertHz, 4, MTResizeRevertVt, 4, MTResizeTrans, 4
@@ -1796,11 +1794,10 @@ _MaskTransResizeViewSurf16:
             JNZ         .BcResize
 
 .EndResizeView:
-            EMMS
             POP         EDI
             POP         EBX
             POP         ESI
-    RETURN
+    MMX_RETURN
 
 ; ==== Poly16 and RePoly16 =============================
 
@@ -2024,8 +2021,8 @@ _Poly16:
         POP         EDI
 		POP         EBX
         POP         ESI
-		;EMMS
-		RETURN
+
+    MMX_RETURN
 
 .TstSiDblSide:
 		TEST		BYTE [EBP+TypePoly+3],POLY_FLAG_DBL_SIDED16 >> 24

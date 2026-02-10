@@ -327,8 +327,8 @@ ALIGN 4
 		POP			ESI
 		POP			EDI
 		POP			EBX
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -658,8 +658,8 @@ ALIGN 4
 		POP			ESI
 		POP			EDI
 		POP			EBX
-		;EMMS
-	RETURN
+
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipped **********************************************
@@ -1141,8 +1141,8 @@ ALIGN 4
 		MOVD		EBX,mm7
 		MOVD		EDI,mm6
 		MOVD		ESI,mm5
-		;EMMS
-                RETURN
+
+	MMX_RETURN
 
 ALIGN 32
 _linemap:
@@ -1539,7 +1539,7 @@ _LineMap:
 		MOVD		EBX,mm7
 		MOVD		EDI,mm6
 		MOVD		ESI,mm5
-		;EMMS
-                RETURN
+
+    RETURN
 
 

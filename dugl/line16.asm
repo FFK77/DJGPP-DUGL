@@ -374,8 +374,8 @@ ALIGN 4
 		MOVD		EBX,mm7
 		MOVD		EDI,mm6
 		MOVD		ESI,mm5
-		;EMMS
-                RETURN
+
+	MMX_RETURN
 
 ALIGN 32
 _linemap16:
@@ -775,8 +775,8 @@ ALIGN 4
 		MOVD		EBX,mm7
 		MOVD		EDI,mm6
 		MOVD		ESI,mm5
-		;EMMS
-                RETURN
+
+	MMX_RETURN
 
 
 ALIGN 32
@@ -1208,8 +1208,7 @@ ALIGN 4
 		POP		EDI
 		POP		EBX
 
-		;EMMS
-                RETURN
+    MMX_RETURN
 
 
 ALIGN 32
@@ -1667,6 +1666,6 @@ ALIGN 4
 		POP		ESI
 		POP		EDI
 		POP		EBX
-		;EMMS
-                RETURN
+
+    MMX_RETURN
 

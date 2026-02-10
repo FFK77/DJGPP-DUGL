@@ -101,7 +101,7 @@ _DgInstallTimer:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _DgUninstallTimer:
 		PUSH		ESI
@@ -146,7 +146,7 @@ _DgUninstallTimer:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RET
+		FRETURN
 
 ALIGN 32
 DebTmLockCode:;****************************************************************

@@ -135,7 +135,7 @@ _InstallMouse:
 		POP		EBX
 		POP		EDI
 		POP		ESI
-		RET
+		FRETURN
 
 _UninstallMouse:
 		PUSH		ESI
@@ -172,12 +172,12 @@ _UninstallMouse:
 		POP		EDI
 		POP		ESI
 
-		RET
+		FRETURN
 
 _IsMouseWheelSupported:
 		XOR		EAX,EAX
 		MOV		AL,[MsWheelSupp]
-		RET
+		FRETURN
 
 _SetMouseView:
 	ARG	V1, 4
@@ -216,7 +216,7 @@ _SetMouseView:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-		RETURN
+	RETURN
 
 _GetMouseView:
 	ARG	V2, 4
@@ -230,7 +230,7 @@ _GetMouseView:
 
 		POP		EDI
 		POP		ESI
-		RETURN
+	RETURN
 
 _SetMouseOrg:
 	ARG	MsXOrg, 4, MsYOrg, 4
@@ -249,7 +249,7 @@ _SetMouseOrg:
 		MOV		[MsOrgX],EDX
 		MOV		[MsOrgY],EBP
 
-		RETURN
+	RETURN
 
 _SetMousePos:
 	ARG	MouseX, 4, MouseY, 4
@@ -273,7 +273,7 @@ _SetMousePos:
 		MOV		[_MsX],EAX
 		MOV		[_MsY],ECX
 
-		RETURN
+	RETURN
 
 _SetMouseSpeed:
 	ARG	MsHzSpeed, 4, MsVtSpeed, 4
@@ -293,7 +293,7 @@ _SetMouseSpeed:
 		MOV		DWORD [_MsSpeedVt],EDX
 		STI
 
-		RETURN
+	RETURN
 
 _SetMouseAccel:
 	ARG	MsAccel, 4
@@ -301,7 +301,7 @@ _SetMouseAccel:
 		MOV		EAX,[EBP+MsAccel]
 		MOV		[_MsAccel],EAX
 
-		RETURN
+	RETURN
 
 ; mouse event stack function
 _EnableMsEvntsStack:
@@ -310,7 +310,7 @@ _EnableMsEvntsStack:
 		MOV		[MsStackStart],EAX
 		OR		AL,1
 		MOV		[MsStackEnable],EAX
-		RET
+		FRETURN
 
 _DisableMsEvntsStack:
 		XOR		EAX,EAX
@@ -323,7 +323,7 @@ _ClearMsEvntsStack:
 		XOR		EAX,EAX
 		MOV		[MsStackNbElt],EAX
 		MOV		[MsStackStart],EAX
-		RET
+		FRETURN
 
 _GetMsEvent:
 		ARG	MsEvnt, 4
@@ -364,7 +364,7 @@ _GetMsEvent:
 		POP		EDI
 .finNoMsEvt:
 		STI ; end critique
-		RETURN
+	RETURN
 
 ; Mouse Event Structure **************************
 		struc MouseEvent

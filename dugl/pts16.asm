@@ -220,7 +220,7 @@ _PutSurf16:
 		POP		EDI
 		POP		EBX
 
-	RETURN
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -559,7 +559,7 @@ _PutMaskSurf16:
 		POP		ESI
 		POP		EDI
 		POP		EBX
-	RETURN
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -911,7 +911,7 @@ _PutSurfBlnd16:
 		POP			ESI
 		POP			EDI
 		POP			EBX
-	RETURN
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -1408,7 +1408,7 @@ _PutMaskSurfBlnd16:
 		POP			ESI
 		POP			EDI
 		POP			EBX
-	RETURN
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -1623,7 +1623,7 @@ _SurfMaskCopyBlnd16:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-	RETURN
+	MMX_RETURN
 
 ; mix 16bpp colors: source in (mm0, mm1, mm2) / dest in (mm3, mm4, mm5)
 ; source miltipilier mm7 (4 words from 0 to 31)
@@ -1922,7 +1922,7 @@ _PutSurfTrans16:
 		POP		ESI
 		POP		EDI
 		POP		EBX
-	RETURN
+	MMX_RETURN
 
 ; PutSurf Clipper **********************************************
 .PutSurfClip:
@@ -2109,7 +2109,7 @@ _SurfCopyTrans16:
 		POP			EBX
 		POP			ESI
 		POP			EDI
-	RETURN
+	MMX_RETURN
 
 ; -------------------------------
 ; Put a Masked Transparent Surf
@@ -2420,7 +2420,7 @@ _PutMaskSurfTrans16:
 		POP			ESI
 		POP			EDI
 		POP			EBX
-	RETURN
+	MMX_RETURN
 
 .PutSurfClip:
 ; PutSurf Clipper **********************************************
@@ -2631,5 +2631,5 @@ _SurfMaskCopyTrans16:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-	RETURN
+	MMX_RETURN
 

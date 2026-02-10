@@ -23,7 +23,7 @@ _DetectCPUID:
 		POP		EAX
 		XOR		EAX,ECX
 		SETNZ		AL
-		RET
+		FRETURN
 
 _ExecCPUID:
 	ARG	ValEAX, 4, PtEAX, 4, PtEBX, 4, PtECX, 4, PtEDX, 4
@@ -48,7 +48,7 @@ _ExecCPUID:
 		POP		EDI
 		POP		EBX
 		POP		ESI
-		RETURN
+	RETURN
 
 _EnableMTRR:
 		push	ebx
@@ -78,7 +78,7 @@ _EnableMTRR:
 fin:
 		movzx	eax,cl
 		pop	ebx
-		RET
+		FRETURN
 
 
 ALIGN 32

@@ -88,9 +88,8 @@ _TransfB8ToB16Pal:
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
 		MOVD		EBP,mm5
-		;EMMS
 
-		RET
+		MMX_FRETURN
 
 ; convert a 8bpp paletted buffer to 16bpp (5:6:5:rgb) buffer
 _TransfB8ToB16:
@@ -167,9 +166,8 @@ _TransfB8ToB16:
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
 		MOVD		EBP,mm5
-		;EMMS
 
-		RET
+		MMX_FRETURN
 
 _TransfB8ToB15:
 		MOVD		mm5,EBP
@@ -209,9 +207,8 @@ _TransfB8ToB15:
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
 		MOVD		EBP,mm5
-		;EMMS
 
-		RET
+		MMX_FRETURN
 
 _TransfB16ToB8:
 		MOVD		mm5,EBP
@@ -256,9 +253,8 @@ _TransfB16ToB8:
 		MOVD		EDI,mm1
 		MOVD		EBX,mm2
 		MOVD		EBP,mm5
-		;EMMS
 
-		RET
+	MMX_FRETURN
 
 ; BLUR MACRO
 
@@ -827,12 +823,11 @@ ALIGN 32
 ; END BLUR last Horizontal Line -------------------------------------------
 
 .errorEnd:
-        EMMS
         POP     EBX
         POP     EDI
         POP     ESI
 
-    RETURN
+    MMX_RETURN
 
 
 ALIGN 32

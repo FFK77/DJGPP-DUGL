@@ -1,5 +1,5 @@
 /*	Dust Ultimate Game Library (DUGL)
-    Copyright (C) 2025  Fakhri Feki
+    Copyright (C) 2026  Fakhri Feki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ void DWorkerYield();
 #define PDMutex void*
 void *CreateDMutex();
 void  DestroyDMutex(PDMutex DMutexPtr);
-void  LockDMutex(PDMutex DMutexPtr);
-void  UnlockDMutex(PDMutex DMutexPtr);
+int  LockDMutex(PDMutex DMutexPtr);
+int  UnlockDMutex(PDMutex DMutexPtr);
 bool  TryLockDMutex(PDMutex DMutexPtr);
 
 #ifdef __cplusplus

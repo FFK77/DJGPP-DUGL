@@ -34,7 +34,7 @@ _SetCurBMFont:
             JNZ         .BcCopyCurBMF
 
 .NotSet:
-    RETURN
+    MMX_RETURN
 
 ; PUT Bitmap character in SrcSurf into CurSurf at (BMCharsRendX, BMCharsRendY)  and (ECX, EDX)
 ;*****************

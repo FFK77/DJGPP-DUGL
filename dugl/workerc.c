@@ -84,7 +84,7 @@ void DestroyDWorkers() {
     dataThreadsID = NULL;
 }
 
-static int WorkerThreadFunction(void *ptr) {
+static void * WorkerThreadFunction(void *ptr) {
     unsigned int myIdx = *(unsigned int*)(ptr);
     if (MaxDWorkersCount == 0 || myIdx == 0 || myIdx > MaxDWorkersCount)
         return 0;
@@ -295,41 +295,43 @@ void DestroyDWorker(unsigned int dworkerID) {
 // Mutex ///////////////////////////////////////////////////
 
 PDMutex CreateDMutex() {
-    DMutex *mutex = (DMutex*)malloc(sizeof(DMutex));
-    if (mutex != NULL) {
-        mutex->Sign = 'XTMD'; // "DMTX"
-        pthread_mutex_init(&mutex->mutex, NULL);
+    DMutex *pmutex = (DMutex*)malloc(sizeof(DMutex));
+    if (pmutex != NULL) {
+        pmutex->Sign = 'XTMD'; // "DMTX"
+        pthread_mutex_init(&pmutex->mutex, NULL);
     }
-    return mutex;
+    return pmutex;
 }
 
 void  DestroyDMutex(PDMutex DMutexPtr) {
-    DMutex *mutex = (DMutex*)DMutexPtr;
-    if (mutex->Sign == 'XTMD') {
-        pthread_mutex_destroy(&mutex->mutex);
-        mutex->Sign = 0;
-        free(mutex);
+    DMutex *pmutex = (DMutex*)DMutexPtr;
+    if (pmutex != NULL && pmutex->Sign == 'XTMD') {
+        pthread_mutex_destroy(&pmutex->mutex);
+        pmutex->Sign = 0;
+        free(pmutex);
     }
 }
 
-void  LockDMutex(PDMutex DMutexPtr) {
-    DMutex *mutex = (DMutex*)DMutexPtr;
-    if (mutex->Sign == 'XTMD') {
-        pthread_mutex_lock(&mutex->mutex);
+int  LockDMutex(PDMutex DMutexPtr) {
+    DMutex *pmutex = (DMutex*)DMutexPtr;
+    if (pmutex != NULL && pmutex->Sign == 'XTMD') {
+        return pthread_mutex_lock(&pmutex->mutex);
     }
+    return -1;
 }
 
-void  UnlockDMutex(PDMutex DMutexPtr) {
-    DMutex *mutex = (DMutex*)DMutexPtr;
-    if (mutex->Sign == 'XTMD') {
-        pthread_mutex_unlock(&mutex->mutex);
+int  UnlockDMutex(PDMutex DMutexPtr) {
+    DMutex *pmutex = (DMutex*)DMutexPtr;
+    if (pmutex != NULL && pmutex->Sign == 'XTMD') {
+        return pthread_mutex_unlock(&pmutex->mutex);
     }
+    return -1;
 }
 
 bool  TryLockDMutex(PDMutex DMutexPtr) {
-    DMutex *mutex = (DMutex*)DMutexPtr;
-    if (mutex->Sign == 'XTMD') {
-        return (pthread_mutex_trylock(&mutex->mutex) == 0);
+    DMutex *pmutex = (DMutex*)DMutexPtr;
+    if (pmutex != NULL && pmutex->Sign == 'XTMD') {
+        return (pthread_mutex_trylock(&pmutex->mutex) == 0);
     }
     return false;
 }

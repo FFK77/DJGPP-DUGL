@@ -153,6 +153,7 @@ void BlurSurf16(DgSurf *S16Dst, DgSurf *S16Src); // use Blur16
 
 // 16 bpp Surf Copy/Filter
 // -----------------------
+void DgMemCpy(void *dst, void *src, unsigned int sizeCopy);
 void SurfCopy(DgSurf *Sdst, DgSurf *Ssrc);
 void SurfCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);
 void SurfMaskCopyBlnd16(DgSurf *S16Dst, DgSurf *S16Src,int colBlnd);

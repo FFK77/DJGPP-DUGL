@@ -109,6 +109,10 @@
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
+		<Unit filename="image.asm" />
+		<Unit filename="imagec.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="intrdugl.h" />
 		<Unit filename="ipx.asm" />
 		<Unit filename="ipxc.c">

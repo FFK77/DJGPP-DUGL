@@ -1540,6 +1540,6 @@ _LineMap:
 		MOVD		EDI,mm6
 		MOVD		ESI,mm5
 
-    RETURN
+    MMX_RETURN
 
 

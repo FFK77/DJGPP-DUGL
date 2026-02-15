@@ -240,7 +240,7 @@ void rectmap(int x1,int y1,int x2,int y2,int rcol,unsigned int rmap);
 
 void PutPixel16(void *Point,int col);
 int GetPixel16(void *Point);
-void Clear16(int clrcol);  // efface tout la surface
+void Clear16(int clrcol);  // clear the entire surface, ignoring the view
 void Line16(void *Point1,void *Point2,int col);
 void LineMap16(void *Point1,void *Point2,int col,unsigned int Map);
 void LineBlnd16(void *Point1,void *Point2,int col);
@@ -270,7 +270,7 @@ void RePoly16(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // 16 bpp Drawing helper functions provided for convenience
 // -------------------------------------------------------
 
-void ClearSurf16(int clrcol);	// Clear All the current 16bpp Surf view with clrcol
+void ClearSurf16(int clrcol);	// Clear the current Surf view with clrcol
 void line16(int X1,int Y1,int X2,int Y2,int LgCol);
 void linemap16(int X1,int Y1,int X2,int Y2,int LgCol,unsigned int Map);
 void lineblnd16(int X1,int Y1,int X2,int Y2,int LgCol);
@@ -282,8 +282,9 @@ int  cgetpixel16(int X,int Y); // clipped
 void cputpixelblnd16(int X,int Y,int pcol); // clipped
 void CPutPixelBlnd16(void *Pt1,int pcol); // clipped
 
-void Bar16(void *Pt1,void *Pt2,int bcol);  // use Poly16
-void bar16(int x1,int y1,int x2,int y2,int bcol);  // use Poly16
+void InBar16(int minx,int miny,int maxx, int maxy,int bcol);
+void Bar16(void *Pt1,void *Pt2,int bcol);
+void bar16(int x1,int y1,int x2,int y2,int bcol);
 void BarBlnd16(void *Pt1,void *Pt2,int bcol);  // use Poly16
 void barblnd16(int x1,int y1,int x2,int y2,int bcol);  // use Poly16
 void rect16(int x1,int y1,int x2,int y2,int rcol);

@@ -1,42 +1,44 @@
 
 ;***** SOLID
 ;***************************************************************************
-; IN : EAX col, ESI long, EDI Dest,
+; IN : EAX,mm0 col, ESI long, EDI Dest,
 ; change : mm0, ECX
 ;***************************************************************************
 %macro	@SolidHLine16	0
 		TEST		EDI,2
-		JZ		SHORT %%FPasStBAv
-		DEC		ESI
-		MOV		[EDI],AX
-		JZ		SHORT %%FinSHLine
-		LEA		EDI,[EDI+2]
+		LEA			ECX,[ECX-ECX] ; ECX = 0
+		JZ			SHORT %%FPasStBAv
+		DEC			ESI
+		MOV			[EDI],AX
+		JZ			SHORT %%FinSHLine
+		LEA			EDI,[EDI+2]
 %%FPasStBAv:
 		TEST		EDI,4
-		JZ		SHORT %%PasStDAv
-		CMP		ESI,BYTE 2
-		JL		SHORT %%StBAp
-		MOV		[EDI],EAX
-		SUB		ESI,BYTE 2
-		LEA		EDI,[EDI+4]
+		JZ			SHORT %%PasStDAv
+		CMP			ESI,BYTE 2
+		JL			SHORT %%StBAp
+		MOV			[EDI],EAX
+		SUB			ESI,BYTE 2
+		LEA			EDI,[EDI+4]
 %%PasStDAv:
-		MOV		ECX,ESI
-		SHR		ECX,2
-		OR		ECX,ECX
-		JZ		SHORT %%StDAp
+        SHLD    	ECX,ESI,30 ; ECX = ESI >> 2  ECX should be equal to zero
+		JZ			SHORT %%StDAp
 ALIGN 4
-%%StoMMX:	MOVQ		[EDI],mm0
-		DEC		ECX
-		LEA		EDI,[EDI+8]
-		JNZ		SHORT %%StoMMX
-		AND		ESI,BYTE 3
-		JZ		SHORT %%FinSHLine
-%%StDAp: 	CMP		ESI,BYTE 2
-		JL		SHORT %%StBAp
+%%StoMMX:
+		MOVQ		[EDI],mm0
+		DEC			ECX
+		LEA			EDI,[EDI+8]
+		JNZ			SHORT %%StoMMX
+		AND			ESI,BYTE 3
+		JZ			SHORT %%FinSHLine
+%%StDAp:
+		CMP			ESI,BYTE 2
+		JL			SHORT %%StBAp
 		STOSD
-%%StBAp:	AND		ESI,BYTE 1
-		JZ		SHORT %%PasStBAp
-		MOV		[EDI],AX
+%%StBAp:
+		AND			ESI,BYTE 1
+		JZ			SHORT %%PasStBAp
+		MOV			[EDI],AX
 %%PasStBAp:
 %%FinSHLine:
 %endmacro

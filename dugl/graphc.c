@@ -1157,34 +1157,19 @@ void CPutPixelBlnd16(void *Pt1,int pcol) {
 	LineBlnd16(Pt1,Pt1,pcol);
 }
 
-
-void ClearSurf16(int clrcol) {
-	bar16(CurSurf.MinX,CurSurf.MinY,CurSurf.MaxX,CurSurf.MaxY,clrcol);
-}
-
-void Bar16(void *Pt1,void *Pt2,int bcol)
-{	bar16(((int*)(Pt1))[0], ((int*)(Pt1))[1],
-		((int*)(Pt2))[0],((int*)(Pt2))[1], bcol);
-}
-
-void bar16(int x1,int y1,int x2,int y2,int bcol)
-{	int CBar[8], ACBar[5];
+void bar16(int x1,int y1,int x2,int y2,int bcol) {
 	if (x1==x2 || y1==y2) {
-	  line16(x1,y1,x2,y2,bcol); return; }
-	CBar[0]= CBar[6]= x2;
-	CBar[2]= CBar[4]= x1;
-	CBar[5]= CBar[7]= y1;
-	CBar[1]= CBar[3]= y2;
- 	ACBar[0]=4;
-	ACBar[1]=&CBar[0]; ACBar[2]=&CBar[2];
-	ACBar[3]=&CBar[4]; ACBar[4]=&CBar[6];
-	Poly16(&ACBar, NULL, POLY16_SOLID|POLY16_FLAG_DBL_SIDED, bcol);
+	  line16(x1,y1,x2,y2,bcol);
+	  return;
+    }
+    Bar16(&x1, &x2, bcol);
 }
 
 void BarBlnd16(void *Pt1,void *Pt2,int bcol) {
 	barblnd16(((int*)(Pt1))[0], ((int*)(Pt1))[1],
 		((int*)(Pt2))[0],((int*)(Pt2))[1], bcol);
 }
+
 void barblnd16(int x1,int y1,int x2,int y2,int bcol) {
 	int CBar[8], ACBar[5];
 	if (x1==x2 || y1==y2) {

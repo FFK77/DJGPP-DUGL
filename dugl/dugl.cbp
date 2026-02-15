@@ -102,6 +102,7 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="graph.asm" />
+		<Unit filename="graphM.asm" />
 		<Unit filename="graphc.c">
 			<Option compilerVar="CC" />
 		</Unit>

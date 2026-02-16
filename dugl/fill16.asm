@@ -458,6 +458,7 @@ InFillSOLID_BLND16:
 		SUB			EBX,[FinYPoly]	; -
 		PUNPCKLDQ	mm7,mm7
 		NEG			EBX		; -
+		XOR			ECX,ECX
 ;ALIGN 4
 .BcFillSolid16:
 		MOV			EDI,[_TPolyAdDeb+EDX+EBX*4]
@@ -521,6 +522,7 @@ ClipFillSOLID_BLND16:
 
 		ADD			EAX,[_vlfb]
 		NEG			EBX
+		XOR			ECX,ECX
 		;INC		EBX
 		MOVD		mm6,EAX
 ;ALIGN 4
@@ -545,11 +547,11 @@ ClipFillSOLID_BLND16:
 		MOV			EDI,[_MinX]
 .PasAJX1:
 		SUB			ESI,EDI
-		MOVD		ECX,mm6
+		MOVD		EAX,mm6
 		;SHL		EDI,1 ; 16bpp => xDeb*= 2
 		INC			ESI
 		;ADD		EDI,ECX
-		LEA			EDI,[ECX+EDI*2]
+		LEA			EDI,[EAX+EDI*2]
 		@SolidBlndHLine16
 .PasDrwClSD:
 		DEC			EBX

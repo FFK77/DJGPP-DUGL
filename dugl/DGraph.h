@@ -267,9 +267,6 @@ void RePoly16(void *ListPt, DgSurf *SS, unsigned int TypePoly, int ColPoly);
 // REPOLY16 provided for convenience as RePoly16 handle only drawn polygones with status 'C' or 'I' to avoid useless calls
 #define REPOLY16(ListPt, SS, TypePoly, ColPoly) if (LastPolyStatus!='N') RePoly16(ListPt, SS, TypePoly, ColPoly);
 
-// 16 bpp Drawing helper functions provided for convenience
-// -------------------------------------------------------
-
 void ClearSurf16(int clrcol);	// Clear the current Surf view with clrcol
 void line16(int X1,int Y1,int X2,int Y2,int LgCol);
 void linemap16(int X1,int Y1,int X2,int Y2,int LgCol,unsigned int Map);
@@ -285,8 +282,9 @@ void CPutPixelBlnd16(void *Pt1,int pcol); // clipped
 void InBar16(int minx,int miny,int maxx, int maxy,int bcol);
 void Bar16(void *Pt1,void *Pt2,int bcol);
 void bar16(int x1,int y1,int x2,int y2,int bcol);
-void BarBlnd16(void *Pt1,void *Pt2,int bcol);  // use Poly16
-void barblnd16(int x1,int y1,int x2,int y2,int bcol);  // use Poly16
+void InBarBlnd16(int minx,int miny,int maxx, int maxy,int bcol);
+void BarBlnd16(void *Pt1,void *Pt2,int bcol);
+void barblnd16(int x1,int y1,int x2,int y2,int bcol);
 void rect16(int x1,int y1,int x2,int y2,int rcol);
 void rectmap16(int x1,int y1,int x2,int y2,int rcol,unsigned int rmap);
 void rectblnd16(int x1,int y1,int x2,int y2,int rcol);

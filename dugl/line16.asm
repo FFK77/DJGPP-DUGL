@@ -1185,6 +1185,8 @@ ALIGN 4
 		ADD		EDI,[XP1]
 		;SHL		EAX,16  ; shift high
 		;OR		AX,BX ; assign the 16bpp color to the low
+		XOR			ECX,ECX
+
 		@SolidBlndHLine16
 		;@SolidHLine16
 		JMP		SHORT .FinLine

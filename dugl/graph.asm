@@ -8,7 +8,7 @@ GLOBAL  _DgSetSrcSurf,_DgGetCurSurf,_Clear
 GLOBAL  _Poly, _RePoly,_PutSurf,_PutMaskSurf
 
 ; 16bpp
-GLOBAL  _PutPixel16,_GetPixel16, _ClearSurf16, _InBar16, _Bar16
+GLOBAL  _PutPixel16,_GetPixel16, _ClearSurf16, _InBar16, _Bar16, _InBarBlnd16, _BarBlnd16
 GLOBAL  _PutSurf16,_PutMaskSurf16,_PutSurfBlnd16,_PutMaskSurfBlnd16
 GLOBAL  _PutSurfTrans16,_PutMaskSurfTrans16
 GLOBAL  _SurfCopyBlnd16,_SurfMaskCopyBlnd16,_SurfCopyTrans16,_SurfMaskCopyTrans16
@@ -573,6 +573,155 @@ _InBar16:
             JNZ         .BcBar
 
 .EndInBar:
+            POP         EDI
+            POP         EBX
+            POP         ESI
+
+    MMX_RETURN
+
+
+_BarBlnd16:
+    ARG BarBlnd16P1Ptr, 4, BarBlnd16P2Ptr, 4, BarBlnd16Col, 4
+
+            PUSH        ESI
+            PUSH        EBX
+            PUSH        EDI
+
+            MOV         ESI,[EBP+BarBlnd16P1Ptr]
+            MOV         EDI,[EBP+BarBlnd16P2Ptr]
+
+		MOVQ		mm1,[ESI] ; init min = XP1 | YP1
+		MOVQ		mm0,[EDI] ; = XP2 | YP2
+		MOVQ		mm2,mm1   ; init max = XP1 | YP1
+
+		MOVQ		mm3,mm1 ; = min (x|y)
+		MOVQ		mm4,mm2 ; = max (x|y)
+		PCMPGTD	mm3,mm0 ; mm3 = min(x|y) > (xn|yn)
+		PCMPGTD	mm4,mm0 ; mm4 = max(x|y) > (xn|yn)
+		MOVQ		mm5,mm3 ;
+		MOVQ		mm6,mm4 ;
+		PAND		mm3,mm0 ; mm3 = ((xn|yn) < min(x|y)) ? (xn|yn) : (0|0)
+		PANDN		mm4,mm0 ; mm4 = ((xn|yn) > max(x|y)) ? (xn|yn) : (0|0)
+		PANDN		mm5,mm1 ; mm5 = ((xn|yn) > min(x|y)) ? min (x|y) : (0|0)
+		PAND		mm6,mm2 ; mm6 = ((xn|yn) < max(x|y)) ? max (x|y) : (0|0)
+		MOVQ		mm1,mm3
+		MOVQ		mm2,mm4
+		POR		mm1,mm5 ; mm1 = min(x|y)
+		POR		mm2,mm6 ; mm2 = max(x|y)
+
+            MOVD        EBX,mm1 ; = MinX
+            MOVD        ECX,mm2 ; = MaxX
+            PSRLQ		mm1,32 ; = MinY
+            PSRLQ		mm2,32 ; = MaxY
+
+            ; check completely out
+            CMP         EBX,[_MaxX]
+            JG          _InBarBlnd16.EndInBlndBar
+            CMP         ECX,[_MinX]
+            JL          _InBarBlnd16.EndInBlndBar
+
+            MOVD        EDI,mm1 ; = MinY
+            MOVD        ESI,mm2 ; = MaxY
+            ; check completely out
+            CMP         EDI,[_MaxY]
+            JG          _InBarBlnd16.EndInBlndBar
+            CMP         ESI,[_MinY]
+            JL          _InBarBlnd16.EndInBlndBar
+
+            ; clip coordinates to current view
+            MOV         EAX,[_MaxX]
+            MOV         EDX,[_MaxY]
+            CMP         ECX,EAX ; x2 > MaxX
+            JL          SHORT .NoClipMaxX
+            MOV         ECX,EAX
+.NoClipMaxX:
+            CMP         ESI,EDX ; y2 > MaxY
+            MOV         EAX,[_MinX]
+            JL          SHORT .NoClipMaxY
+            MOV         ESI,EDX
+.NoClipMaxY:
+            MOV         EDX,[_MinY]
+            CMP         EBX,EAX ; x1 < MinX
+            JG          SHORT .NoClipMinX
+            MOV         EBX,EAX
+.NoClipMinX:
+            CMP         EDI,EDX ; y1 < MinY
+            JG          SHORT .NoClipMinY
+            MOV         EDI,EDX
+.NoClipMinY:
+
+            MOV         EAX,[EBP+BarBlnd16Col]
+            SUB         ESI,EDI ; = (MaxY - MinY)
+            JMP         _InBarBlnd16.CommonInBar16
+
+_InBarBlnd16:
+    ARG InBlndRect16MinX, 4, InBlndRect16MinY, 4, InBlndRect16MaxX, 4, InBlndRect16MaxY, 4, InBlndRect16Col, 4
+
+            PUSH        ESI
+            PUSH        EBX
+            PUSH        EDI
+
+            MOV         EAX,[EBP+InBlndRect16Col]
+            MOV         EDI,[EBP+InBlndRect16MinY]
+            MOV         ESI,[EBP+InBlndRect16MaxY]
+            MOV         ECX,[EBP+InBlndRect16MaxX]
+            SUB         ESI,EDI ; = (MaxY - MinY)
+            MOV         EBX,[EBP+InBlndRect16MinX]
+.CommonInBar16:
+            JLE         .EndInBlndBar ; MinY >= MaxY ? exit
+
+            IMUL        EDI,[_NegScanLine]
+            LEA         EBP,[ESI+1]
+            SUB         ECX,EBX
+            ADD         EDI,[_vlfb]
+            LEA         ESI,[ECX+1] ; = dest hline size
+            LEA         EDI,[EDI+EBX*2] ; = start Hline dest
+
+; prepare blending
+		MOV       	EBX,EAX ;
+		MOV       	ECX,EAX ;
+		MOV       	EDX,EAX ;
+		AND		EBX,[QBlue16Mask] ; EBX = Bclr16 | Bclr16
+		SHR		EAX,24
+		AND		ECX,[QGreen16Mask] ; ECX = Gclr16 | Gclr16
+		AND		AL,BlendMask ; remove any ineeded bits
+		JZ		.EndInBlndBar ; nothing 0 is the source
+		AND		EDX,[QRed16Mask] ; EDX = Rclr16 | Rclr16
+		XOR		AL,BlendMask ; 31-blendsrc
+		MOVD		mm7,EAX
+		XOR		AL,BlendMask ; 31-blendsrc
+		INC		AL
+		SHR		DX,5 ; right shift red 5bits
+		IMUL		BX,AX
+		IMUL		CX,AX
+		IMUL		DX,AX
+		MOVD		mm3,EBX
+		MOVD		mm4,ECX
+		MOVD		mm5,EDX
+		PUNPCKLWD	mm3,mm3
+		PUNPCKLWD	mm4,mm4
+		PUNPCKLWD	mm5,mm5
+		PUNPCKLWD	mm7,mm7
+		PUNPCKLDQ	mm3,mm3
+		PUNPCKLDQ	mm4,mm4
+
+		PUNPCKLDQ	mm5,mm5
+		PUNPCKLDQ	mm7,mm7
+; end prep blending
+            MOV         EBX,EDI ; EBX = start Hline dest
+            MOV         EDX,ESI ; EDX = dest hline size
+            XOR         ECX,ECX ; should be zero for SolidBlndHLine16
+.BcBar:
+            MOV         EDI,EBX ; start hline
+            MOV         ESI,EDX ; dest hline size
+
+		@SolidBlndHLine16
+
+            ADD         EBX,[_NegScanLine] ; next hline
+            DEC         EBP
+            JNZ         .BcBar
+
+.EndInBlndBar:
             POP         EDI
             POP         EBX
             POP         ESI

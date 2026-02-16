@@ -1367,7 +1367,7 @@ ALIGN 4
 		MOVD		EAX,mm0
 		DEC			ESI
 		STOSW
-		JZ		%%FinSHLine
+		JZ			%%FinSHLine
 %%FPasStBAv:
 		TEST		EDI,4
 		JZ			SHORT %%PasStDAv
@@ -1382,35 +1382,36 @@ ALIGN 4
 		SUB			ESI,BYTE 2
 		LEA			EDI,[EDI+4]
 %%PasStDAv:
-		MOV		ECX,ESI
-		SHR		ECX,2
-		OR		ECX,ECX
-		JZ		%%StDAp
-%%StoMMX:	MOVQ		mm0,[EDI]
+        SHLD    	ECX,ESI,30 ; ECX = ESI >> 2  ECX should be equal to zero
+		JZ			%%StDAp
+%%StoMMX:
+		MOVQ		mm0,[EDI]
 		MOVQ		mm1,[EDI]
 		MOVQ		mm2,[EDI]
 		;MOVQ		mm0,mm1
 		;MOVQ		mm2,mm1
 		@SolidBlndQ
 		MOVQ		[EDI],mm0
-		DEC		ECX
-		LEA		EDI,[EDI+8]
-		JNZ		%%StoMMX
-		AND		ESI,BYTE 3
-		JZ		%%FinSHLine
-%%StDAp: 	TEST		ESI,2
-		JZ		SHORT %%StBAp
-		MOV		EAX,[EDI] ; B
+		DEC			ECX
+		LEA			EDI,[EDI+8]
+		JNZ			%%StoMMX
+		AND			ESI,BYTE 3
+		JZ			%%FinSHLine
+%%StDAp:
+		TEST		ESI,2
+		JZ			SHORT %%StBAp
+		MOV			EAX,[EDI] ; B
 		MOVD		mm0,EAX ; B
 		MOVD		mm1,EAX ; G
 		MOVD		mm2,EAX  ; R
 		@SolidBlndQ
 		MOVD		[EDI],mm0
-		SUB		ESI,BYTE 2
-		LEA		EDI,[EDI+4]
-%%StBAp:	TEST		ESI,1
-		JZ		SHORT %%PasStBAp
-		MOV		AX,[EDI]
+		SUB			ESI,BYTE 2
+		LEA			EDI,[EDI+4]
+%%StBAp:
+		TEST		ESI,1
+		JZ			SHORT %%PasStBAp
+		MOV			AX,[EDI]
 		MOVD		mm0,EAX ; B
 		MOVD		mm1,EAX ; G
 		MOVD		mm2,EAX	  ; R

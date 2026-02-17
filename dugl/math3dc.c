@@ -362,9 +362,10 @@ float *LengthDVEC4(DVEC4 *vec4, float *lengthRes) {
 DVEC4 *NormalizeDVEC4(DVEC4 *vec4) {
     float lengthVec4 = sqrtf((vec4->x*vec4->x) + (vec4->y*vec4->y) + (vec4->z*vec4->z));
     if (lengthVec4 > 0.0f) {
-        vec4->x /= lengthVec4;
-        vec4->y /= lengthVec4;
-        vec4->z /= lengthVec4;
+        float InvLengthVec4 = 1.0f / lengthVec4;
+        vec4->x *= InvLengthVec4;
+        vec4->y *= InvLengthVec4;
+        vec4->z *= InvLengthVec4;
     }
     return vec4;
 }
@@ -377,9 +378,10 @@ DVEC4 *NormalizeDVEC4Res(DVEC4 *vec4, DVEC4 *nvres) {
     nvres->z = 0.0f;
     nvres->d = 0.0f;
     if (lengthVec4 > 0.0f) {
-        nvres->x = vec4->x / lengthVec4;
-        nvres->y = vec4->y / lengthVec4;
-        nvres->z = vec4->z / lengthVec4;
+        float InvLengthVec4 = 1.0f / lengthVec4;
+        nvres->x = vec4->x * InvLengthVec4;
+        nvres->y = vec4->y * InvLengthVec4;
+        nvres->z = vec4->z * InvLengthVec4;
     }
     return nvres;
 }
@@ -752,28 +754,28 @@ void DMatrix4MulDVEC4ArrayRes(DMatrix4 *mat4x4, DVEC4 *vec4ArraySrc, int count, 
 // multiply DVEC4 array by mat4x4, divide result x,y,z by max (1.0, result Z) and store result on the same array
 void DMatrix4MulDVEC4ArrayPersp(DMatrix4 *mat4x4, DVEC4 *vec4Array, int count) {
      DVEC4 inVec4;
-     float divZ = 0.0f;
+     float invDivZ = 0.0f;
      for (int i=0; i<count; i++) {
         inVec4 = vec4Array[i];
         vec4Array[i].z = inVec4.x * mat4x4->rows[0].z + inVec4.y * mat4x4->rows[1].z + inVec4.z * mat4x4->rows[2].z + mat4x4->rows[3].z;
         // take max between (1.0f and result vector z)
-        divZ = (vec4Array[i].z <= 1.0f) ? 1.0f : vec4Array[i].z;
-        vec4Array[i].z /= divZ;
-        vec4Array[i].x = (inVec4.x * mat4x4->rows[0].x + inVec4.y * mat4x4->rows[1].x + inVec4.z * mat4x4->rows[2].x + mat4x4->rows[3].x) / divZ;
-        vec4Array[i].y = (inVec4.x * mat4x4->rows[0].y + inVec4.y * mat4x4->rows[1].y + inVec4.z * mat4x4->rows[2].y + mat4x4->rows[3].y) / divZ;
+        invDivZ = (vec4Array[i].z <= 1.0f) ? 1.0f : (1.0f/vec4Array[i].z);
+        vec4Array[i].z *= invDivZ;
+        vec4Array[i].x = (inVec4.x * mat4x4->rows[0].x + inVec4.y * mat4x4->rows[1].x + inVec4.z * mat4x4->rows[2].x + mat4x4->rows[3].x) * invDivZ;
+        vec4Array[i].y = (inVec4.x * mat4x4->rows[0].y + inVec4.y * mat4x4->rows[1].y + inVec4.z * mat4x4->rows[2].y + mat4x4->rows[3].y) * invDivZ;
      }
 }
 
 // multiply DVEC4 array by mat4x4, divide result x,y,z by max (1.0, result Z) and store result on destination array
  void DMatrix4MulDVEC4ArrayPerspRes(DMatrix4 *mat4x4, DVEC4 *vec4ArraySrc, int count, DVEC4 *vec4ArrayDst) {
-     float divZ = 0.0f;
+     float invDivZ = 0.0f;
      for (int i=0; i<count; i++) {
         vec4ArrayDst[i].z = vec4ArraySrc[i].x * mat4x4->rows[0].z + vec4ArraySrc[i].y * mat4x4->rows[1].z + vec4ArraySrc[i].z * mat4x4->rows[2].z + mat4x4->rows[3].z;
         // take max between (1.0f and result vector z)
-        divZ = (vec4ArrayDst[i].z <= 1.0f) ? 1.0f : vec4ArrayDst[i].z;
-        vec4ArrayDst[i].z /= divZ;
-        vec4ArrayDst[i].x = (vec4ArraySrc[i].x * mat4x4->rows[0].x + vec4ArraySrc[i].y * mat4x4->rows[1].x + vec4ArraySrc[i].z * mat4x4->rows[2].x + mat4x4->rows[3].x) / divZ;
-        vec4ArrayDst[i].y = (vec4ArraySrc[i].x * mat4x4->rows[0].y + vec4ArraySrc[i].y * mat4x4->rows[1].y + vec4ArraySrc[i].z * mat4x4->rows[2].y + mat4x4->rows[3].y) / divZ;
+        invDivZ = (vec4ArrayDst[i].z <= 1.0f) ? 1.0f : (1.0f/vec4ArrayDst[i].z);
+        vec4ArrayDst[i].z *= invDivZ;
+        vec4ArrayDst[i].x = (vec4ArraySrc[i].x * mat4x4->rows[0].x + vec4ArraySrc[i].y * mat4x4->rows[1].x + vec4ArraySrc[i].z * mat4x4->rows[2].x + mat4x4->rows[3].x) * invDivZ;
+        vec4ArrayDst[i].y = (vec4ArraySrc[i].x * mat4x4->rows[0].y + vec4ArraySrc[i].y * mat4x4->rows[1].y + vec4ArraySrc[i].z * mat4x4->rows[2].y + mat4x4->rows[3].y) * invDivZ;
      }
  }
 

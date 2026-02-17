@@ -1102,7 +1102,7 @@ _SurfCopyBlnd16:
 		POP		EBX
 		POP		ESI
 		POP		EDI
-	RETURN
+	MMX_RETURN
 
 ; =======================================
 ; Put a MASKED Surf blended with a color

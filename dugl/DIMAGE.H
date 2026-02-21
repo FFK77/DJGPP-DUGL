@@ -46,6 +46,10 @@ int LoadMemPNG16(DgSurf **S, void *In, int SizeIn);
 int LoadPNG(DgSurf **S,char *filename, void *PalBGR1024);
 int SavePNG16(DgSurf *S,char *filename);
 
+// WEBP
+int LoadWEBP16(DgSurf **S,char *filename);
+int LoadMemWEBP16(DgSurf **S,void *buffJpeg,int sizeBuff);
+
 #ifdef __cplusplus
            }
 #endif

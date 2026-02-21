@@ -505,6 +505,7 @@ void DestroyDSplitString(DSplitString *splitString) {
 
 // DFileBuffer
 
+#define MAX_MEM_DFILEBUFFER_SIZE ((1<<31)-1)
 #define DEFAULT_DFILEBUFFER_BUFFER_SIZE 64*1024
 #define DROUND16(x) ((x+16)&0xFFFFFFF0)
 #define SIZE_DFB16 DROUND16(sizeof(DFileBuffer))
@@ -568,17 +569,19 @@ DFileBuffer* CreateMemDFileBuffer(void *buff, unsigned int sizeBuff) {
 DFileBuffer* CreateMemDFileBufferFromFile(const char *filename, const char *openmode) {
     DFileBuffer *pfileBuff = NULL;
     FILE *dmemFILE = fopen(filename, openmode);
-    int dmemFileSize = 0;
+    unsigned int dmemFileSize = 0;
     if (dmemFILE != NULL) {
         if (fseek(dmemFILE, 0, SEEK_END) == 0) {
-            dmemFileSize = ftell(dmemFILE);
-            if (fseek(dmemFILE, 0, SEEK_SET) == 0) {
-                char *buff = (char*)malloc(dmemFileSize);
-                if (buff != NULL) {
-                    if ((pfileBuff = CreateMemDFileBuffer(buff, (unsigned int)(dmemFileSize))) == NULL)
-                        free(buff);
-                    else
-                        fread(buff, 1, (size_t)dmemFileSize, dmemFILE); \
+            dmemFileSize = (unsigned int)ftell(dmemFILE);
+            if (dmemFileSize > 0 && dmemFileSize <= MAX_MEM_DFILEBUFFER_SIZE) {
+                if (fseek(dmemFILE, 0, SEEK_SET) == 0) {
+                    char *buff = (char*)malloc(dmemFileSize);
+                    if (buff != NULL) {
+                        if ((pfileBuff = CreateMemDFileBuffer(buff, (unsigned int)(dmemFileSize))) == NULL)
+                            free(buff);
+                        else
+                            fread(buff, 1, (size_t)dmemFileSize, dmemFILE); \
+                    }
                 }
             }
         }

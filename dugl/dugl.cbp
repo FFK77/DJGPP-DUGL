@@ -141,6 +141,9 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="transf.asm" />
+		<Unit filename="webpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="workerc.c">
 			<Option compilerVar="CC" />
 		</Unit>
